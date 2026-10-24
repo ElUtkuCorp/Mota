@@ -1,0 +1,20 @@
+Mota
+Copyright 2026 ElUtku y colaboradores de Mota
+
+Este producto es una obra derivada de Valetudo
+(https://github.com/Hypfer/Valetudo), Copyright Sören Beye y colaboradores,
+distribuido bajo la licencia Apache 2.0. El texto de la licencia está en LICENSE.
+
+Partes del controlador para robots con protocolo 3irobotix proceden de
+Congatudo (https://github.com/congatudo/Congatudo) y de agnoc
+(https://github.com/congatudo/agnoc), también bajo la licencia Apache 2.0.
+
+Aviso de cambios (sección 4.b de la licencia Apache 2.0):
+Los archivos de este repositorio pueden haber sido modificados respecto al
+original. Mota parte del tag 2026.10.0 de Valetudo (commit 78267517). El
+historial de git de este repositorio documenta cada cambio. Resumen:
+- Nombre, documentación y flujos de GitHub Actions propios de Mota.
+- Se han retirado los flujos y plantillas de GitHub propios del proyecto original.
+
+Mota no está afiliado a Valetudo, Congatudo, Cecotec ni 3irobotix. Esos
+nombres se citan solo para indicar el origen del código y la compatibilidad.

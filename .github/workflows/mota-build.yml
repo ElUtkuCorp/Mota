@@ -1,0 +1,64 @@
+# Mota: compila los binarios armv7 y, al publicar una release, los sube con sus sumas SHA-256.
+# - push a main, pull request o ejecución manual: binarios como artefactos de la ejecución.
+# - release publicada: además, los adjunta a la release (mota-armv7, mota-armv7-lowmem, SHA256SUMS).
+name: Compilación de Mota
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-armv7:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          cache: npm
+
+      # Los runtimes Node de pkg vienen en build_dependencies/pkg (los de upstream).
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Generar el esquema OpenAPI
+        run: npm run build_openapi_schema
+
+      - name: Compilar el frontend
+        run: npm run build --workspace=frontend
+
+      - name: Compilar armv7
+        run: npm run build_armv7 --workspace=backend
+
+      - name: Compilar armv7 lowmem
+        run: npm run build_armv7_lowmem --workspace=backend
+
+      - name: Preparar binarios y SHA256SUMS
+        run: |
+          mkdir -p dist
+          cp build/armv7/valetudo dist/mota-armv7
+          cp build/armv7/valetudo-lowmem dist/mota-armv7-lowmem
+          cd dist
+          sha256sum mota-armv7 mota-armv7-lowmem > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Subir artefactos
+        uses: actions/upload-artifact@v7
+        with:
+          name: mota-armv7-${{ github.sha }}
+          path: dist/*
+
+      - name: Adjuntar a la release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/mota-armv7 dist/mota-armv7-lowmem dist/SHA256SUMS --clobber
