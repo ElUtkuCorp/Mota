@@ -1,6 +1,7 @@
 module.exports = {
     CecotecBasicControlCapability: require("./CecotecBasicControlCapability"),
     CecotecCarpetModeControlCapability: require("./CecotecCarpetModeControlCapability"),
+    CecotecCleanRouteControlCapability: require("./CecotecCleanRouteControlCapability"),
     CecotecCombinedVirtualRestrictionsCapability: require("./CecotecCombinedVirtualRestrictionsCapability"),
     CecotecConsumableMonitoringCapability: require("./CecotecConsumableMonitoringCapability"),
     CecotecCurrentStatisticsCapability: require("./CecotecCurrentStatisticsCapability"),

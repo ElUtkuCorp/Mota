@@ -1,7 +1,9 @@
 const capabilities = require("./capabilities");
+const CecotecQuirkFactory = require("./CecotecQuirkFactory");
 const fs = require("fs");
 const Logger = require("../../Logger");
 const PendingMapChangeValetudoEvent = require("../../valetudo_events/events/PendingMapChangeValetudoEvent");
+const QuirksCapability = require("../../core/capabilities/QuirksCapability");
 const SelectionPreset = require("../../entities/core/ValetudoSelectionPreset");
 const ValetudoRobot = require("../../core/ValetudoRobot");
 const {
@@ -120,6 +122,15 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         );
         this.emitMapUpdated = throttle(this.emitMapUpdated.bind(this));
 
+        const quirkFactory = new CecotecQuirkFactory({
+            robot: this
+        });
+        this.registerCapability(new QuirksCapability({
+            robot: this,
+            quirks: [
+                quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.RESUME_AFTER_CHARGE)
+            ]
+        }));
         this.registerCapability(
             new capabilities.CecotecBasicControlCapability({
                 robot: this,
@@ -127,6 +138,11 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         );
         this.registerCapability(
             new capabilities.CecotecCarpetModeControlCapability({
+                robot: this,
+            })
+        );
+        this.registerCapability(
+            new capabilities.CecotecCleanRouteControlCapability({
                 robot: this,
             })
         );
