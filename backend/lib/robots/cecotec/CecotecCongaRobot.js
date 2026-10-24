@@ -1,5 +1,7 @@
 const capabilities = require("./capabilities");
+const CecotecBatteryGuard = require("./CecotecBatteryGuard");
 const CecotecCleanHistory = require("./CecotecCleanHistory");
+const CecotecMotaRouter = require("./CecotecMotaRouter");
 const CecotecQuirkFactory = require("./CecotecQuirkFactory");
 const fs = require("fs");
 const Logger = require("../../Logger");
@@ -117,6 +119,9 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         this.pathPoints = [];
         /** Mota: modo de la próxima limpieza (ver CecotecOperationModeControlCapability) */
         this.selectedOperationMode = PresetSelectionStateAttribute.MODE.VACUUM;
+        /** Mota: última orden de limpieza ({type: "mode", mode} o {type: "zones", options}), para reanudar */
+        this.lastCleaningRequest = undefined;
+        this.batteryGuard = new CecotecBatteryGuard({robot: this});
         this.server = new CloudServer();
         this.emitStateUpdated = throttle(this.emitStateUpdated.bind(this));
         this.emitStateAttributesUpdated = throttle(
@@ -131,7 +136,9 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         this.registerCapability(new QuirksCapability({
             robot: this,
             quirks: [
-                quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.RESUME_AFTER_CHARGE)
+                quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.RESUME_AFTER_CHARGE),
+                quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.RETURN_AT_BATTERY),
+                quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.RESUME_AT_BATTERY)
             ]
         }));
         this.registerCapability(
@@ -251,6 +258,11 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             this.cleanHistory = new CecotecCleanHistory({
                 directory: path.join(path.dirname(this.config.location), "historial")
             });
+            this.registerCapability(
+                new capabilities.CecotecTotalStatisticsCapability({
+                    robot: this,
+                })
+            );
 
             this.registerCapability(
                 new capabilities.CecotecWifiConfigurationCapability({
@@ -283,6 +295,56 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
      */
     getModelName() {
         return "Conga";
+    }
+
+    /**
+     * Mota: repite una orden de limpieza guardada (reanudación tras cargar)
+     *
+     * @param {{type: "mode", mode: string} | {type: "zones", options: any} | undefined} request
+     * @returns {Promise<void>}
+     */
+    async repeatCleaningRequest(request) {
+        if (request?.type === "zones") {
+            await this.capabilities[capabilities.CecotecZoneCleaningCapability.TYPE].start(request.options);
+
+            return;
+        }
+
+        if (request?.type === "mode") {
+            this.selectedOperationMode = request.mode;
+        }
+
+        await this.capabilities[capabilities.CecotecBasicControlCapability.TYPE].start();
+    }
+
+    /**
+     * Mota: si ahora mismo es horario de No molestar del robot (evaluado en su hora local, que
+     * es la zona horaria del proceso)
+     *
+     * @returns {boolean}
+     */
+    isInDoNotDisturb() {
+        const quietHours = this.robot?.device.config?.quietHours;
+
+        if (!quietHours?.isEnabled) {
+            return false;
+        }
+
+        const now = new Date();
+        const minutes = now.getHours() * 60 + now.getMinutes();
+        const begin = quietHours.begin.toMinutes();
+        const end = quietHours.end.toMinutes();
+
+        return begin <= end ? minutes >= begin && minutes < end : minutes >= begin || minutes < end;
+    }
+
+    /**
+     * Mota: API propia (historial y diagnóstico) en /api/v2/mota/
+     *
+     * @param {any} app
+     */
+    initModelSpecificWebserverRoutes(app) {
+        app.use("/api/v2/mota/", new CecotecMotaRouter({robot: this}).getRouter());
     }
 
     async shutdown() {
@@ -351,6 +413,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             this.lastCleanStatistics = { time: currentClean.time * 60, area: currentClean.size * 100 };
         }
         this.state.upsertFirstMatchingAttribute(newStatus);
+        this.batteryGuard.onStateUpdate(robot.device.battery?.value, newStatus.value);
 
         // Mota: al llegar a la base, recolocar el robot sobre ella en el mapa
         if (

@@ -40,6 +40,7 @@ class CecotecCleanHistory {
                 fs.writeFileSync(path.join(this.directory, `${report.cleanId}.png`), report.mapdata);
             }
 
+            this.addToTotals(entry);
             Logger.info(`Stored clean report ${report.cleanId} (${entry.durationSeconds ?? "?"} s, map: ${entry.hasMap})`);
             this.prune();
         } catch (e) {
@@ -54,7 +55,7 @@ class CecotecCleanHistory {
         try {
             return fs.readdirSync(this.directory)
                 .filter(f => {
-                    return f.endsWith(".json");
+                    return f.endsWith(".json") && f !== "totales.json";
                 })
                 .map(f => {
                     return JSON.parse(fs.readFileSync(path.join(this.directory, f)).toString());
@@ -65,6 +66,43 @@ class CecotecCleanHistory {
         } catch (e) {
             return [];
         }
+    }
+
+    /**
+     * Totales acumulados de todas las limpiezas (no solo de las que se conservan)
+     *
+     * @returns {{count: number, timeSeconds: number, areaCm2: number}}
+     */
+    getTotals() {
+        try {
+            return JSON.parse(fs.readFileSync(path.join(this.directory, "totales.json")).toString());
+        } catch (e) {
+            return {count: 0, timeSeconds: 0, areaCm2: 0};
+        }
+    }
+
+    /**
+     * @param {number} cleanId
+     * @returns {string|undefined} ruta del PNG del mapa de esa limpieza, si existe
+     */
+    getMapPath(cleanId) {
+        const mapPath = path.join(this.directory, `${Number(cleanId)}.png`);
+
+        return Number.isInteger(Number(cleanId)) && fs.existsSync(mapPath) ? mapPath : undefined;
+    }
+
+    /**
+     * @private
+     * @param {{durationSeconds?: number, area?: number}} entry
+     */
+    addToTotals(entry) {
+        const totals = this.getTotals();
+
+        totals.count += 1;
+        totals.timeSeconds += entry.durationSeconds ?? 0;
+        totals.areaCm2 += entry.area ?? 0;
+
+        fs.writeFileSync(path.join(this.directory, "totales.json"), JSON.stringify(totals));
     }
 
     /**

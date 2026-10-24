@@ -41,6 +41,8 @@ module.exports = class CecotecZoneCleaningCapability extends ZoneCleaningCapabil
                 ]);
         });
 
+        // Mota: para poder reanudar tras cargar
+        this.robot.lastCleaningRequest = {type: "zones", options: options};
         await this.robot.robot.cleanAreas(areas);
     }
 

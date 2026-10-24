@@ -18,6 +18,9 @@ module.exports = class CecotecBasicControlCapability extends BasicControlCapabil
             return;
         }
 
+        // Mota: para poder reanudar tras cargar
+        this.robot.lastCleaningRequest = {type: "mode", mode: this.robot.selectedOperationMode};
+
         switch (this.robot.selectedOperationMode) {
             case PresetSelectionStateAttribute.MODE.MOP:
                 await this.robot.robot.startMopClean();
