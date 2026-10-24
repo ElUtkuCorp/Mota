@@ -1,4 +1,5 @@
 const express = require("express");
+const GithubValetudoUpdateProvider = require("../updater/lib/update_provider/GithubValetudoUpdateProvider");
 const Logger = require("../Logger");
 
 class UpdaterRouter {
@@ -53,7 +54,8 @@ class UpdaterRouter {
             const currentConfig = this.config.get("updater");
 
             res.json({
-                updateProvider: currentConfig.updateProvider.type
+                updateProvider: currentConfig.updateProvider.type,
+                repository: currentConfig.updateProvider.implementationSpecificConfig?.repository ?? GithubValetudoUpdateProvider.DEFAULT_REPOSITORY
             });
         });
 
@@ -63,19 +65,20 @@ class UpdaterRouter {
 
                 let newUpdateProviderConfig;
 
-                switch (req.body.updateProvider) {
-                    case "github":
-                        newUpdateProviderConfig = {
-                            type: "github",
-                            implementationSpecificConfig: {}
-                        };
-                        break;
-                    case "github_nightly":
-                        newUpdateProviderConfig = {
-                            type: "github_nightly",
-                            implementationSpecificConfig: {}
-                        };
+                // Mota: repositorio configurable (modo avanzado). Vacío = el de Mota por defecto
+                let repository = currentConfig.updateProvider.implementationSpecificConfig?.repository;
+                if (typeof req.body.repository === "string") {
+                    repository = req.body.repository.length > 0 ? req.body.repository : undefined;
+                }
+                const implementationSpecificConfig = repository ? {repository: repository} : {};
 
+                switch (req.body.updateProvider) {
+                    case GithubValetudoUpdateProvider.TYPE:
+                    case GithubValetudoUpdateProvider.NIGHTLY_TYPE:
+                        newUpdateProviderConfig = {
+                            type: req.body.updateProvider,
+                            implementationSpecificConfig: implementationSpecificConfig
+                        };
                         break;
                 }
 

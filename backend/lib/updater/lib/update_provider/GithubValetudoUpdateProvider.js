@@ -5,10 +5,35 @@ const {get} = require("../UpdaterUtils");
 
 class GithubValetudoUpdateProvider extends ValetudoUpdateProvider {
     /**
+     * Mota: el repositorio es configurable (por defecto el de Mota) y el canal de pruebas usa las
+     * pre-releases de ese mismo repositorio en lugar de las nightlies de Valetudo, que no traen el
+     * soporte de la Conga.
+     *
+     * @param {object} [options]
+     * @param {string} [options.repository] "propietario/repositorio" en GitHub
+     * @param {boolean} [options.includePrereleases]
+     */
+    constructor(options) {
+        super();
+
+        const repository = options?.repository;
+
+        this.repository = GithubValetudoUpdateProvider.IS_VALID_REPOSITORY(repository) ? repository : GithubValetudoUpdateProvider.DEFAULT_REPOSITORY;
+        this.includePrereleases = options?.includePrereleases === true;
+    }
+
+    /**
+     * @return {string}
+     */
+    get releasesUrl() {
+        return `https://api.github.com/repos/${this.repository}/releases`;
+    }
+
+    /**
      * @return {Promise<Array<import("./ValetudoRelease")>>}
      */
     async fetchReleases() {
-        const rawReleasesResponse = await get(GithubValetudoUpdateProvider.RELEASES_URL);
+        const rawReleasesResponse = await get(this.releasesUrl);
 
         if (!Array.isArray(rawReleasesResponse?.data)) {
             throw new Error("GithubValetudoUpdateProvider: Received invalid releases response");
@@ -76,7 +101,7 @@ class GithubValetudoUpdateProvider extends ValetudoUpdateProvider {
      */
     parseReleaseOverviewApiResponse(data) {
         const releases = data.filter(rR => {
-            return rR.prerelease === false && rR.draft === false;
+            return rR.draft === false && (this.includePrereleases || rR.prerelease === false);
         }).map(rR => {
             return new ValetudoRelease({
                 version: rR.tag_name,
@@ -97,9 +122,18 @@ class GithubValetudoUpdateProvider extends ValetudoUpdateProvider {
 }
 
 
-GithubValetudoUpdateProvider.TYPE = "github";
+/**
+ * @param {any} repository
+ * @return {boolean}
+ */
+GithubValetudoUpdateProvider.IS_VALID_REPOSITORY = function(repository) {
+    return typeof repository === "string" && /^[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}$/.test(repository);
+};
 
-GithubValetudoUpdateProvider.RELEASES_URL = "https://api.github.com/repos/Hypfer/Valetudo/releases";
+GithubValetudoUpdateProvider.TYPE = "github";
+GithubValetudoUpdateProvider.NIGHTLY_TYPE = "github_nightly";
+
+GithubValetudoUpdateProvider.DEFAULT_REPOSITORY = "ElUtkuCorp/Mota";
 GithubValetudoUpdateProvider.MANIFEST_NAME = "valetudo_release_manifest.json";
 
 

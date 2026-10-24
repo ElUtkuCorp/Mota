@@ -1,5 +1,4 @@
 const fs = require("fs");
-const GithubValetudoNightlyUpdateProvider = require("./lib/update_provider/GithubValetudoNightlyUpdateProvider");
 const GithubValetudoUpdateProvider = require("./lib/update_provider/GithubValetudoUpdateProvider");
 const Logger = require("../Logger");
 const NullUpdateProvider = require("./lib/update_provider/NullUpdateProvider");
@@ -45,12 +44,14 @@ class Updater {
         clearTimeout(this.pendingCleanupTimeout);
         this.cleanupHandler();
 
+        const repository = updaterConfig.updateProvider.implementationSpecificConfig?.repository;
+
         switch (updaterConfig.updateProvider.type) {
             case GithubValetudoUpdateProvider.TYPE:
-                this.updateProvider = new GithubValetudoUpdateProvider();
+                this.updateProvider = new GithubValetudoUpdateProvider({repository: repository});
                 break;
-            case GithubValetudoNightlyUpdateProvider.TYPE:
-                this.updateProvider = new GithubValetudoNightlyUpdateProvider();
+            case GithubValetudoUpdateProvider.NIGHTLY_TYPE:
+                this.updateProvider = new GithubValetudoUpdateProvider({repository: repository, includePrereleases: true});
                 break;
             default:
                 Logger.error(`Invalid UpdateProvider ${updaterConfig.updateProvider.type}`);

@@ -49,8 +49,15 @@ const binaries = {
 console.log("Starting UPX compression");
 
 Object.values(binaries).forEach(async (b,i) => {
-    console.log("Compressing " + b.built);
     const name = Object.keys(binaries)[i];
+
+    // Mota: solo se compilan algunas arquitecturas (armv7); se omiten las que no existen
+    if (!fs.existsSync(b.built)) {
+        console.log("Skipping " + name + ": " + b.built + " not found");
+        return;
+    }
+
+    console.log("Compressing " + b.built);
 
     console.time(name);
 

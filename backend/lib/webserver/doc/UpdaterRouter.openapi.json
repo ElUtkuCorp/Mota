@@ -100,6 +100,9 @@
                       "github",
                       "github_nightly"
                     ]
+                  },
+                  "repository": {
+                    "type": "string"
                   }
                 }
               }
@@ -125,20 +128,32 @@
                     "github",
                     "github_nightly"
                   ]
+                },
+                "repository": {
+                  "type": "string",
+                  "description": "Mota: GitHub repository (owner/name) to fetch releases from. Empty = default (ElUtkuCorp/Mota)",
+                  "pattern": "^$|^[A-Za-z0-9-]{1,39}/[A-Za-z0-9._-]{1,100}$"
                 }
               }
             },
             "examples": {
-              "release":{
+              "release": {
                 "description": "Use the Github Release update provider",
                 "value": {
                   "updateProvider": "github"
                 }
               },
-              "nightly":{
+              "nightly": {
                 "description": "Use the Github Nightly update provider",
                 "value": {
                   "updateProvider": "github_nightly"
+                }
+              },
+              "custom": {
+                "description": "Use pre-releases from a custom fork",
+                "value": {
+                  "updateProvider": "github_nightly",
+                  "repository": "someone/Mota"
                 }
               }
             }

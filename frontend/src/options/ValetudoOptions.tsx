@@ -4,6 +4,7 @@ import {
     SystemUpdateAlt as UpdaterIcon,
     Badge as FriendlyNameIcon,
     Equalizer as StatisticsIcon,
+    Source as RepositoryIcon,
 } from "@mui/icons-material";
 import {ListMenu} from "../components/list_menu/ListMenu";
 import PaperContainer from "../components/PaperContainer";
@@ -98,11 +99,11 @@ const FriendlyNameEditModalListMenuItem = (): React.ReactElement => {
 const updateProviders : Array<SelectListMenuItemOption> = [
     {
         value: "github",
-        label: "Release"
+        label: "Estable"
     },
     {
         value: "github_nightly",
-        label: "Nightly"
+        label: "Pruebas (pre-releases)"
     }
 ];
 
@@ -131,9 +132,47 @@ const UpdateProviderSelectListMenuItem = (): React.ReactElement => {
             disabled={disabled}
             loadingOptions={false}
             loadError={configurationError}
-            primaryLabel="Update Channel"
-            secondaryLabel="Select the channel used by the inbuilt updater"
+            primaryLabel="Canal de actualizaciones"
+            secondaryLabel="Estable usa solo las releases publicadas; Pruebas incluye también las pre-releases"
             icon={<UpdaterIcon/>}
+        />
+    );
+};
+
+// Mota: repositorio de GitHub del que se descargan las actualizaciones (modo avanzado), para que
+// quien haga su propio fork pueda cambiarlo sin tocar código
+const UpdateRepositoryEditModalListMenuItem = (): React.ReactElement => {
+    const {
+        data: storedConfiguration,
+        isPending: configurationPending,
+    } = useUpdaterConfigurationQuery();
+    const {mutate: updateConfiguration, isPending: configurationUpdating} = useUpdaterConfigurationMutation();
+
+    const description = "Avanzado: repositorio de GitHub (propietario/nombre) del que se descargan las actualizaciones. Déjalo vacío para usar el de Mota.";
+
+    return (
+        <TextEditModalListMenuItem
+            isLoading={configurationPending || configurationUpdating}
+            value={storedConfiguration?.repository ?? ""}
+
+            dialog={{
+                title: "Repositorio de actualizaciones",
+                description: description,
+
+                validatingTransformer: (newValue: string) => {
+                    return newValue.replace(/[^A-Za-z0-9._/-]/g, "").slice(0, 140);
+                },
+                onSave: (newValue: string) => {
+                    updateConfiguration({
+                        updateProvider: storedConfiguration?.updateProvider ?? "github",
+                        repository: newValue
+                    });
+                }
+            }}
+
+            icon={<RepositoryIcon/>}
+            primaryLabel="Repositorio de actualizaciones"
+            secondaryLabel={storedConfiguration?.repository ?? description}
         />
     );
 };
@@ -149,6 +188,7 @@ const ValetudoOptions = (): React.ReactElement => {
             <SpacerListMenuItem key={"spacer0"}/>,
             <FriendlyNameEditModalListMenuItem key={"friendlyName"}/>,
             <UpdateProviderSelectListMenuItem key={"updateProviderSelect"}/>,
+            <UpdateRepositoryEditModalListMenuItem key={"updateRepository"}/>,
             <LinkListMenuItem
                 key={"analytics"}
                 url="/options/valetudo/analytics"

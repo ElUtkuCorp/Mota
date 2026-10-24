@@ -549,6 +549,7 @@ export interface CombinedVirtualRestrictionsProperties {
 
 export interface UpdaterConfiguration {
     updateProvider: "github" | "github_nightly";
+    repository?: string;
 }
 
 export interface UpdaterStateMetaData {

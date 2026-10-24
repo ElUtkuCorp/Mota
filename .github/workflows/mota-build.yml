@@ -1,6 +1,8 @@
-# Mota: compila los binarios armv7 y, al publicar una release, los sube con sus sumas SHA-256.
+# Mota: compila los binarios armv7 y, al publicar una release, los adjunta en el formato que espera el
+# actualizador integrado (los mismos nombres que Valetudo más valetudo_release_manifest.json con sus SHA-256).
 # - push a main, pull request o ejecución manual: binarios como artefactos de la ejecución.
-# - release publicada: además, los adjunta a la release (mota-armv7, mota-armv7-lowmem, SHA256SUMS).
+# - release publicada: además, se adjuntan a la release. La etiqueta debe coincidir con "version" de package.json,
+#   porque el actualizador compara la versión del manifiesto con la de la release.
 name: Compilación de Mota
 
 on:
@@ -26,6 +28,16 @@ jobs:
           node-version: 22.x
           cache: npm
 
+      - name: Comprobar que la etiqueta coincide con la versión
+        if: github.event_name == 'release'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="${{ github.event.release.tag_name }}"
+          if [ "$VERSION" != "$TAG" ]; then
+            echo "La etiqueta $TAG no coincide con la versión $VERSION de package.json" >&2
+            exit 1
+          fi
+
       # Los runtimes Node de pkg vienen en build_dependencies/pkg (los de upstream).
       - name: Instalar dependencias
         run: npm ci
@@ -42,14 +54,24 @@ jobs:
       - name: Compilar armv7 lowmem
         run: npm run build_armv7_lowmem --workspace=backend
 
-      - name: Preparar binarios y SHA256SUMS
+      # El robot tiene poco espacio en la partición del binario: el actualizador pide la versión .upx
+      - name: Comprimir con UPX
+        run: npm run upx
+
+      - name: Generar el manifiesto de la release
+        run: npm run build_release_manifest
+
+      - name: Preparar binarios, manifiesto y SHA256SUMS
         run: |
           mkdir -p dist
-          cp build/armv7/valetudo dist/mota-armv7
-          cp build/armv7/valetudo-lowmem dist/mota-armv7-lowmem
+          cp build/armv7/valetudo dist/valetudo-armv7
+          cp build/armv7/valetudo-lowmem dist/valetudo-armv7-lowmem
+          cp build/armv7/valetudo.upx dist/valetudo-armv7.upx
+          cp build/armv7/valetudo-lowmem.upx dist/valetudo-armv7-lowmem.upx
+          cp build/valetudo_release_manifest.json dist/
           cd dist
-          sha256sum mota-armv7 mota-armv7-lowmem > SHA256SUMS
-          cat SHA256SUMS
+          sha256sum valetudo-armv7 valetudo-armv7-lowmem valetudo-armv7.upx valetudo-armv7-lowmem.upx > SHA256SUMS
+          cat SHA256SUMS valetudo_release_manifest.json
 
       - name: Subir artefactos
         uses: actions/upload-artifact@v7
@@ -61,4 +83,4 @@ jobs:
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ github.event.release.tag_name }}" dist/mota-armv7 dist/mota-armv7-lowmem dist/SHA256SUMS --clobber
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/* --clobber
