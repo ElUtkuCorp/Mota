@@ -1,4 +1,5 @@
 const BasicControlCapability = require("../../../core/capabilities/BasicControlCapability");
+const {PresetSelectionStateAttribute, StatusStateAttribute} = require("../../../entities/state/attributes");
 
 /**
  * @extends BasicControlCapability<import("../CecotecCongaRobot")>
@@ -9,7 +10,27 @@ module.exports = class CecotecBasicControlCapability extends BasicControlCapabil
             throw new Error("There is no robot connected to server");
         }
 
-        await this.robot.robot.start();
+        // Mota: en pausa se reanuda lo que estuviera haciendo; si no, se arranca el modo elegido
+        const status = this.robot.state.getFirstMatchingAttributeByConstructor(StatusStateAttribute);
+        if (status?.value === StatusStateAttribute.VALUE.PAUSED) {
+            await this.robot.robot.start();
+
+            return;
+        }
+
+        switch (this.robot.selectedOperationMode) {
+            case PresetSelectionStateAttribute.MODE.MOP:
+                await this.robot.robot.startMopClean();
+                break;
+            case PresetSelectionStateAttribute.MODE.EDGE:
+                await this.robot.robot.startEdgeClean();
+                break;
+            case PresetSelectionStateAttribute.MODE.SPIRAL:
+                await this.robot.robot.startSpiralClean();
+                break;
+            default:
+                await this.robot.robot.startAutoClean();
+        }
     }
 
     async stop() {

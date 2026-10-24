@@ -957,7 +957,9 @@
             "high": "Alta",
             "max": "Máxima",
             "custom": "Personalizada"
-        }
+        },
+        "edge": "Bordes",
+        "spiral": "Espiral"
     },
     "systemInformation": {
         "noRuntimeInformation": "No hay información de ejecución",

@@ -1,7 +1,9 @@
 const capabilities = require("./capabilities");
+const CecotecCleanHistory = require("./CecotecCleanHistory");
 const CecotecQuirkFactory = require("./CecotecQuirkFactory");
 const fs = require("fs");
 const Logger = require("../../Logger");
+const path = require("path");
 const PendingMapChangeValetudoEvent = require("../../valetudo_events/events/PendingMapChangeValetudoEvent");
 const QuirksCapability = require("../../core/capabilities/QuirksCapability");
 const SelectionPreset = require("../../entities/core/ValetudoSelectionPreset");
@@ -10,7 +12,6 @@ const {
     BatteryStateAttribute,
     StatusStateAttribute,
     PresetSelectionStateAttribute,
-    AttachmentStateAttribute,
 } = require("../../entities/state/attributes");
 const {
     CloudServer,
@@ -115,6 +116,8 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         super(options);
 
         this.pathPoints = [];
+        /** Mota: modo de la próxima limpieza (ver CecotecOperationModeControlCapability) */
+        this.selectedOperationMode = PresetSelectionStateAttribute.MODE.VACUUM;
         this.server = new CloudServer();
         this.emitStateUpdated = throttle(this.emitStateUpdated.bind(this));
         this.emitStateAttributesUpdated = throttle(
@@ -147,12 +150,20 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             })
         );
         this.registerCapability(
-            new capabilities.CecotecCombinedVirtualRestrictionsCapability({
+            new capabilities.CecotecOperationModeControlCapability({
                 robot: this,
+                presets: [
+                    PresetSelectionStateAttribute.MODE.VACUUM,
+                    PresetSelectionStateAttribute.MODE.MOP,
+                    PresetSelectionStateAttribute.MODE.EDGE,
+                    PresetSelectionStateAttribute.MODE.SPIRAL,
+                ].map((mode) => {
+                    return new SelectionPreset({ name: mode, value: mode });
+                }),
             })
         );
         this.registerCapability(
-            new capabilities.CecotecConsumableMonitoringCapability({
+            new capabilities.CecotecCombinedVirtualRestrictionsCapability({
                 robot: this,
             })
         );
@@ -243,6 +254,11 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             })
         );
         if (this.config.get("embedded") === true) {
+            // Mota: historial de limpiezas junto a la configuración (UDISK en la 3090)
+            this.cleanHistory = new CecotecCleanHistory({
+                directory: path.join(path.dirname(this.config.location), "historial")
+            });
+
             this.registerCapability(
                 new capabilities.CecotecWifiConfigurationCapability({
                     robot: this,
@@ -274,20 +290,6 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
      */
     getModelName() {
         return "Conga";
-    }
-
-    getModelDetails() {
-        return Object.assign(
-            {},
-            super.getModelDetails(),
-            {
-                supportedAttachments: [
-                    AttachmentStateAttribute.TYPE.DUSTBIN,
-                    AttachmentStateAttribute.TYPE.WATERTANK,
-                    AttachmentStateAttribute.TYPE.MOP,
-                ]
-            }
-        );
     }
 
     async shutdown() {
@@ -325,6 +327,10 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         robot.on("updateChargerPosition", () => {
             return this.onUpdateChargerPosition(robot);
         });
+        robot.on("cleanReport", (report) => {
+            this.cleanHistory?.store(report, this.lastCleanStatistics);
+            this.lastCleanStatistics = undefined;
+        });
     }
 
     /**
@@ -345,6 +351,12 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         }
 
         this.state.upsertFirstMatchingAttribute(this.getBatteryState(robot));
+
+        // Mota: últimos valores de la limpieza en curso, para el historial
+        const currentClean = robot.device.currentClean;
+        if (currentClean && currentClean.time > 0) {
+            this.lastCleanStatistics = { time: currentClean.time * 60, area: currentClean.size * 100 };
+        }
         this.state.upsertFirstMatchingAttribute(newStatus);
 
         // Mota: al llegar a la base, recolocar el robot sobre ella en el mapa
@@ -357,32 +369,11 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         this.state.upsertFirstMatchingAttribute(this.getIntensityState(robot));
         this.state.upsertFirstMatchingAttribute(this.getWaterUsageState(robot));
 
-        this.state.upsertFirstMatchingAttribute(
-            new AttachmentStateAttribute({
-                type: AttachmentStateAttribute.TYPE.DUSTBIN,
-                attached: !robot.device.hasMopAttached,
-            })
-        );
-        this.state.upsertFirstMatchingAttribute(
-            new AttachmentStateAttribute({
-                type: AttachmentStateAttribute.TYPE.WATERTANK,
-                attached: robot.device.hasMopAttached,
-            })
-        );
-        this.state.upsertFirstMatchingAttribute(
-            new AttachmentStateAttribute({
-                type: AttachmentStateAttribute.TYPE.MOP,
-                attached: robot.device.hasMopAttached,
-            })
-        );
-        this.state.upsertFirstMatchingAttribute(
-            new PresetSelectionStateAttribute({
-                type: PresetSelectionStateAttribute.TYPE.OPERATION_MODE,
-                value: robot.device.hasMopAttached ?
-                    PresetSelectionStateAttribute.MODE.VACUUM_AND_MOP :
-                    PresetSelectionStateAttribute.MODE.VACUUM,
-            })
-        );
+        this.state.upsertFirstMatchingAttribute(this.getOperationModeState(robot));
+
+        // Mota: la 3090 no tiene sensores de depósito ni de mopa, y agnoc deducía "mopa puesta"
+        // de un campo que este firmware no envía. No se publican accesorios ni consumibles
+        // (el firmware no responde a las órdenes de consumibles).
 
         this.emitStateAttributesUpdated();
 
@@ -844,6 +835,37 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         ];
 
         this.emitMapUpdated();
+    }
+
+    /**
+     * Mota: mientras limpia o está en pausa se muestra el modo real del robot; si no, el elegido
+     *
+     * @param {import("@agnoc/core").Robot} robot
+     */
+    getOperationModeState(robot) {
+        const { state, mode } = robot.device;
+        let value = this.selectedOperationMode;
+
+        if (state && (/** @type {Array<string>} */ ([DeviceState.VALUE.CLEANING, DeviceState.VALUE.PAUSED, DeviceState.VALUE.RETURNING])).includes(state.value)) {
+            switch (mode?.value) {
+                case DeviceMode.VALUE.MOP:
+                    value = PresetSelectionStateAttribute.MODE.MOP;
+                    break;
+                case DeviceMode.VALUE.EDGE:
+                    value = PresetSelectionStateAttribute.MODE.EDGE;
+                    break;
+                case DeviceMode.VALUE.SPIRAL:
+                    value = PresetSelectionStateAttribute.MODE.SPIRAL;
+                    break;
+                default:
+                    value = PresetSelectionStateAttribute.MODE.VACUUM;
+            }
+        }
+
+        return new PresetSelectionStateAttribute({
+            type: PresetSelectionStateAttribute.TYPE.OPERATION_MODE,
+            value: value,
+        });
     }
 
     /**

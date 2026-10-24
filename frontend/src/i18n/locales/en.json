@@ -957,7 +957,9 @@
             "high": "High",
             "max": "Max",
             "custom": "Custom"
-        }
+        },
+        "edge": "Edges",
+        "spiral": "Spiral"
     },
     "systemInformation": {
         "noRuntimeInformation": "No runtime information",

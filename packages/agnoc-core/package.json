@@ -1,0 +1,19 @@
+{
+  "name": "@agnoc/core",
+  "version": "0.17.2-mota.1",
+  "description": "Fork de @agnoc/core 0.17.2 (MIT) para Mota: soporte ampliado de la Cecotec Conga 3090",
+  "license": "MIT",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "dependencies": {
+    "debug": "^4.3.4",
+    "protobufjs": "^7.2.2",
+    "tiny-typed-emitter": "^2.1.0"
+  },
+  "author": "Adrián González Rus <a.gonzalezrus@gmail.com> (https://github.com/adrigzr)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adrigzr/agnoc.git",
+    "directory": "packages/core"
+  }
+}

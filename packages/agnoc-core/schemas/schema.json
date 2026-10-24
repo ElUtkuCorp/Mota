@@ -1,0 +1,1689 @@
+{
+  "nested": {
+    "COMMON_ERROR_REPLY": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "error": {
+          "rule": "required",
+          "type": "string",
+          "id": 2
+        },
+        "opcode": {
+          "type": "uint32",
+          "id": 3
+        }
+      }
+    },
+    "CLIENT_IDLE_TIMEOUT": {
+      "fields": {}
+    },
+    "DEVICE_MAPID_PUSH_HAS_WAITING_BE_SAVED": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "CLIENT_HEARTBEAT_REQ": {
+      "fields": {}
+    },
+    "CLIENT_HEARTBEAT_RSP": {
+      "fields": {}
+    },
+    "CLIENT_ONLINE_REQ": {
+      "fields": {
+        "deviceSerialNumber": {
+          "rule": "required",
+          "type": "string",
+          "id": 1
+        },
+        "unk1": {
+          "rule": "required",
+          "type": "bool",
+          "id": 2
+        },
+        "unk2": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 3
+        }
+      }
+    },
+    "CLIENT_ONLINE_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "reason": {
+          "type": "string",
+          "id": 2
+        }
+      }
+    },
+    "DEVICE_REGISTER_REQ": {
+      "fields": {
+        "softwareVersion": {
+          "rule": "required",
+          "type": "string",
+          "id": 1
+        },
+        "hardwareVersion": {
+          "rule": "required",
+          "type": "string",
+          "id": 2
+        },
+        "deviceSerialNumber": {
+          "rule": "required",
+          "type": "string",
+          "id": 3
+        },
+        "deviceMac": {
+          "rule": "required",
+          "type": "string",
+          "id": 4
+        },
+        "deviceType": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 5
+        },
+        "customerFirmwareId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 6
+        },
+        "ctrlVersion": {
+          "rule": "required",
+          "type": "string",
+          "id": 7
+        }
+      }
+    },
+    "DEVICE_REGISTER_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "device": {
+          "rule": "required",
+          "type": "Device",
+          "id": 3
+        }
+      },
+      "nested": {
+        "Device": {
+          "fields": {
+            "id": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 1
+            }
+          }
+        }
+      }
+    },
+    "DEVICE_VERSION_INFO_UPDATE_REQ": {
+      "fields": {
+        "softwareVersion": {
+          "rule": "required",
+          "type": "string",
+          "id": 1
+        },
+        "hardwareVersion": {
+          "rule": "required",
+          "type": "string",
+          "id": 2
+        }
+      }
+    },
+    "DEVICE_VERSION_INFO_UPDATE_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "PUSH_DEVICE_AGENT_SETTING_REQ": {
+      "fields": {
+        "deviceId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "voice": {
+          "rule": "required",
+          "type": "USER_SET_DEVICE_CTRL_SETTING_REQ",
+          "id": 2
+        },
+        "cleanPreference": {
+          "rule": "required",
+          "type": "USER_SET_DEVICE_CLEANPREFERENCE_REQ",
+          "id": 3
+        },
+        "taskList": {
+          "type": "DEVICE_ORDERLIST_SETTING_REQ",
+          "id": 4
+        },
+        "ota": {
+          "rule": "required",
+          "type": "PUSH_DEVICE_PACKAGE_UPGRADE_INFO_REQ",
+          "id": 5
+        },
+        "quietHours": {
+          "rule": "required",
+          "type": "USER_SET_DEVICE_QUIETHOURS_REQ",
+          "id": 7
+        }
+      }
+    },
+    "PUSH_DEVICE_AGENT_SETTING_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "PUSH_DEVICE_PACKAGE_UPGRADE_INFO_REQ": {
+      "fields": {
+        "newVersion": {
+          "rule": "required",
+          "type": "bool",
+          "id": 1
+        },
+        "packageSize": {
+          "rule": "required",
+          "type": "string",
+          "id": 2
+        },
+        "systemVersion": {
+          "rule": "required",
+          "type": "string",
+          "id": 3
+        },
+        "otaPackageVersion": {
+          "rule": "required",
+          "type": "string",
+          "id": 4
+        },
+        "remoteUrl": {
+          "rule": "required",
+          "type": "string",
+          "id": 5
+        },
+        "forceupgrade": {
+          "rule": "required",
+          "type": "bool",
+          "id": 6
+        }
+      }
+    },
+    "PUSH_DEVICE_PACKAGE_UPGRADE_INFO_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "PUSH_DEVICE_BATTERY_INFO_REQ": {
+      "fields": {
+        "battery": {
+          "rule": "required",
+          "type": "Battery",
+          "id": 1
+        }
+      },
+      "nested": {
+        "Battery": {
+          "fields": {
+            "level": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 1
+            }
+          }
+        }
+      }
+    },
+    "PUSH_DEVICE_BATTERY_INFO_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_SEEK_LOCATION_REQ": {
+      "fields": {}
+    },
+    "DEVICE_SEEK_LOCATION_RSP": {
+      "fields": {}
+    },
+    "DEVICE_STATUS_GETTING_REQ": {
+      "fields": {}
+    },
+    "DEVICE_MAPID_WORK_STATUS_PUSH_REQ": {
+      "fields": {
+        "mapHeadId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "areaCleanFlag": {
+          "rule": "required",
+          "type": "bool",
+          "id": 2
+        },
+        "workMode": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 3
+        },
+        "battery": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 4
+        },
+        "chargeStatus": {
+          "rule": "required",
+          "type": "bool",
+          "id": 5
+        },
+        "type": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 6
+        },
+        "faultCode": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 7
+        },
+        "cleanPreference": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 8
+        },
+        "repeatClean": {
+          "rule": "required",
+          "type": "bool",
+          "id": 9
+        },
+        "cleanTime": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 10
+        },
+        "cleanSize": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 11
+        },
+        "waterLevel": {
+          "type": "uint32",
+          "id": 12
+        },
+        "dustBoxType": {
+          "type": "uint32",
+          "id": 13
+        },
+        "mopType": {
+          "type": "bool",
+          "id": 14
+        }
+      }
+    },
+    "DEVICE_SET_CLEAN_PREFERENCE_REQ": {
+      "fields": {
+        "mode": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_SET_CLEAN_PREFERENCE_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_AUTO_CLEAN_REQ": {
+      "fields": {
+        "ctrlValue": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "cleanType": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 2
+        }
+      }
+    },
+    "DEVICE_AUTO_CLEAN_RSP": {
+      "fields": {}
+    },
+    "DEVICE_CHARGE_REQ": {
+      "fields": {
+        "enable": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_CHARGE_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_MAPID_GET_GLOBAL_INFO_REQ": {
+      "fields": {
+        "mask": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_NAVIGATION_REQ": {
+      "fields": {
+        "mapHeadId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "poseX": {
+          "rule": "required",
+          "type": "float",
+          "id": 2
+        },
+        "poseY": {
+          "rule": "required",
+          "type": "float",
+          "id": 3
+        },
+        "posePhi": {
+          "rule": "required",
+          "type": "float",
+          "id": 4
+        },
+        "ctrlValue": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 5
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_NAVIGATION_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "position": {
+          "rule": "required",
+          "type": "DEVICE_MAPID_SET_NAVIGATION_REQ",
+          "id": 3
+        }
+      }
+    },
+    "DEVICE_WORKSTATUS_REPORT_REQ": {
+      "fields": {
+        "status": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_WORKSTATUS_REPORT_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_GET_ALL_GLOBAL_MAP_INFO_REQ": {
+      "fields": {
+        "unk1": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "unk2": {
+          "rule": "required",
+          "type": "string",
+          "id": 2
+        }
+      }
+    },
+    "DEVICE_GET_ALL_GLOBAL_MAP_INFO_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_GETTIME_REQ": {
+      "fields": {}
+    },
+    "DEVICE_GETTIME_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "body": {
+          "rule": "required",
+          "type": "Body",
+          "id": 3
+        }
+      },
+      "nested": {
+        "Body": {
+          "fields": {
+            "deviceTime": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 1
+            },
+            "deviceTimezone": {
+              "type": "uint32",
+              "id": 2
+            }
+          }
+        }
+      }
+    },
+    "DEVICE_SETTIME_REQ": {
+      "fields": {}
+    },
+    "DEVICE_SETTIME_RSP": {
+      "fields": {
+        "deviceTime": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "deviceTimezone": {
+          "type": "uint32",
+          "id": 2
+        }
+      }
+    },
+    "DEVICE_CONTROL_LOCK_REQ": {
+      "fields": {}
+    },
+    "DEVICE_CONTROL_LOCK_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_AREA_CLEAN_INFO_REQ": {
+      "fields": {
+        "mapHeadId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "planId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 2
+        },
+        "cleanAreaLength": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 3
+        },
+        "cleanAreaList": {
+          "rule": "repeated",
+          "type": "CleanArea",
+          "id": 4
+        }
+      },
+      "nested": {
+        "Coordinate": {
+          "fields": {
+            "x": {
+              "rule": "required",
+              "type": "float",
+              "id": 1
+            },
+            "y": {
+              "rule": "required",
+              "type": "float",
+              "id": 2
+            }
+          }
+        },
+        "CleanArea": {
+          "fields": {
+            "cleanAreaId": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 1
+            },
+            "type": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 2
+            },
+            "coordinateLength": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 3
+            },
+            "coordinateList": {
+              "rule": "repeated",
+              "type": "Coordinate",
+              "id": 4
+            }
+          }
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_AREA_RESTRICTED_INFO_REQ": {
+      "fields": {
+        "mapHeadId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "planId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 2
+        },
+        "cleanAreaLength": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 3
+        },
+        "cleanAreaList": {
+          "rule": "repeated",
+          "type": "CleanArea",
+          "id": 4
+        }
+      },
+      "nested": {
+        "Coordinate": {
+          "fields": {
+            "x": {
+              "rule": "required",
+              "type": "float",
+              "id": 1
+            },
+            "y": {
+              "rule": "required",
+              "type": "float",
+              "id": 2
+            }
+          }
+        },
+        "CleanArea": {
+          "fields": {
+            "cleanAreaId": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 1
+            },
+            "type": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 2
+            },
+            "coordinateLength": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 3
+            },
+            "coordinateList": {
+              "rule": "repeated",
+              "type": "Coordinate",
+              "id": 4
+            }
+          }
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_AREA_RESTRICTED_INFO_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "position": {
+          "rule": "required",
+          "type": "DEVICE_MAPID_SET_AREA_RESTRICTED_INFO_REQ",
+          "id": 3
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_AREA_CLEAN_INFO_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "position": {
+          "rule": "required",
+          "type": "DEVICE_MAPID_SET_AREA_CLEAN_INFO_REQ",
+          "id": 3
+        }
+      }
+    },
+    "DEVICE_AREA_CLEAN_REQ": {
+      "fields": {
+        "ctrlValue": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_AREA_CLEAN_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_MANUAL_CTRL_REQ": {
+      "fields": {
+        "command": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_MANUAL_CTRL_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_SAVEWAITINGMAP_INFO_REQ": {
+      "fields": {
+        "mode": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_SAVEWAITINGMAP_INFO_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_ORDERLIST_GETTING_REQ": {
+      "fields": {}
+    },
+    "DEVICE_ORDERLIST_GETTING_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "orderList": {
+          "rule": "repeated",
+          "type": "DEVICE_ORDERLIST_SETTING_REQ",
+          "id": 3
+        },
+        "mapInfoList": {
+          "rule": "repeated",
+          "type": "MapInfo",
+          "id": 4
+        }
+      },
+      "nested": {
+        "PlanInfo": {
+          "fields": {
+            "planId": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 1
+            },
+            "planName": {
+              "rule": "required",
+              "type": "string",
+              "id": 2
+            }
+          }
+        },
+        "MapInfo": {
+          "fields": {
+            "mapId": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 1
+            },
+            "mapName": {
+              "rule": "required",
+              "type": "string",
+              "id": 2
+            },
+            "planInfo": {
+              "rule": "repeated",
+              "type": "PlanInfo",
+              "id": 3
+            }
+          }
+        }
+      }
+    },
+    "DEVICE_ORDERLIST_SETTING_REQ": {
+      "fields": {
+        "orderId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "enable": {
+          "rule": "required",
+          "type": "bool",
+          "id": 2
+        },
+        "repeat": {
+          "rule": "required",
+          "type": "bool",
+          "id": 3
+        },
+        "weekDay": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 4
+        },
+        "dayTime": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 5
+        },
+        "cleanInfo": {
+          "type": "CleanInfo",
+          "id": 6
+        }
+      },
+      "nested": {
+        "CleanInfo": {
+          "fields": {
+            "mapHeadId": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 1
+            },
+            "planId": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 2
+            },
+            "cleanMode": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 3
+            },
+            "windPower": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 4
+            },
+            "waterLevel": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 5
+            },
+            "twiceClean": {
+              "rule": "required",
+              "type": "bool",
+              "id": 6
+            }
+          }
+        }
+      }
+    },
+    "DEVICE_ORDERLIST_SETTING_RSP": {
+      "fields": {
+        "orderId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 2
+        }
+      }
+    },
+    "DEVICE_ORDERLIST_DELETE_REQ": {
+      "fields": {
+        "orderId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "mode": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 2
+        }
+      }
+    },
+    "DEVICE_ORDERLIST_DELETE_RSP": {
+      "fields": {
+        "orderId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 2
+        }
+      }
+    },
+    "DEVICE_MAPID_GET_CONSUMABLES_PARAM_REQ": {
+      "fields": {}
+    },
+    "DEVICE_MAPID_GET_CONSUMABLES_PARAM_RSP": {
+      "fields": {
+        "mainBrushTime": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "sideBrushTime": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 2
+        },
+        "filterTime": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 3
+        },
+        "dishclothTime": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 4
+        }
+      }
+    },
+    "DEVICE_EVENT_REPORT_CLEANTASK": {
+      "fields": {
+        "cleanId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "startTime": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 2
+        },
+        "endTime": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 3
+        },
+        "unk4": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 4
+        },
+        "unk5": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 5
+        },
+        "unk6": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 6
+        },
+        "unk7": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 7
+        },
+        "unk8": {
+          "rule": "required",
+          "type": "Unk1",
+          "id": 8
+        },
+        "mapHeadId": {
+          "type": "uint32",
+          "id": 9
+        },
+        "mapName": {
+          "type": "string",
+          "id": 10
+        },
+        "planName": {
+          "type": "string",
+          "id": 11
+        }
+      },
+      "nested": {
+        "Unk1": {
+          "fields": {
+            "unk1Unk1": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 1
+            },
+            "unk1Unk2": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 2
+            },
+            "unk1Unk6": {
+              "type": "uint32",
+              "id": 6
+            }
+          }
+        }
+      }
+    },
+    "DEVICE_CLEANMAP_BINDATA_REPORT_REQ": {
+      "fields": {
+        "cleanId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_CLEANMAP_BINDATA_REPORT_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "cleanId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 3
+        }
+      }
+    },
+    "DEVICE_OFFLINE_CMD": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_TIME_SYNC_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "body": {
+          "rule": "required",
+          "type": "Body",
+          "id": 3
+        }
+      },
+      "nested": {
+        "Body": {
+          "fields": {
+            "time": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 1
+            }
+          }
+        }
+      }
+    },
+    "DEVICE_EVENT_REPORT_REQ": {
+      "fields": {
+        "type": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "keyValue": {
+          "rule": "required",
+          "type": "int32",
+          "id": 2
+        },
+        "reportTime": {
+          "type": "int32",
+          "id": 3
+        }
+      }
+    },
+    "DEVICE_EVENT_REPORT_CLEANMAP": {
+      "fields": {
+        "cleanId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "mapdata": {
+          "type": "bytes",
+          "id": 2
+        },
+        "pathdata": {
+          "type": "bytes",
+          "id": 3
+        },
+        "vwalldata": {
+          "type": "bytes",
+          "id": 4
+        }
+      }
+    },
+    "DEVICE_EVENT_REPORT_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "body": {
+          "rule": "required",
+          "type": "Body",
+          "id": 3
+        }
+      },
+      "nested": {
+        "Body": {
+          "fields": {
+            "cleanId": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 1
+            }
+          }
+        }
+      }
+    },
+    "UNK_11A4": {
+      "fields": {
+        "unk1": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "UNK_11A7": {
+      "fields": {
+        "unk1": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "UNK_0044": {
+      "fields": {}
+    },
+    "DEVICE_WITHROOMS_CLEAN_REQ": {
+      "fields": {
+        "cleanType": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "ctrlValue": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 2
+        },
+        "roomNumber": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 3
+        },
+        "roomIdList": {
+          "rule": "required",
+          "type": "bytes",
+          "id": 4
+        }
+      }
+    },
+    "DEVICE_WITHROOMS_CLEAN_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_WLAN_INFO_GETTING_REQ": {
+      "fields": {}
+    },
+    "DEVICE_WLAN_INFO_GETTING_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "body": {
+          "rule": "required",
+          "type": "Body",
+          "id": 3
+        }
+      },
+      "nested": {
+        "Body": {
+          "fields": {
+            "ipv4": {
+              "rule": "required",
+              "type": "string",
+              "id": 1
+            },
+            "ssid": {
+              "rule": "required",
+              "type": "string",
+              "id": 2
+            },
+            "port": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 3
+            },
+            "mask": {
+              "rule": "required",
+              "type": "string",
+              "id": 4
+            },
+            "mac": {
+              "rule": "required",
+              "type": "string",
+              "id": 5
+            }
+          }
+        }
+      }
+    },
+    "DEVICE_MAPID_SELECT_MAP_PLAN_REQ": {
+      "fields": {
+        "mapHeadId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "planId": {
+          "type": "uint32",
+          "id": 2
+        },
+        "mode": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 3
+        }
+      }
+    },
+    "DEVICE_MAPID_SELECT_MAP_PLAN_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "unk1": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 3
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_PLAN_PARAMS_REQ": {
+      "fields": {
+        "mapHeadId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "planId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 2
+        },
+        "mapName": {
+          "rule": "required",
+          "type": "string",
+          "id": 3
+        },
+        "planName": {
+          "rule": "required",
+          "type": "string",
+          "id": 4
+        },
+        "roomList": {
+          "rule": "repeated",
+          "type": "Room",
+          "id": 5
+        },
+        "areaInfo": {
+          "rule": "required",
+          "type": "DEVICE_MAPID_SET_AREA_CLEAN_INFO_REQ",
+          "id": 6
+        }
+      },
+      "nested": {
+        "Room": {
+          "fields": {
+            "roomId": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 1
+            },
+            "roomName": {
+              "rule": "required",
+              "type": "string",
+              "id": 3
+            },
+            "enable": {
+              "rule": "required",
+              "type": "bool",
+              "id": 4
+            }
+          }
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_PLAN_PARAMS_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "unk1": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 3
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_ARRANGEROOM_INFO_REQ": {
+      "fields": {
+        "mapHeadId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        },
+        "type": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 2
+        },
+        "dataLen": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 3
+        },
+        "data": {
+          "rule": "required",
+          "type": "bytes",
+          "id": 4
+        },
+        "roomId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 5
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_ARRANGEROOM_INFO_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_VIRWALL_ALL_LIST_SETTING_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "unk1": {
+          "rule": "required",
+          "type": "string",
+          "id": 2
+        },
+        "unk2": {
+          "rule": "required",
+          "type": "int32",
+          "id": 3
+        }
+      }
+    },
+    "USER_SET_DEVICE_QUIETHOURS_REQ": {
+      "fields": {
+        "isOpen": {
+          "rule": "required",
+          "type": "bool",
+          "id": 1
+        },
+        "beginTime": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 2
+        },
+        "endTime": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 3
+        }
+      }
+    },
+    "USER_SET_DEVICE_QUIETHOURS_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "USER_SET_DEVICE_CLEANPREFERENCE_REQ": {
+      "fields": {
+        "ecoMode": {
+          "type": "bool",
+          "id": 1
+        },
+        "repeatClean": {
+          "type": "bool",
+          "id": 2
+        },
+        "cleanBroken": {
+          "type": "bool",
+          "id": 3
+        },
+        "carpetTurbo": {
+          "type": "bool",
+          "id": 4
+        },
+        "historyMap": {
+          "type": "bool",
+          "id": 5
+        },
+        "waterLevel": {
+          "type": "uint32",
+          "id": 6
+        }
+      }
+    },
+    "USER_SET_DEVICE_CLEANPREFERENCE_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_ZERO_CALIBRATION_REQ": {
+      "fields": {
+        "unk1": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_ZERO_CALIBRATION_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        },
+        "body": {
+          "rule": "required",
+          "type": "Body",
+          "id": 3
+        }
+      },
+      "nested": {
+        "Body": {
+          "fields": {
+            "unk1": {
+              "rule": "required",
+              "type": "uint32",
+              "id": 1
+            }
+          }
+        }
+      }
+    },
+    "DEVICE_UPGRADE_GET_AUTO_INSTALL_REQ": {
+      "fields": {}
+    },
+    "DEVICE_UPGRADE_GET_AUTO_INSTALL_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_UPGRADE_SET_AUTO_INSTALL_REQ": {
+      "fields": {
+        "unk1": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_UPGRADE_SET_AUTO_INSTALL_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "USER_SET_DEVICE_CTRL_SETTING_REQ": {
+      "fields": {
+        "voiceMode": {
+          "type": "bool",
+          "id": 1
+        },
+        "volume": {
+          "type": "uint32",
+          "id": 2
+        }
+      }
+    },
+    "USER_SET_DEVICE_CTRL_SETTING_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_CONSUMABLES_PARAM_REQ": {
+      "fields": {
+        "itemId": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_CONSUMABLES_PARAM_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "USER_GET_DEVICE_QUIETHOURS_REQ": {
+      "fields": {}
+    },
+    "USER_GET_DEVICE_QUIETHOURS_RSP": {
+      "fields": {
+        "isOpen": {
+          "rule": "required",
+          "type": "bool",
+          "id": 1
+        },
+        "beginTime": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 2
+        },
+        "endTime": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 3
+        }
+      }
+    },
+    "DEVICE_MAPID_SET_HISTORY_MAP_ENABLE_REQ": {
+      "fields": {}
+    },
+    "DEVICE_MAPID_SET_HISTORY_MAP_ENABLE_RSP": {
+      "fields": {}
+    },
+    "DEVICE_MAPID_INTO_MODEIDLE_INFO_REQ": {
+      "fields": {
+        "mode": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_MAPID_INTO_MODEIDLE_INFO_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_MOP_FLOOR_CLEAN_REQ": {
+      "fields": {
+        "ctrlValue": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_MOP_FLOOR_CLEAN_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_EDGE_CLEAN_REQ": {
+      "fields": {
+        "ctrlValue": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_EDGE_CLEAN_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_SPIRAL_CLEAN_REQ": {
+      "fields": {
+        "ctrlValue": {
+          "rule": "required",
+          "type": "uint32",
+          "id": 1
+        }
+      }
+    },
+    "DEVICE_SPIRAL_CLEAN_RSP": {
+      "fields": {
+        "result": {
+          "rule": "required",
+          "type": "int32",
+          "id": 1
+        }
+      }
+    }
+  }
+}

@@ -21,7 +21,7 @@ import {
 } from "./components/CustomIcons";
 import i18n from "./i18n";
 
-const order: Array<PresetValue> = ["off", "min", "low", "medium", "high", "max", "turbo", "vacuum", "vacuum_and_mop", "vacuum_then_mop", "mop"];
+const order: Array<PresetValue> = ["off", "min", "low", "medium", "high", "max", "turbo", "vacuum", "vacuum_and_mop", "vacuum_then_mop", "mop", "edge", "spiral"];
 export const sortPresets = (presets: PresetSelectionState["value"][]) => {
     return [...presets].sort((a, b) => {
         return order.indexOf(a) - order.indexOf(b);
@@ -29,7 +29,7 @@ export const sortPresets = (presets: PresetSelectionState["value"][]) => {
 };
 const presetValues: Array<PresetValue> = [
     "off", "min", "low", "medium", "high", "max", "turbo", "custom",
-    "vacuum_and_mop", "vacuum_then_mop", "vacuum", "mop"
+    "vacuum_and_mop", "vacuum_then_mop", "vacuum", "mop", "edge", "spiral"
 ];
 
 // Translated lazily via getters so that the current UI language is always used
