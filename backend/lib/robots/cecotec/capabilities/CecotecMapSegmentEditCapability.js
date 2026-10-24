@@ -1,7 +1,8 @@
 const MapSegmentEditCapability = require("../../../core/capabilities/MapSegmentEditCapability");
-const {Pixel} = require("@agnoc/core");
 
 /**
+ * Mota: unir y dividir habitaciones virtuales (el firmware de la 3090 no tiene habitaciones)
+ *
  * @extends MapSegmentEditCapability<import("../CecotecCongaRobot")>
  */
 class CecotecMapSegmentEditCapability extends MapSegmentEditCapability {
@@ -11,25 +12,8 @@ class CecotecMapSegmentEditCapability extends MapSegmentEditCapability {
      * @returns {Promise<void>}
      */
     async joinSegments(segmentA, segmentB) {
-        if (!this.robot.robot) {
-            throw new Error("There is no robot connected to server");
-        }
-
-        const map = this.robot.robot.device.map;
-
-        if (!map) {
-            throw new Error("There is no map in connected robot");
-        }
-
-        const segmentIds = [segmentA, segmentB].map(segment => {
-            return String(segment.id);
-        });
-        const rooms = map.rooms.filter(room => {
-            return segmentIds.includes(room.id.toString());
-        });
-
-        await this.robot.robot.joinRooms(rooms);
-        await this.robot.robot.updateMap();
+        this.robot.virtualRooms.join(Number(segmentA.id), Number(segmentB.id));
+        this.robot.refreshMap();
     }
 
     /**
@@ -43,31 +27,8 @@ class CecotecMapSegmentEditCapability extends MapSegmentEditCapability {
      * @returns {Promise<void>}
      */
     async splitSegment(segment, pA, pB) {
-        if (!this.robot.robot) {
-            throw new Error("There is no robot connected to server");
-        }
-
-        const map = this.robot.robot.device.map;
-
-        if (!map) {
-            throw new Error("There is no map in connected robot");
-        }
-
-        const offset = map.size.y;
-        const room = map.rooms.find(room => {
-            return room.id.toString() === String(segment.id);
-        });
-        const pointA = map.toCoordinate(new Pixel({
-            x: pA.x,
-            y: offset - pA.y
-        }));
-        const pointB = map.toCoordinate(new Pixel({
-            x: pB.x,
-            y: offset - pB.y
-        }));
-
-        await this.robot.robot.splitRoom(room, pointA, pointB);
-        await this.robot.robot.updateMap();
+        this.robot.virtualRooms.split(Number(segment.id), pA, pB);
+        this.robot.refreshMap();
     }
 }
 

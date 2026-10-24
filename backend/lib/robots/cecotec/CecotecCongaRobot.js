@@ -4,6 +4,7 @@ const CecotecCleanHistory = require("./CecotecCleanHistory");
 const CecotecMapGuard = require("./CecotecMapGuard");
 const CecotecMotaRouter = require("./CecotecMotaRouter");
 const CecotecQuirkFactory = require("./CecotecQuirkFactory");
+const CecotecVirtualRooms = require("./CecotecVirtualRooms");
 const fs = require("fs");
 const Logger = require("../../Logger");
 const path = require("path");
@@ -123,6 +124,9 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         /** Mota: última orden de limpieza ({type: "mode", mode} o {type: "zones", options}), para reanudar */
         this.lastCleaningRequest = undefined;
         this.batteryGuard = new CecotecBatteryGuard({robot: this});
+        this.virtualRooms = new CecotecVirtualRooms({
+            path: this.config.get("embedded") === true ? path.join(path.dirname(this.config.location), "habitaciones.json") : undefined
+        });
         this.server = new CloudServer();
         this.emitStateUpdated = throttle(this.emitStateUpdated.bind(this));
         this.emitStateAttributesUpdated = throttle(
@@ -304,12 +308,53 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
     }
 
     /**
+     * Mota: metros por celda del mapa del firmware
+     *
+     * @param {import("@agnoc/core").DeviceMap} map
+     * @returns {number}
+     */
+    getMapResolution(map) {
+        const resolution = (map.max.x - map.min.x) / map.size.x;
+
+        return Number.isFinite(resolution) && resolution > 0 ? resolution : 0.05;
+    }
+
+    /**
+     * Mota: vuelve a dividir el mapa actual en habitaciones virtuales (descarta las anteriores)
+     */
+    resegmentRooms() {
+        const map = this.robot?.device.map;
+
+        if (!map) {
+            throw new Error("There is no map in connected robot");
+        }
+
+        this.virtualRooms.segment(this.getMapPixels(map).floor, map.size.x, map.size.y, this.getMapResolution(map));
+        this.refreshMap();
+    }
+
+    /**
+     * Mota: vuelve a generar el mapa de Mota (p. ej. tras editar habitaciones)
+     */
+    refreshMap() {
+        if (this.robot) {
+            this.onUpdateMap(this.robot);
+        }
+    }
+
+    /**
      * Mota: repite una orden de limpieza guardada (reanudación tras cargar)
      *
-     * @param {{type: "mode", mode: string} | {type: "zones", options: any} | undefined} request
+     * @param {{type: "mode", mode: string} | {type: "zones", options: any} | {type: "segments", segments: any} | undefined} request
      * @returns {Promise<void>}
      */
     async repeatCleaningRequest(request) {
+        if (request?.type === "segments") {
+            await this.capabilities[capabilities.CecotecMapSegmentationCapability.TYPE].executeSegmentAction(request.segments);
+
+            return;
+        }
+
         if (request?.type === "zones") {
             await this.capabilities[capabilities.CecotecZoneCleaningCapability.TYPE].start(request.options);
 
@@ -750,6 +795,25 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
      * @returns {Array<import("../../entities/map/MapLayer")>}
      */
     getSegmentEntities(map, fullMap) {
+        // Mota: habitaciones virtuales (la 3090 no informa de habitaciones)
+        if (this.virtualRooms?.hasRooms()) {
+            const width = this.virtualRooms.getWidth();
+
+            return this.virtualRooms.getRooms().map(room => {
+                const pixels = [];
+
+                room.pixels.forEach(i => {
+                    pixels.push(i % width, Math.floor(i / width));
+                });
+
+                return this.buildMapLayer(MapLayer.TYPE.SEGMENT, pixels, {
+                    segmentId: String(room.id),
+                    active: false,
+                    name: room.name,
+                });
+            });
+        }
+
         const offset = map.size.y; // 800 in Conga 3490
         const segments = (map.rooms ?? []).map((room) => {
             return {
@@ -856,6 +920,22 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         }
 
         const { floor, walls } = this.getMapPixels(map);
+
+        // Mota: primera división automática en habitaciones virtuales, con el robot en la base
+        // (mapa completo) y suficiente suelo (unos 4 m²)
+        const status = this.state.getFirstMatchingAttributeByConstructor(StatusStateAttribute);
+        const resolution = this.getMapResolution(map);
+        if (
+            this.virtualRooms && !this.virtualRooms.hasRooms() &&
+            status?.value === StatusStateAttribute.VALUE.DOCKED &&
+            floor.length / 2 > 4 / (resolution * resolution)
+        ) {
+            try {
+                this.virtualRooms.segment(floor, map.size.x, map.size.y, resolution);
+            } catch (e) {
+                Logger.warn("Virtual rooms: automatic segmentation failed", e);
+            }
+        }
 
         this.updatePathPoints(map);
 

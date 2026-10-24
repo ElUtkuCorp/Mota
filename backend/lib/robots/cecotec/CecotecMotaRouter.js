@@ -43,6 +43,15 @@ class CecotecMotaRouter {
             }
         });
 
+        this.router.post("/rooms/resegment", (req, res) => {
+            try {
+                this.robot.resegmentRooms();
+                res.sendStatus(200);
+            } catch (e) {
+                res.status(400).json(e.message);
+            }
+        });
+
         this.router.get("/diagnostics", (req, res) => {
             res.json(CecotecMotaRouter.COLLECT_DIAGNOSTICS(this.robot));
         });
