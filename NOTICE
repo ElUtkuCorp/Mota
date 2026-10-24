@@ -15,6 +15,10 @@ original. Mota parte del tag 2026.10.0 de Valetudo (commit 78267517). El
 historial de git de este repositorio documenta cada cambio. Resumen:
 - Nombre, documentación y flujos de GitHub Actions propios de Mota.
 - Se han retirado los flujos y plantillas de GitHub propios del proyecto original.
+- Controlador CecotecCongaRobot tomado de Congatudo (commit b074089) y adaptado
+  a las APIs de Valetudo 2026.10: consumibles con ValetudoConsumable, modo de
+  operación como PresetSelectionStateAttribute, accesorios declarados en
+  getModelDetails y relleno de habitaciones reescrito sobre píxeles sin comprimir.
 
 Mota no está afiliado a Valetudo, Congatudo, Cecotec ni 3irobotix. Esos
 nombres se citan solo para indicar el origen del código y la compatibilidad.
