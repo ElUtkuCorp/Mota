@@ -6,7 +6,7 @@ import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import style from "./Help.module.css";
-import {HelpText} from "./res/HelpText";
+import {useTranslation} from "react-i18next";
 import DetailPageHeaderRow from "../components/DetailPageHeaderRow";
 
 // Taken from stackoverflow: https://stackoverflow.com/a/69120400
@@ -19,12 +19,14 @@ function LinkRenderer(props: any) {
 }
 
 const Help = (): React.ReactElement => {
+    const {t} = useTranslation();
+
     return (
         <PaperContainer>
             <Grid2 container direction="row">
                 <Box style={{width: "100%"}}>
                     <DetailPageHeaderRow
-                        title="General Help"
+                        title={t("nav.generalHelp")}
                         icon={<HelpIcon/>}
                     />
 
@@ -34,7 +36,7 @@ const Help = (): React.ReactElement => {
                             remarkPlugins={[gfm]}
                             rehypePlugins={[rehypeRaw]}
                         >
-                            {HelpText}
+                            {t("help.general")}
                         </ReactMarkdown>
                     </div>
                 </Box>

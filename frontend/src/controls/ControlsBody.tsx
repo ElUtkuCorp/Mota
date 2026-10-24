@@ -12,9 +12,11 @@ import CurrentStatistics from "./CurrentStatistics";
 import Attachments from "./Attachments";
 import {FanSpeedMediumIcon, WaterGradeLowIcon} from "../components/CustomIcons";
 import React from "react";
+import {useTranslation} from "react-i18next";
 
 
 const ControlsBody = (): React.ReactElement => {
+    const {t} = useTranslation();
     const [
         basicControls,
         fanSpeed,
@@ -49,7 +51,7 @@ const ControlsBody = (): React.ReactElement => {
             {operationMode && (
                 <PresetSelectionControl
                     capability={Capability.OperationModeControl}
-                    label="Mode"
+                    label={t("controls.mode")}
                     icon={
                         <OperationModeIcon
                             fontSize="small"
@@ -61,7 +63,7 @@ const ControlsBody = (): React.ReactElement => {
             {fanSpeed && (
                 <PresetSelectionControl
                     capability={Capability.FanSpeedControl}
-                    label="Fan"
+                    label={t("controls.fanSpeed")}
                     icon={
                         <FanSpeedMediumIcon
                             fontSize="small"
@@ -72,7 +74,7 @@ const ControlsBody = (): React.ReactElement => {
             {waterControl && (
                 <PresetSelectionControl
                     capability={Capability.WaterUsageControl}
-                    label="Water"
+                    label={t("controls.waterUsage")}
                     icon={<WaterGradeLowIcon fontSize="small" />}
                 />
             )}

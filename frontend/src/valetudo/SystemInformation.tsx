@@ -37,8 +37,15 @@ import ReloadableCard from "../components/ReloadableCard";
 import PaperContainer from "../components/PaperContainer";
 import TextInformationGrid from "../components/TextInformationGrid";
 import {useValetudoColorsInverse} from "../hooks/useValetudoColors";
+import {useTranslation} from "react-i18next";
+import {formatNumber} from "../i18n";
+
+const formatMiB = (bytes: number): string => {
+    return formatNumber(bytes / 1024 / 1024, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " MiB";
+};
 
 const SystemRuntimeInfo = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         data: systemRuntimeInfo,
         isPending: systemRuntimeInfoPending,
@@ -57,16 +64,16 @@ const SystemRuntimeInfo = (): React.ReactElement => {
         }
 
         if (!systemRuntimeInfo) {
-            return <Typography color="error">No runtime information</Typography>;
+            return <Typography color="error">{t("systemInformation.noRuntimeInformation")}</Typography>;
         }
 
         const topItems: Array<[header: string, body: string]> = [
-            ["Valetudo uptime", convertSecondsToHumans(systemRuntimeInfo.uptime)],
+            [t("systemInformation.uptimeMota"), convertSecondsToHumans(systemRuntimeInfo.uptime)],
             ["UID", String(systemRuntimeInfo.uid)],
             ["GID", String(systemRuntimeInfo.gid)],
             ["PID", String(systemRuntimeInfo.pid)],
-            ["Reincarnation", systemRuntimeInfo.phoenix.canReincarnate ? "Possible" : "Impossible"],
-            ["Generation", String(systemRuntimeInfo.phoenix.generation)],
+            [t("systemInformation.reincarnation"), systemRuntimeInfo.phoenix.canReincarnate ? t("systemInformation.possible") : t("systemInformation.impossible")],
+            [t("systemInformation.generation"), String(systemRuntimeInfo.phoenix.generation)],
             ["argv", systemRuntimeInfo.argv.join(" ")]
         ];
 
@@ -113,10 +120,10 @@ const SystemRuntimeInfo = (): React.ReactElement => {
                 <ButtonGroup variant="outlined">
                     <Button onClick={() => {
                         setNodeDialogOpen(true);
-                    }}>Node</Button>
+                    }}>{t("systemInformation.node")}</Button>
                     <Button onClick={() => {
                         setEnvDialogOpen(true);
-                    }}>Environment</Button>
+                    }}>{t("systemInformation.environment")}</Button>
                 </ButtonGroup>
 
                 <Dialog
@@ -127,7 +134,7 @@ const SystemRuntimeInfo = (): React.ReactElement => {
                     scroll={"body"}
                     fullScreen={mobileView}
                 >
-                    <DialogTitle>Node information</DialogTitle>
+                    <DialogTitle>{t("systemInformation.nodeInformation")}</DialogTitle>
                     <DialogContent dividers>
                         <Stack spacing={2}>
                             <Grid2 container spacing={2}>
@@ -150,8 +157,8 @@ const SystemRuntimeInfo = (): React.ReactElement => {
                                 <Table size="small">
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell>Dependency</TableCell>
-                                            <TableCell align="right">Version</TableCell>
+                                            <TableCell>{t("systemInformation.dependency")}</TableCell>
+                                            <TableCell align="right">{t("systemInformation.version")}</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -164,7 +171,7 @@ const SystemRuntimeInfo = (): React.ReactElement => {
                     <DialogActions>
                         <Button onClick={() => {
                             setNodeDialogOpen(false);
-                        }}>Close</Button>
+                        }}>{t("common.close")}</Button>
                     </DialogActions>
                 </Dialog>
 
@@ -177,14 +184,14 @@ const SystemRuntimeInfo = (): React.ReactElement => {
                     maxWidth={"xl"}
                     scroll={"body"}
                 >
-                    <DialogTitle>Environment</DialogTitle>
+                    <DialogTitle>{t("systemInformation.environment")}</DialogTitle>
                     <DialogContent>
                         <TableContainer component={Paper}>
                             <Table size="small" stickyHeader>
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell>Key</TableCell>
-                                        <TableCell>Value</TableCell>
+                                        <TableCell>{t("systemInformation.key")}</TableCell>
+                                        <TableCell>{t("systemInformation.value")}</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -196,16 +203,16 @@ const SystemRuntimeInfo = (): React.ReactElement => {
                     <DialogActions>
                         <Button onClick={() => {
                             setEnvDialogOpen(false);
-                        }}>Close</Button>
+                        }}>{t("common.close")}</Button>
                     </DialogActions>
                 </Dialog>
             </Stack>
         );
-    }, [systemRuntimeInfoPending, systemRuntimeInfo, nodeDialogOpen, envDialogOpen, mobileView]);
+    }, [systemRuntimeInfoPending, systemRuntimeInfo, nodeDialogOpen, envDialogOpen, mobileView, t]);
 
     return (
         <ReloadableCard
-            title="Runtime Information"
+            title={t("systemInformation.runtimeInformation")}
             loading={systemRuntimeInfoFetching}
             onReload={() => {
                 return fetchSystemRuntimeInfo();
@@ -218,6 +225,7 @@ const SystemRuntimeInfo = (): React.ReactElement => {
 };
 
 const SystemInformation = (): React.ReactElement => {
+    const {t} = useTranslation();
     const palette = useValetudoColorsInverse();
     const {
         data: robotInformation,
@@ -252,24 +260,24 @@ const SystemInformation = (): React.ReactElement => {
         }
 
         if (!version && !valetudoInformation) {
-            return <Typography color="error">No valetudo information</Typography>;
+            return <Typography color="error">{t("systemInformation.noMotaInformation")}</Typography>;
         }
 
         const items = [
             {
-                header: "Release",
+                header: t("systemInformation.release"),
                 body: version?.release
             },
             {
-                header: "Commit",
+                header: t("systemInformation.commit"),
                 body: version?.commit
             },
             {
-                header: "Embedded",
-                body: valetudoInformation?.embedded ? "true" : "false"
+                header: t("systemInformation.embedded"),
+                body: valetudoInformation?.embedded ? t("systemInformation.yes") : t("systemInformation.no")
             },
             {
-                header: "System ID",
+                header: t("systemInformation.systemId"),
                 body: valetudoInformation?.systemId
             }
         ].filter(item => {
@@ -279,7 +287,7 @@ const SystemInformation = (): React.ReactElement => {
         return (
             <TextInformationGrid items={items}/>
         );
-    }, [valetudoInformationViewLoading, version, valetudoInformation]);
+    }, [valetudoInformationViewLoading, version, valetudoInformation, t]);
 
 
     const robotInformationViewLoading = robotInformationPending || robotPropertiesPending;
@@ -292,24 +300,24 @@ const SystemInformation = (): React.ReactElement => {
         }
 
         if (!robotInformation && !robotProperties) {
-            return <Typography color="error">No robot information</Typography>;
+            return <Typography color="error">{t("systemInformation.noRobotInformation")}</Typography>;
         }
 
         const items = [
             {
-                header: "Manufacturer",
+                header: t("systemInformation.manufacturer"),
                 body: robotInformation?.manufacturer
             },
             {
-                header: "Model",
+                header: t("systemInformation.model"),
                 body: robotInformation?.modelName
             },
             {
-                header: "Valetudo Implementation",
+                header: t("systemInformation.implementation"),
                 body: robotInformation?.implementation
             },
             {
-                header: "Firmware Version",
+                header: t("systemInformation.firmwareVersion"),
                 body: robotProperties?.firmwareVersion
             }
         ].filter(item => {
@@ -320,7 +328,7 @@ const SystemInformation = (): React.ReactElement => {
             <TextInformationGrid items={items}/>
         );
 
-    }, [robotInformation, robotInformationViewLoading, robotProperties]);
+    }, [robotInformation, robotInformationViewLoading, robotProperties, t]);
 
     const systemHostInformation = React.useMemo(() => {
         if (systemHostInfoPending) {
@@ -330,7 +338,7 @@ const SystemInformation = (): React.ReactElement => {
         }
         if (!systemHostInfo) {
             return (
-                <Typography color="textSecondary">No system host information</Typography>
+                <Typography color="textSecondary">{t("systemInformation.noHostInformation")}</Typography>
             );
         }
 
@@ -347,19 +355,19 @@ const SystemInformation = (): React.ReactElement => {
             <Grid2 container spacing={2}>
                 <Grid2>
                     <Typography variant="caption" color="textSecondary">
-                        Hostname
+                        {t("systemInformation.hostname")}
                     </Typography>
                     <Typography variant="body2">{systemHostInfo.hostname}</Typography>
                 </Grid2>
                 <Grid2>
                     <Typography variant="caption" color="textSecondary">
-                        Arch
+                        {t("systemInformation.arch")}
                     </Typography>
                     <Typography variant="body2">{systemHostInfo.arch}</Typography>
                 </Grid2>
                 <Grid2>
                     <Typography variant="caption" color="textSecondary">
-                        Uptime
+                        {t("systemInformation.uptime")}
                     </Typography>
                     <Typography variant="body2">
                         {convertSecondsToHumans(systemHostInfo.uptime)}
@@ -367,41 +375,41 @@ const SystemInformation = (): React.ReactElement => {
                 </Grid2>
                 <Grid2 size={{xs: 12}}>
                     <Typography variant="caption" color="textSecondary">
-                        System Memory (RAM)
+                        {t("systemInformation.memory")}
                     </Typography>
 
                     <RatioBar
                         total={systemHostInfo.mem.total}
-                        totalLabel={`${((systemHostInfo.mem.free) / 1024 / 1024).toFixed(2)} MiB`}
+                        totalLabel={formatMiB(systemHostInfo.mem.free)}
                         partitions={
                             [
                                 {
-                                    label: "System",
+                                    label: t("systemInformation.memorySystem"),
                                     value: systemHostInfo.mem.total - systemHostInfo.mem.free - systemHostInfo.mem.valetudo_current,
-                                    valueLabel: `${((systemHostInfo.mem.total - systemHostInfo.mem.free - systemHostInfo.mem.valetudo_current) / 1024 / 1024).toFixed(2)} MiB`,
+                                    valueLabel: formatMiB(systemHostInfo.mem.total - systemHostInfo.mem.free - systemHostInfo.mem.valetudo_current),
                                     color: palette.green
                                 },
                                 {
-                                    label: "Valetudo",
+                                    label: t("systemInformation.memoryMota"),
                                     value: systemHostInfo.mem.valetudo_current,
-                                    valueLabel: `${((systemHostInfo.mem.valetudo_current) / 1024 / 1024).toFixed(2)} MiB`,
+                                    valueLabel: formatMiB(systemHostInfo.mem.valetudo_current),
                                     color: palette.red
                                 },
                                 {
-                                    label: "Valetudo (Max)",
+                                    label: t("systemInformation.memoryMotaMax"),
                                     value: systemHostInfo.mem.valetudo_max - systemHostInfo.mem.valetudo_current,
-                                    valueLabel: `${((systemHostInfo.mem.valetudo_max) / 1024 / 1024).toFixed(2)} MiB`,
+                                    valueLabel: formatMiB(systemHostInfo.mem.valetudo_max),
                                     color: palette.teal
                                 }
                             ]
                         }
-                        noneLegendLabel={"Free"}
+                        noneLegendLabel={t("systemInformation.memoryFree")}
                     />
                 </Grid2>
 
                 <Grid2 size={{xs: 12}}>
                     <Typography variant="caption" color="textSecondary">
-                        CPU Usage
+                        {t("systemInformation.cpuUsage")}
                     </Typography>
                     {
                         systemHostInfo.cpus.map((cpu, i) => {
@@ -423,7 +431,7 @@ const SystemInformation = (): React.ReactElement => {
                                         })
                                     }
                                     hideLegend={i !== systemHostInfo.cpus.length -1}
-                                    noneLegendLabel={"idle"}
+                                    noneLegendLabel={t("systemInformation.cpuIdle")}
                                 />
                             );
                         })
@@ -432,7 +440,7 @@ const SystemInformation = (): React.ReactElement => {
             </Grid2>
 
         );
-    }, [systemHostInfo, systemHostInfoPending, palette]);
+    }, [systemHostInfo, systemHostInfoPending, palette, t]);
 
     return (
         <PaperContainer>
@@ -448,7 +456,7 @@ const SystemInformation = (): React.ReactElement => {
                     >
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
-                                Robot
+                                {t("systemInformation.robot")}
                             </Typography>
                             <Divider/>
                             {robotInformationView}
@@ -463,7 +471,7 @@ const SystemInformation = (): React.ReactElement => {
                     >
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
-                                Valetudo
+                                {t("systemInformation.mota")}
                             </Typography>
                             <Divider/>
                             {valetudoInformationView}
@@ -473,7 +481,7 @@ const SystemInformation = (): React.ReactElement => {
                 <Grid2
                     style={{flexGrow: 1}}
                 >
-                    <ReloadableCard title="System Host Information" loading={systemHostInfoFetching}
+                    <ReloadableCard title={t("systemInformation.hostInformation")} loading={systemHostInfoFetching}
                         boxShadow={3}
                         onReload={() => {
                             return fetchSystemHostInfo();

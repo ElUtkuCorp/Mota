@@ -11,6 +11,7 @@ import {TapTouchHandlerEvent} from "./utils/touch_handling/events/TapTouchHandle
 import React from "react";
 import {LiveMapModeSwitcher} from "./LiveMapModeSwitcher";
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle} from "@mui/material";
+import i18n from "../i18n";
 
 
 export type LiveMapMode = "segments" | "zones" | "goto" | "none";
@@ -313,7 +314,7 @@ class LiveMap extends BaseMap<LiveMapProps, LiveMapState> {
                         <Button onClick={() => {
                             this.setState({dialogOpen: false});
                         }} autoFocus>
-                            Close
+                            {i18n.t("common.close")}
                         </Button>
                     </DialogActions>
                 </Dialog>

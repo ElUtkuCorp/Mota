@@ -6,8 +6,10 @@ import {Grid2, Typography, ToggleButton, ToggleButtonGroup} from "@mui/material"
 import React from "react";
 import ControlsCard from "./ControlsCard";
 import {Extension} from "@mui/icons-material";
+import {useTranslation} from "react-i18next";
 
 const Attachments = (): React.ReactElement | null => {
+    const {t} = useTranslation();
     const {
         data: attachments,
         isPending: isAttachmentPending,
@@ -17,7 +19,7 @@ const Attachments = (): React.ReactElement | null => {
     const attachmentDetails = React.useMemo(() => {
         if (isAttachmentError) {
             return (
-                <Typography color="error">Error loading attachment state</Typography>
+                <Typography color="error">{t("controls.attachments.loadError")}</Typography>
             );
         }
 
@@ -27,7 +29,7 @@ const Attachments = (): React.ReactElement | null => {
 
         if (attachments.length === 0) {
             return (
-                <Typography color="textSecondary">No attachments found</Typography>
+                <Typography color="textSecondary">{t("controls.attachments.none")}</Typography>
             );
         }
 
@@ -38,7 +40,7 @@ const Attachments = (): React.ReactElement | null => {
                         {attachments.map(({ type, attached }) => {
                             return (
                                 <ToggleButton disabled selected={attached} key={type} value={type} fullWidth>
-                                    {type}
+                                    {t(`robot.attachments.${type}`, {defaultValue: type})}
                                 </ToggleButton>
                             );
                         })}
@@ -46,12 +48,12 @@ const Attachments = (): React.ReactElement | null => {
                 </Grid2>
             </Grid2>
         );
-    }, [attachments, isAttachmentError]);
+    }, [attachments, isAttachmentError, t]);
 
     return (
         <ControlsCard
             icon={Extension}
-            title="Attachments"
+            title={t("controls.attachments.title")}
             isLoading={isAttachmentPending}
         >
             <Grid2 container direction="row" sx={{maxHeight: "4em"}}>

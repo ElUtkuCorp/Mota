@@ -39,6 +39,7 @@ import {
     DockComponentDustbag,
 } from "../components/CustomIcons";
 import {useValetudoColorsInverse} from "../hooks/useValetudoColors";
+import {useTranslation} from "react-i18next";
 
 const DockComponentTile = ({ label, icon: IconComponent, statusText, statusColor }: { label: string, icon: React.ElementType, statusText: string, statusColor: string }) => {
     return (
@@ -74,6 +75,7 @@ const DOCK_COMPONENT_ORDER: DockComponentStateAttributeType[] = [
 ];
 
 const DockComponents = ({ supportedTypes, dockComponents }: { supportedTypes: DockComponentStateAttributeType[], dockComponents: any[] }) => {
+    const {t} = useTranslation();
     const palette = useValetudoColorsInverse();
 
     const components = React.useMemo(() => {
@@ -89,23 +91,23 @@ const DockComponents = ({ supportedTypes, dockComponents }: { supportedTypes: Do
 
                 switch (type) {
                     case "water_tank_clean":
-                        label = "Freshwater";
+                        label = t("controls.dock.components.water_tank_clean");
                         IconComponent = DockComponentWaterTankClean;
                         break;
                     case "water_tank_dirty":
-                        label = "Wastewater";
+                        label = t("controls.dock.components.water_tank_dirty");
                         IconComponent = DockComponentWaterTankDirty;
                         break;
                     case "detergent":
-                        label = "Detergent";
+                        label = t("controls.dock.components.detergent");
                         IconComponent = DockComponentDetergent;
                         break;
                     case "dustbag":
-                        label = "Dustbag";
+                        label = t("controls.dock.components.dustbag");
                         IconComponent = DockComponentDustbag;
                         break;
                     default:
-                        label = "Unknown";
+                        label = t("common.unknown");
                         IconComponent = DockComponentUnknownIcon;
                         break;
                 }
@@ -115,23 +117,23 @@ const DockComponents = ({ supportedTypes, dockComponents }: { supportedTypes: Do
 
                 switch (value) {
                     case "ok":
-                        statusText = "OK";
+                        statusText = t("controls.dock.componentState.ok");
                         statusColor = palette.green;
                         break;
                     case "empty":
-                        statusText = "Empty";
+                        statusText = t("controls.dock.componentState.empty");
                         statusColor = palette.red;
                         break;
                     case "full":
-                        statusText = "Full";
+                        statusText = t("controls.dock.componentState.full");
                         statusColor = palette.red;
                         break;
                     case "missing":
-                        statusText = "Missing";
+                        statusText = t("controls.dock.componentState.missing");
                         statusColor = palette.yellow;
                         break;
                     default:
-                        statusText = "Unknown";
+                        statusText = t("controls.dock.componentState.unknown");
                         statusColor = palette.purple;
                         break;
                 }
@@ -145,7 +147,7 @@ const DockComponents = ({ supportedTypes, dockComponents }: { supportedTypes: Do
                     statusColor: statusColor
                 };
             });
-    }, [supportedTypes, dockComponents, palette]);
+    }, [supportedTypes, dockComponents, palette, t]);
 
     const statusColor = React.useMemo(() => {
         let color = palette.green;
@@ -177,11 +179,11 @@ const DockComponents = ({ supportedTypes, dockComponents }: { supportedTypes: Do
                 sx={{ cursor: "pointer" }}
             >
                 <Grid2 sx={{ flexGrow: 1 }}>
-                    <Typography variant="subtitle2" sx={{ml: 0.5}}>Components</Typography>
+                    <Typography variant="subtitle2" sx={{ml: 0.5}}>{t("controls.dock.componentsTitle")}</Typography>
                 </Grid2>
                 <Grid2 sx={{ display: "flex", alignItems: "center" }}>
                     <Typography variant="caption" sx={{ color: statusColor, fontWeight: "bold", mr: 1 }}>
-                        {isOk ? "OK" : "Not OK"}
+                        {isOk ? t("controls.dock.componentState.ok") : t("controls.dock.notOk")}
                     </Typography>
                     <Icon component={expanded ? CloseIcon : OpenIcon} />
                 </Grid2>
@@ -207,6 +209,7 @@ const DockComponents = ({ supportedTypes, dockComponents }: { supportedTypes: Do
 };
 
 const Dock = (): React.ReactElement => {
+    const {t} = useTranslation();
     const { data: robotStatus, isPending: isRobotStatusPending } = useRobotStatusQuery();
     const { data: robotInfo, isPending: isRobotInfoPending } = useRobotInformationQuery();
     const {
@@ -271,7 +274,7 @@ const Dock = (): React.ReactElement => {
 
         if (robotStatus === undefined || (dockStatusIsRelevant && dockStatus?.length !== 1)) {
             return (
-                <Typography color="error">Error loading dock controls</Typography>
+                <Typography color="error">{t("controls.dock.loadError")}</Typography>
             );
         }
 
@@ -281,7 +284,7 @@ const Dock = (): React.ReactElement => {
         return (
             <>
                 <Typography variant="overline">
-                    {dockState}
+                    {t(`controls.dock.state.${dockState}`, {defaultValue: dockState})}
                 </Typography>
 
                 {supportedComponents.length > 0 && (
@@ -308,7 +311,7 @@ const Dock = (): React.ReactElement => {
                                 }}
                                 sx={{width: "100%"}}
                             >
-                                <StyledIcon as={CleanMopIcon} /> { dockState === "cleaning" ? "Stop" : "Clean" }
+                                <StyledIcon as={CleanMopIcon} /> { dockState === "cleaning" ? t("controls.dock.stop") : t("controls.dock.clean") }
                             </Button>
                         </Grid2>
                     }
@@ -328,7 +331,7 @@ const Dock = (): React.ReactElement => {
                                 }}
                                 sx={{width: "100%"}}
                             >
-                                <StyledIcon as={DryMopIcon} /> { dockState === "drying" ? "Stop" : "Dry" }
+                                <StyledIcon as={DryMopIcon} /> { dockState === "drying" ? t("controls.dock.stop") : t("controls.dock.dry") }
                             </Button>
                         </Grid2>
                     }
@@ -345,7 +348,7 @@ const Dock = (): React.ReactElement => {
                                 }}
                                 sx={{width: "100%"}}
                             >
-                                <StyledIcon as={EmptyIcon} /> Empty
+                                <StyledIcon as={EmptyIcon} /> {t("controls.dock.empty")}
                             </Button>
                         </Grid2>
                     }
@@ -371,13 +374,14 @@ const Dock = (): React.ReactElement => {
         triggerMopDockCleanCommand,
         triggerMopDockDryCommand,
         robotInfo,
-        dockComponents
+        dockComponents,
+        t
     ]);
 
 
     return (
         <ControlsCard
-            title="Dock"
+            title={t("controls.dock.title")}
             pending={feedbackPending}
             icon={DockIcon}
             isLoading={isPending}

@@ -5,8 +5,10 @@ import {useValetudoEventsInteraction, useValetudoEventsQuery} from "../api";
 import {eventControls} from "./ValetudoEventControls";
 import ReloadableCard from "./ReloadableCard";
 import styles from "./ValetudoEvents.module.css";
+import {useTranslation} from "react-i18next";
 
 const ValetudoEvents = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         data: eventData,
         isFetching: eventDataFetching,
@@ -64,14 +66,14 @@ const ValetudoEvents = (): React.ReactElement => {
             );
         }) : (
             <Typography color="textSecondary" variant={"subtitle1"}>
-                No events
+                {t("components.events.noEvents")}
             </Typography>
         );
 
         return (
             <ReloadableCard
                 divider={false}
-                title="Events"
+                title={t("components.events.title")}
                 loading={eventDataFetching}
                 onReload={() => {
                     return eventDataRefetch();
@@ -95,20 +97,20 @@ const ValetudoEvents = (): React.ReactElement => {
                         handleClose();
                     }}
                 >
-                    Close
+                    {t("common.close")}
                 </Button>
             </ReloadableCard>
         );
-    }, [eventData, eventDataFetching, eventDataRefetch, interactWithEvent]);
+    }, [eventData, eventDataFetching, eventDataRefetch, interactWithEvent, t]);
 
     return (
         <>
             <IconButton
                 size="large"
-                aria-label="Events"
+                aria-label={t("components.events.title")}
                 onClick={handleMenu}
                 color="inherit"
-                title="Events and Notifications"
+                title={t("components.events.tooltip")}
             >
                 {icon}
             </IconButton>

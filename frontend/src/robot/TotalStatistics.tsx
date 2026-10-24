@@ -15,7 +15,8 @@ import {
 import {Capability, useTotalStatisticsQuery, ValetudoDataPoint} from "../api";
 import {useCapabilitiesSupported} from "../CapabilitiesProvider";
 import PaperContainer from "../components/PaperContainer";
-import {adjustHexColorBrightness, getFriendlyStatName, getHumanReadableStatValue} from "../utils";
+import {adjustHexColorBrightness, getHumanReadableStatValue} from "../utils";
+import {useTranslation} from "react-i18next";
 import {History as HistoryIcon} from "@mui/icons-material";
 import {StatisticsAchievement, statisticsAchievements} from "./res/StatisticsAchievements";
 import {useIsMobileView} from "../hooks";
@@ -44,6 +45,7 @@ achievementColors.dark = {
 };
 
 const StatisticsGridItem: React.FunctionComponent<{ dataPoint: ValetudoDataPoint}> = ({ dataPoint}): React.ReactElement => {
+    const {t} = useTranslation();
     const [overviewDialogOpen, setOverviewDialogOpen] = React.useState(false);
     const mobileView = useIsMobileView();
 
@@ -71,7 +73,7 @@ const StatisticsGridItem: React.FunctionComponent<{ dataPoint: ValetudoDataPoint
                         <Grid2 style={{alignSelf: "flex-end", width: "100%"}}>
                             <CardContent style={{paddingBottom: "16px"}}>
                                 {<Typography variant="body1" mb={2}>
-                                    {mostRecentAchievement?.description || "No achievement yet"}
+                                    {mostRecentAchievement?.description || t("statistics.noAchievement")}
                                 </Typography>}
 
                                 <Grid2 container>
@@ -81,7 +83,7 @@ const StatisticsGridItem: React.FunctionComponent<{ dataPoint: ValetudoDataPoint
                                         }}
                                     >
                                         <Typography sx={{fontSize: 14}} color="text.secondary" gutterBottom>
-                                            {`Total ${getFriendlyStatName(dataPoint)}`}
+                                            {t(`statistics.totals.${dataPoint.type}`)}
                                         </Typography>
                                         <Typography variant="h5" component="div">
                                             {getHumanReadableStatValue(dataPoint)}
@@ -94,7 +96,7 @@ const StatisticsGridItem: React.FunctionComponent<{ dataPoint: ValetudoDataPoint
                                             onClick={() => {
                                                 setOverviewDialogOpen(true);
                                             }}
-                                            title="Achievement Overview"
+                                            title={t("statistics.achievementOverview")}
                                         >
                                             <HistoryIcon/>
                                         </IconButton>
@@ -113,7 +115,7 @@ const StatisticsGridItem: React.FunctionComponent<{ dataPoint: ValetudoDataPoint
                 fullScreen={mobileView}
             >
                 <DialogTitle style={{userSelect: "none"}}>
-                    {getFriendlyStatName(dataPoint)} Achievements
+                    {t(`statistics.achievementsTitles.${dataPoint.type}`)}
                 </DialogTitle>
 
                 <DialogContent dividers>
@@ -122,7 +124,7 @@ const StatisticsGridItem: React.FunctionComponent<{ dataPoint: ValetudoDataPoint
                             const notYetAchievedAchievement : StatisticsAchievement = {
                                 value: achievement.value,
                                 title: "?",
-                                description: "Not yet achieved"
+                                description: t("statistics.notYetAchieved")
                             };
                             const achieved = dataPoint.value >= achievement.value;
                             const achievementToDisplay = achieved ? achievement : notYetAchievedAchievement;
@@ -151,7 +153,7 @@ const StatisticsGridItem: React.FunctionComponent<{ dataPoint: ValetudoDataPoint
                                                     {
                                                         achieved && <>
                                                             <Typography sx={{fontSize: 14}} color="text.secondary" gutterBottom>
-                                                                Achieved at
+                                                                {t("statistics.achievedAt")}
                                                             </Typography>
                                                             <Typography variant="body1" mb={2}>
                                                                 {
@@ -177,7 +179,7 @@ const StatisticsGridItem: React.FunctionComponent<{ dataPoint: ValetudoDataPoint
                 <DialogActions>
                     <Button onClick={() => {
                         setOverviewDialogOpen(false);
-                    }}>Close</Button>
+                    }}>{t("common.close")}</Button>
                 </DialogActions>
             </Dialog>
         </>
@@ -272,6 +274,7 @@ const StatisticsAward: React.FunctionComponent<{ achievement?: StatisticsAchieve
 };
 
 const TotalStatisticsInternal: React.FunctionComponent = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         data: totalStatisticsState,
         isPending: totalStatisticsPending,
@@ -286,7 +289,7 @@ const TotalStatisticsInternal: React.FunctionComponent = (): React.ReactElement 
         }
 
         if (totalStatisticsError || !totalStatisticsState) {
-            return <Typography color="error">Error loading statistics</Typography>;
+            return <Typography color="error">{t("statistics.loadError")}</Typography>;
         }
 
         const statistics = totalStatisticsState.sort((a, b) => {
@@ -309,16 +312,17 @@ const TotalStatisticsInternal: React.FunctionComponent = (): React.ReactElement 
                 {statistics}
             </Grid2>
         );
-    }, [totalStatisticsError, totalStatisticsPending, totalStatisticsState]);
+    }, [totalStatisticsError, totalStatisticsPending, totalStatisticsState, t]);
 };
 
 const TotalStatistics = (): React.ReactElement => {
+    const {t} = useTranslation();
     const [supported] = useCapabilitiesSupported(Capability.TotalStatistics);
 
     return (
         <PaperContainer>
             {supported ? <TotalStatisticsInternal/> : (
-                <Typography color="error">This robot does not support total statistics.</Typography>
+                <Typography color="error">{t("statistics.notSupported")}</Typography>
             )}
         </PaperContainer>
     );

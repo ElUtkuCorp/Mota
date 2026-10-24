@@ -24,7 +24,7 @@ import TimerEditDialog from "./TimerEditDialog";
 import { deepCopy } from "../../utils";
 import {Help as HelpIcon} from "@mui/icons-material";
 import HelpDialog from "../../components/HelpDialog";
-import {TimersHelp} from "./res/TimersHelp";
+import {useTranslation} from "react-i18next";
 import PaperContainer from "../../components/PaperContainer";
 import {convertTimer} from "./TimerUtils";
 
@@ -41,6 +41,7 @@ const timerTemplate: Timer = {
 };
 
 const Timers = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         data: timerData,
         isPending: timerDataPending,
@@ -110,7 +111,7 @@ const Timers = (): React.ReactElement => {
     }
 
     if (timerDataError || timerPropertiesError || !timerPropertiesData) {
-        return <Typography color="error">Error loading timers</Typography>;
+        return <Typography color="error">{t("timers.loadError")}</Typography>;
     }
 
     return (
@@ -121,7 +122,7 @@ const Timers = (): React.ReactElement => {
                         onClick={() => {
                             return setHelpDialogOpen(true);
                         }}
-                        title="Help"
+                        title={t("common.help")}
                     >
                         <HelpIcon/>
                     </IconButton>
@@ -133,7 +134,7 @@ const Timers = (): React.ReactElement => {
                             <Typography
                                 sx={{padding:"1rem", textAlign: "center", marginTop: "10vh", marginBottom: "5vh"}}
                             >
-                                You currently don&apos;t have any timers configured in Valetudo.
+                                {t("timers.none")}
                             </Typography>
                     }
                 </Grid2>
@@ -167,9 +168,9 @@ const Timers = (): React.ReactElement => {
                 >
                     <Fab
                         color="primary"
-                        aria-label="add"
+                        aria-label={t("timers.add")}
                         onClick={addTimer}
-                        title="Add new timer"
+                        title={t("timers.add")}
                     >
                         <AddIcon />
                     </Fab>
@@ -180,7 +181,7 @@ const Timers = (): React.ReactElement => {
                 setDialogOpen={(open: boolean) => {
                     setHelpDialogOpen(open);
                 }}
-                helpText={TimersHelp}
+                helpText={t("help.timers")}
             />
         </PaperContainer>
     );

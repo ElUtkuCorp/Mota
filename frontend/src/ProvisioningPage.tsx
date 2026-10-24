@@ -43,6 +43,7 @@ import {
     useWifiScanQuery,
 } from "./api";
 import {useCapabilitiesSupported} from "./CapabilitiesProvider";
+import {Trans, useTranslation} from "react-i18next";
 
 const SCAN_RESULT_BATCH_SIZE = 5;
 
@@ -72,6 +73,7 @@ const WifiScan: React.FunctionComponent<{
 }> = ({
     onSelect
 }): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         data: wifiScanResult,
         isFetching: wifiScanFetching,
@@ -119,7 +121,7 @@ const WifiScan: React.FunctionComponent<{
                         <ListItemText
                             primaryTypographyProps={{ style: {fontSize: "0.95rem"} }}
                             primary={network.ssid}
-                            secondary={`${network.signal ?? "unknown"} dBm`}
+                            secondary={t("provisioning.signalUnknown", {signal: network.signal ?? t("provisioning.unknown")})}
                         />
                     </ListItemButton>
                 </ListItem>
@@ -139,7 +141,7 @@ const WifiScan: React.FunctionComponent<{
                         >
                             <ListItemText
                                 sx={{textAlign: "center"}}
-                                primary="See more results"
+                                primary={t("provisioning.moreResults")}
                             />
                         </ListItemButton>
                     </ListItem>
@@ -152,13 +154,13 @@ const WifiScan: React.FunctionComponent<{
                 <ListItem key="no_networks_found">
                     <ListItemText
                         sx={{textAlign: "center"}}
-                        secondary="No Wi-Fi networks found or background network scan still active"
+                        secondary={t("provisioning.noNetworks")}
                     />
                 </ListItem>
             ];
         }
 
-    }, [wifiScanResult, resultLimit, onSelect]);
+    }, [wifiScanResult, resultLimit, onSelect, t]);
 
     return (
         <List
@@ -182,7 +184,7 @@ const WifiScan: React.FunctionComponent<{
                         <RefreshIcon />
                     </ListItemIcon>
                     <ListItemText
-                        primary={wifiScanFetching ? "Scanning..." : "Press to scan for Wi-Fi networks"}
+                        primary={wifiScanFetching ? t("provisioning.scanning") : t("provisioning.pressToScan")}
                     />
                 </ListItemButton>
             </ListItem>
@@ -193,6 +195,7 @@ const WifiScan: React.FunctionComponent<{
 
 
 const ProvisioningPage = (): React.ReactElement => {
+    const {t} = useTranslation();
     const [wifiScanSupported] = useCapabilitiesSupported(Capability.WifiScan);
     const {
         data: robotInformation,
@@ -224,13 +227,13 @@ const ProvisioningPage = (): React.ReactElement => {
         }
 
         if (!robotInformation || !version) {
-            return <Typography color="error">No robot information</Typography>;
+            return <Typography color="error">{t("provisioning.noRobotInformation")}</Typography>;
         }
 
         const items: Array<[header: string, body: string]> = [
-            ["Valetudo", version.release],
-            ["Manufacturer", robotInformation.manufacturer],
-            ["Model", robotInformation.modelName]
+            [t("provisioning.mota"), version.release],
+            [t("provisioning.manufacturer"), robotInformation.manufacturer],
+            [t("provisioning.model"), robotInformation.modelName]
         ];
 
         return (
@@ -247,7 +250,7 @@ const ProvisioningPage = (): React.ReactElement => {
                 })}
             </Grid2>
         );
-    }, [robotInformation, robotInformationPending, version, versionPending]);
+    }, [robotInformation, robotInformationPending, version, versionPending, t]);
 
 
     return (
@@ -286,7 +289,7 @@ const ProvisioningPage = (): React.ReactElement => {
                     }}
                     align="center"
                 >
-                    Please join the robot to your Wi-Fi network to start using Valetudo
+                    {t("provisioning.intro")}
                 </Typography>
                 <Divider/>
 
@@ -309,7 +312,7 @@ const ProvisioningPage = (): React.ReactElement => {
                 <Grid2 container sx={{padding: "1rem"}} direction="column">
                     <Grid2 sx={{paddingLeft: "1rem", paddingRight: "1rem"}}>
                         <TextField
-                            label="SSID/Wi-Fi name"
+                            label={t("provisioning.ssid")}
                             variant="standard"
                             fullWidth
                             value={newSSID} sx={{mb: 1}}
@@ -321,7 +324,7 @@ const ProvisioningPage = (): React.ReactElement => {
 
                     <Grid2 sx={{paddingLeft: "1rem", paddingRight: "1rem"}}>
                         <FormControl style={{width: "100%"}} variant="standard">
-                            <InputLabel htmlFor="standard-adornment-password">PSK/Password</InputLabel>
+                            <InputLabel htmlFor="standard-adornment-password">{t("provisioning.psk")}</InputLabel>
                             <Input
                                 type={showPasswordAsPlain ? "text" : "password"}
                                 fullWidth
@@ -330,7 +333,7 @@ const ProvisioningPage = (): React.ReactElement => {
                                 endAdornment={
                                     <InputAdornment position="end">
                                         <IconButton
-                                            aria-label="toggle password visibility"
+                                            aria-label={t("provisioning.togglePasswordVisibility")}
                                             onClick={() => {
                                                 setShowPasswordAsPlain(!showPasswordAsPlain);
                                             }}
@@ -367,7 +370,7 @@ const ProvisioningPage = (): React.ReactElement => {
                                 });
                             }}
                         >
-                            Apply
+                            {t("provisioning.apply")}
                         </Button>
                     </Grid2>
 
@@ -376,12 +379,11 @@ const ProvisioningPage = (): React.ReactElement => {
 
             <Dialog open={successDialogOpen}>
                 <DialogTitle>
-                    Wi-Fi configuration is applying
+                    {t("provisioning.applyingTitle")}
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        If you&apos;ve entered your Wi-Fi credentials correctly, the robot should now join your network.<br/>
-                        You can now close this page.
+                        <Trans i18nKey="provisioning.applyingText"/>
                     </DialogContentText>
                 </DialogContent>
             </Dialog>

@@ -1,7 +1,8 @@
 import React, { FunctionComponent } from "react";
 import { Button, ButtonGroup, Stack, styled, Typography } from "@mui/material";
 import { ConsumableSubType, ConsumableType, ValetudoEvent, ValetudoEventInteraction } from "../api";
-import {format8601Ish, formatRelative, getConsumableName} from "../utils";
+import {formatDateTime, formatRelative, getConsumableName} from "../utils";
+import {Trans, useTranslation} from "react-i18next";
 
 export interface ValetudoEventRenderProps {
     event: ValetudoEvent;
@@ -22,7 +23,7 @@ const EventRow = styled("div")({
 
 const EventTimestamp : FunctionComponent<{timestamp: number | string}> = ({timestamp}) => {
     return (
-        <Typography variant="caption" title={format8601Ish(new Date(timestamp))} style={{ cursor: "help" }}>
+        <Typography variant="caption" title={formatDateTime(new Date(timestamp))} style={{ cursor: "help" }}>
             {formatRelative(timestamp)}
         </Typography>
     );
@@ -30,13 +31,14 @@ const EventTimestamp : FunctionComponent<{timestamp: number | string}> = ({times
 
 const ConsumableDepletedEventControl: FunctionComponent<ValetudoEventRenderProps> =
     ({event, interact}) => {
+        const {t} = useTranslation();
         const color = event.processed ? "textSecondary" : "textPrimary";
         const textStyle = event.processed ? {textDecoration: "line-through"} : {};
 
         if (!event.type || !event.subType) {
             return (
                 <Typography color={"error"}>
-                    Consumable without type/subType depleted
+                    {t("components.events.consumableWithoutType")}
                 </Typography>
             );
         }
@@ -46,7 +48,11 @@ const ConsumableDepletedEventControl: FunctionComponent<ValetudoEventRenderProps
                 <Stack>
                     <EventTimestamp timestamp={event.timestamp}/>
                     <Typography color={color} style={textStyle} sx={{mr: 1}}>
-                        The consumable <em>{getConsumableName(event.type as ConsumableType, event.subType as ConsumableSubType)}</em> is depleted
+                        <Trans
+                            i18nKey="components.events.consumableDepleted"
+                            values={{name: getConsumableName(event.type as ConsumableType, event.subType as ConsumableSubType)}}
+                            components={{em: <em/>}}
+                        />
                     </Typography>
                 </Stack>
                 <Button
@@ -60,7 +66,7 @@ const ConsumableDepletedEventControl: FunctionComponent<ValetudoEventRenderProps
                     }}
                     color="warning"
                 >
-                    Reset
+                    {t("common.reset")}
                 </Button>
             </EventRow>
         );
@@ -68,6 +74,7 @@ const ConsumableDepletedEventControl: FunctionComponent<ValetudoEventRenderProps
 
 const ErrorEventControl: FunctionComponent<ValetudoEventRenderProps> =
     ({event, interact}) => {
+        const {t} = useTranslation();
         const color = event.processed ? "textSecondary" : "error";
         const textStyle = event.processed ? {textDecoration: "line-through"} : {};
 
@@ -76,7 +83,7 @@ const ErrorEventControl: FunctionComponent<ValetudoEventRenderProps> =
                 <Stack>
                     <EventTimestamp timestamp={event.timestamp}/>
                     <Typography color={color} style={textStyle} sx={{mr: 1}}>
-                        An error occurred: {event.message || "Unknown error"}
+                        {t("components.events.errorOccurred", {message: event.message || t("components.events.unknownError")})}
                     </Typography>
                 </Stack>
                 <Button
@@ -90,7 +97,7 @@ const ErrorEventControl: FunctionComponent<ValetudoEventRenderProps> =
                     }}
                     color="error"
                 >
-                    Dismiss
+                    {t("components.events.dismiss")}
                 </Button>
             </EventRow>
         );
@@ -98,6 +105,7 @@ const ErrorEventControl: FunctionComponent<ValetudoEventRenderProps> =
 
 const PendingMapChangeEventControl: FunctionComponent<ValetudoEventRenderProps> =
     ({event, interact}) => {
+        const {t} = useTranslation();
         const color = event.processed ? "textSecondary" : "textPrimary";
         const textStyle = event.processed ? {textDecoration: "line-through"} : {};
 
@@ -106,7 +114,7 @@ const PendingMapChangeEventControl: FunctionComponent<ValetudoEventRenderProps> 
                 <Stack>
                     <EventTimestamp timestamp={event.timestamp}/>
                     <Typography color={color} style={textStyle} sx={{mr: 1}}>
-                        A map change is pending. Do you want to accept the new map?
+                        {t("components.events.pendingMapChange")}
                     </Typography>
                 </Stack>
                 <ButtonGroup size="small" variant="contained" color="success">
@@ -119,7 +127,7 @@ const PendingMapChangeEventControl: FunctionComponent<ValetudoEventRenderProps> 
                         }}
                         color="success"
                     >
-                        Yes
+                        {t("common.yes")}
                     </Button>
                     <Button
                         disabled={event.processed}
@@ -130,15 +138,16 @@ const PendingMapChangeEventControl: FunctionComponent<ValetudoEventRenderProps> 
                         }}
                         color="error"
                     >
-                        No
+                        {t("common.no")}
                     </Button>
                 </ButtonGroup>
             </EventRow>
         );
     };
 
-const CreateDismissableEventControl = (message: string) : FunctionComponent<ValetudoEventRenderProps> => {
+const CreateDismissableEventControl = (messageKey: string) : FunctionComponent<ValetudoEventRenderProps> => {
     return function DismissableEventControl({event, interact}) {
+        const {t} = useTranslation();
         const color = event.processed ? "textSecondary" : "textPrimary";
         const textStyle = event.processed ? {textDecoration: "line-through"} : {};
 
@@ -147,7 +156,7 @@ const CreateDismissableEventControl = (message: string) : FunctionComponent<Vale
                 <Stack>
                     <EventTimestamp timestamp={event.timestamp}/>
                     <Typography color={color} style={textStyle} sx={{mr: 1}}>
-                        {message}
+                        {t(messageKey)}
                     </Typography>
                 </Stack>
                 <Button
@@ -161,7 +170,7 @@ const CreateDismissableEventControl = (message: string) : FunctionComponent<Vale
                     }}
                     color="info"
                 >
-                    Dismiss
+                    {t("components.events.dismiss")}
                 </Button>
             </EventRow>
         );
@@ -170,6 +179,7 @@ const CreateDismissableEventControl = (message: string) : FunctionComponent<Vale
 
 const MissingResourceEventControl: FunctionComponent<ValetudoEventRenderProps> =
     ({event, interact}) => {
+        const {t} = useTranslation();
         const color = event.processed ? "textSecondary" : "textPrimary";
         const textStyle = event.processed ? {textDecoration: "line-through"} : {};
 
@@ -192,7 +202,7 @@ const MissingResourceEventControl: FunctionComponent<ValetudoEventRenderProps> =
                     }}
                     color="warning"
                 >
-                    Dismiss
+                    {t("components.events.dismiss")}
                 </Button>
             </EventRow>
         );
@@ -200,6 +210,7 @@ const MissingResourceEventControl: FunctionComponent<ValetudoEventRenderProps> =
 
 const ValetudoUpdatedEventControl: FunctionComponent<ValetudoEventRenderProps> =
     ({event, interact}) => {
+        const {t} = useTranslation();
         const color = event.processed ? "textSecondary" : "textPrimary";
         const textStyle = event.processed ? {textDecoration: "line-through"} : {};
 
@@ -208,7 +219,10 @@ const ValetudoUpdatedEventControl: FunctionComponent<ValetudoEventRenderProps> =
                 <Stack>
                     <EventTimestamp timestamp={event.timestamp}/>
                     <Typography color={color} style={textStyle} sx={{mr: 1}}>
-                        Valetudo was successfully updated from &apos;{event.previousVersion ?? "unknown"}&apos; to &apos;{event.newVersion ?? "unknown"}&apos;.
+                        {t("components.events.updated", {
+                            previousVersion: event.previousVersion ?? t("common.unknown"),
+                            newVersion: event.newVersion ?? t("common.unknown")
+                        })}
                     </Typography>
                 </Stack>
                 <Button
@@ -222,7 +236,7 @@ const ValetudoUpdatedEventControl: FunctionComponent<ValetudoEventRenderProps> =
                     }}
                     color="info"
                 >
-                    Dismiss
+                    {t("components.events.dismiss")}
                 </Button>
             </EventRow>
         );
@@ -230,6 +244,7 @@ const ValetudoUpdatedEventControl: FunctionComponent<ValetudoEventRenderProps> =
 
 const ValetudoRuntimeErrorEventControl: FunctionComponent<ValetudoEventRenderProps> =
     ({event, interact}) => {
+        const {t} = useTranslation();
         const color = event.processed ? "textSecondary" : "error";
         const textStyle = event.processed ? {textDecoration: "line-through"} : {};
 
@@ -238,8 +253,8 @@ const ValetudoRuntimeErrorEventControl: FunctionComponent<ValetudoEventRenderPro
                 <Stack>
                     <EventTimestamp timestamp={event.timestamp}/>
                     <Typography color={color} style={textStyle} sx={{mr: 1}}>
-                        Valetudo ran into a problem and reincarnated itself. This should never happen.<br/><br/>
-                        {event.description ? event.description: `Reason: ${event.reason}`}
+                        {t("components.events.runtimeError")}<br/><br/>
+                        {event.description ? event.description: t("components.events.runtimeErrorReason", {reason: event.reason})}
                     </Typography>
                 </Stack>
                 <Button
@@ -253,7 +268,7 @@ const ValetudoRuntimeErrorEventControl: FunctionComponent<ValetudoEventRenderPro
                     }}
                     color="error"
                 >
-                    Dismiss
+                    {t("components.events.dismiss")}
                 </Button>
             </EventRow>
         );
@@ -261,9 +276,11 @@ const ValetudoRuntimeErrorEventControl: FunctionComponent<ValetudoEventRenderPro
 
 const UnknownEventControl: FunctionComponent<ValetudoEventRenderProps> =
     ({event}) => {
+        const {t} = useTranslation();
+
         return (
             <Typography color={"error"}>
-                Unknown event type: ${event.__class}
+                {t("components.events.unknownType", {type: event.__class})}
             </Typography>
         );
     };
@@ -272,8 +289,8 @@ export const eventControls: Record<string, React.ComponentType<ValetudoEventRend
     ConsumableDepletedValetudoEvent: ConsumableDepletedEventControl,
     ErrorStateValetudoEvent: ErrorEventControl,
     PendingMapChangeValetudoEvent: PendingMapChangeEventControl,
-    DustBinFullValetudoEvent: CreateDismissableEventControl("The dust bin is full. Please empty it."),
-    MopAttachmentReminderValetudoEvent: CreateDismissableEventControl("The mop is still attached to the robot."),
+    DustBinFullValetudoEvent: CreateDismissableEventControl("components.events.dustBinFull"),
+    MopAttachmentReminderValetudoEvent: CreateDismissableEventControl("components.events.mopAttached"),
     MissingResourceValetudoEvent: MissingResourceEventControl,
     ValetudoUpdatedValetudoEvent: ValetudoUpdatedEventControl,
     ValetudoRuntimeErrorValetudoEvent: ValetudoRuntimeErrorEventControl,

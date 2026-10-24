@@ -25,9 +25,9 @@ import {
     useSystemRuntimeInfoQuery,
 } from "../../api";
 import ConfirmationDialog from "../ConfirmationDialog";
-import {DuststreamingLecture, DuststreamingInstallInstructions} from "./res/Duststreaming";
 import style from "./DuststreamingListMenuItem.module.css";
 import InfoBox from "../InfoBox";
+import {Trans, useTranslation} from "react-i18next";
 
 const CONFIRMATION_COOLDOWN_SECONDS = 60;
 const SKIP_COOLDOWN_CODE = "skip";
@@ -47,6 +47,7 @@ const DuststreamingEnableDialog: React.FunctionComponent<{
     onConfirm,
     loading,
 }): React.ReactElement => {
+    const {t} = useTranslation();
     const [secondsRemaining, setSecondsRemaining] = React.useState(CONFIRMATION_COOLDOWN_SECONDS);
 
     React.useEffect(() => {
@@ -131,7 +132,7 @@ const DuststreamingEnableDialog: React.FunctionComponent<{
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
             <DialogTitle>
-                Are you sure you want to enable camera streaming?
+                {t("components.duststreaming.enableDialogTitle")}
             </DialogTitle>
             <DialogContent>
                 <div className={style.reactMarkDown}>
@@ -140,7 +141,7 @@ const DuststreamingEnableDialog: React.FunctionComponent<{
                         rehypePlugins={[rehypeRaw]}
                         components={markdownComponents}
                     >
-                        {DuststreamingLecture}
+                        {t("components.duststreaming.lecture")}
                     </ReactMarkdown>
                 </div>
             </DialogContent>
@@ -150,10 +151,10 @@ const DuststreamingEnableDialog: React.FunctionComponent<{
                     disabled={secondsRemaining > 0 || loading}
                     autoFocus
                 >
-                    {secondsRemaining > 0 ? `I understand (${secondsRemaining}s)` : "I understand"}
+                    {secondsRemaining > 0 ? t("components.duststreaming.understandCountdown", {seconds: secondsRemaining}) : t("components.duststreaming.understand")}
                 </Button>
                 <Button onClick={onClose} color="inherit" disabled={loading}>
-                    Cancel
+                    {t("common.cancel")}
                 </Button>
             </DialogActions>
         </Dialog>
@@ -169,10 +170,12 @@ const DuststreamingInstructionsDialog: React.FunctionComponent<{
     onClose,
     binaryPath,
 }): React.ReactElement => {
+    const {t} = useTranslation();
+
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
             <DialogTitle>
-                You&apos;re not done yet!
+                {t("components.duststreaming.notDoneTitle")}
             </DialogTitle>
             <DialogContent>
                 <div className={style.reactMarkDown}>
@@ -181,7 +184,7 @@ const DuststreamingInstructionsDialog: React.FunctionComponent<{
                         rehypePlugins={[rehypeRaw]}
                         components={markdownComponents}
                     >
-                        {DuststreamingInstallInstructions(binaryPath ?? "undefined")}
+                        {t("components.duststreaming.installInstructions", {binaryPath: binaryPath ?? "undefined"})}
                     </ReactMarkdown>
 
                     <InfoBox
@@ -191,14 +194,12 @@ const DuststreamingInstructionsDialog: React.FunctionComponent<{
                         }}
                     >
                         <Typography color="info">
-                            <strong>Note</strong>: The slight clunkiness of this feature is not an oversight but by-design.<br/>
-                            Valetudo could easily be doing all this for you, but then it would be a one-button, no-thinking, no-skillcheck spycam.<br/>
-                            <br/>
-                            It should go without saying that building one-button, no-thinking, no-skillcheck abuse tools is an unethical act not to be done by anyone with a desire to call themselves an adult.<br/>
-                            Consequently, and making the subtext explicit here, wanting to &quot;helpfully&quot; pave over this engineered friction is either naive, careless, reckless or just straight dumb.<br/>
-                            <br/>
-                            For more information and additional thoughts, check out the <a target="_blank" rel="noopener" href="https://github.com/Hypfer/Valetudo/releases/tag/2026.08.0">2026.08.0 release notes</a>, featuring the first release of this functionality.<br/>
-                            (This box only exists because post-introduction, an unreasonable amount of people pinged me with &quot;Hey hypfer, look what I did! This is how you can make that easier for people!&quot;)
+                            <Trans
+                                i18nKey="components.duststreaming.note"
+                                components={{
+                                    releaseNotesLink: <a target="_blank" rel="noopener" href="https://github.com/Hypfer/Valetudo/releases/tag/2026.08.0"/>
+                                }}
+                            />
                         </Typography>
                     </InfoBox>
 
@@ -206,7 +207,7 @@ const DuststreamingInstructionsDialog: React.FunctionComponent<{
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose} autoFocus>
-                    Understood
+                    {t("components.duststreaming.understood")}
                 </Button>
             </DialogActions>
         </Dialog>
@@ -214,6 +215,7 @@ const DuststreamingInstructionsDialog: React.FunctionComponent<{
 };
 
 export const DuststreamingListMenuItem = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         data: properties,
         isPending: propertiesPending,
@@ -245,7 +247,7 @@ export const DuststreamingListMenuItem = (): React.ReactElement => {
 
     let secondaryLabel: React.ReactNode | undefined;
     if (!enabled) {
-        secondaryLabel = "See what your robot sees";
+        secondaryLabel = t("components.duststreaming.seeWhatRobotSees");
     } else if (!duststreamerInstalled) {
         secondaryLabel = (
             <Link
@@ -256,11 +258,11 @@ export const DuststreamingListMenuItem = (): React.ReactElement => {
                     setInstructionsDialogOpen(true);
                 }}
             >
-                Setup incomplete
+                {t("components.duststreaming.setupIncomplete")}
             </Link>
         );
     } else {
-        secondaryLabel = "Rockwell - Somebody's Watching Me ♫";
+        secondaryLabel = t("components.duststreaming.activeSong");
     }
 
     const toggleDisabled = !capabilitySupported || configurationPending || configurationUpdating;
@@ -292,12 +294,12 @@ export const DuststreamingListMenuItem = (): React.ReactElement => {
                     </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                    primary="Camera Streaming"
+                    primary={t("components.duststreaming.title")}
                     secondary={secondaryLabel}
                     style={{marginRight: "2rem"}}
                 />
                 {(propertiesError || configurationError) ? (
-                    <Typography variant="body2" color="error">Error</Typography>
+                    <Typography variant="body2" color="error">{t("common.error")}</Typography>
                 ) : (
                     <Button
                         variant="outlined"
@@ -315,7 +317,7 @@ export const DuststreamingListMenuItem = (): React.ReactElement => {
                             minWidth: 0,
                         }}
                     >
-                        {enabled ? "Disable" : "Enable"}
+                        {enabled ? t("components.duststreaming.disable") : t("components.duststreaming.enable")}
                     </Button>
                 )}
             </ListItem>
@@ -328,8 +330,8 @@ export const DuststreamingListMenuItem = (): React.ReactElement => {
                 loading={configurationUpdating}
             />
             <ConfirmationDialog
-                title="Disable camera streaming?"
-                text="This will also delete the duststreamer, so that it cannot be re-enabled with HTTP access alone."
+                title={t("components.duststreaming.disableDialogTitle")}
+                text={t("components.duststreaming.disableDialogText")}
                 open={disableDialogOpen}
                 onClose={() => {
                     setDisableDialogOpen(false);

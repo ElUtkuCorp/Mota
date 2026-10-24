@@ -10,7 +10,7 @@ import {
 import {useCapabilitiesSupported} from "../../CapabilitiesProvider";
 import {deepCopy} from "../../utils";
 import {CapabilityItem} from "./CapabilityLayout";
-import {DoNotDisturbHelp} from "./res/DoNotDisturbHelp";
+import {useTranslation} from "react-i18next";
 
 const formatTime = (value: DoNotDisturbTime | undefined): string => {
     if (!value) {
@@ -20,6 +20,7 @@ const formatTime = (value: DoNotDisturbTime | undefined): string => {
 };
 
 const DoNotDisturbControl: FunctionComponent = () => {
+    const {t} = useTranslation();
     const {
         data: dndConfiguration,
         isFetching: dndConfigurationFetching,
@@ -54,7 +55,7 @@ const DoNotDisturbControl: FunctionComponent = () => {
         if (dndConfigurationError) {
             return (
                 <Typography color="error">
-                    Error loading DND configuration.
+                    {t("robot.capabilities.dnd.loadError")}
                 </Typography>
             );
         }
@@ -67,10 +68,10 @@ const DoNotDisturbControl: FunctionComponent = () => {
                         newConfig.enabled = e.target.checked;
                         setEditConfig(newConfig);
                     }
-                }}/>} label="Enabled"/>
+                }}/>} label={t("robot.capabilities.dnd.enabled")}/>
                 <Stack direction="row" spacing={1} sx={{mt: 1, mb: 1}}>
                     <TextField
-                        label="Start time"
+                        label={t("robot.capabilities.dnd.startTime")}
                         type="time"
                         value={`${startTimeValue.getHours().toString().padStart(2, "0")}:${startTimeValue.getMinutes().toString().padStart(2, "0")}`}
                         InputLabelProps={{ shrink: true }}
@@ -88,7 +89,7 @@ const DoNotDisturbControl: FunctionComponent = () => {
                         }}
                     />
                     <TextField
-                        label="End time"
+                        label={t("robot.capabilities.dnd.endTime")}
                         type="time"
                         value={`${endTimeValue.getHours().toString().padStart(2, "0")}:${endTimeValue.getMinutes().toString().padStart(2, "0")}`}
                         InputLabelProps={{ shrink: true }}
@@ -107,24 +108,24 @@ const DoNotDisturbControl: FunctionComponent = () => {
                     />
                 </Stack>
                 <Typography variant="subtitle2" color="textSecondary" sx={{mb: 2}}>
-                    UTC: {formatTime(editConfig?.start)} &mdash; {formatTime(editConfig?.end)}
+                    {t("robot.capabilities.dnd.utc", {start: formatTime(editConfig?.start), end: formatTime(editConfig?.end)})}
                 </Typography>
                 <Button loading={dndConfigurationUpdating} variant="outlined" color="success" onClick={() => {
                     if (editConfig) {
                         updateDndConfiguration(editConfig);
                     }
-                }}>Apply</Button>
+                }}>{t("robot.capabilities.dnd.apply")}</Button>
             </>
         );
-    }, [editConfig, startTimeValue, endTimeValue, dndConfigurationError, dndConfigurationUpdating, updateDndConfiguration]);
+    }, [editConfig, startTimeValue, endTimeValue, dndConfigurationError, dndConfigurationUpdating, updateDndConfiguration, t]);
 
 
     const loading = dndConfigurationUpdating || dndConfigurationFetching || !dndConfiguration;
     return (
         <CapabilityItem
-            title={"Do not disturb"}
+            title={t("robot.capabilities.dnd.title")}
             loading={loading}
-            helpText={DoNotDisturbHelp}
+            helpText={t("help.doNotDisturb")}
         >
             {dndConfigurationContent}
         </CapabilityItem>

@@ -20,34 +20,36 @@ import React, { FunctionComponent } from "react";
 import {Timer, TimerProperties, ValetudoTimerActionType} from "../../api";
 import TimerEditDialog from "./TimerEditDialog";
 import {convertTimer} from "./TimerUtils";
+import {useTranslation} from "react-i18next";
 
+// "label" and "shortLabel" are i18n keys
 export const weekdays = [
     {
-        label: "Monday",
+        label: "timers.weekdays.monday", shortLabel: "timers.weekdaysShort.monday",
         dow: 1
     },
     {
-        label: "Tuesday",
+        label: "timers.weekdays.tuesday", shortLabel: "timers.weekdaysShort.tuesday",
         dow: 2
     },
     {
-        label: "Wednesday",
+        label: "timers.weekdays.wednesday", shortLabel: "timers.weekdaysShort.wednesday",
         dow: 3
     },
     {
-        label: "Thursday",
+        label: "timers.weekdays.thursday", shortLabel: "timers.weekdaysShort.thursday",
         dow: 4
     },
     {
-        label: "Friday",
+        label: "timers.weekdays.friday", shortLabel: "timers.weekdaysShort.friday",
         dow: 5
     },
     {
-        label: "Saturday",
+        label: "timers.weekdays.saturday", shortLabel: "timers.weekdaysShort.saturday",
         dow: 6
     },
     {
-        label: "Sunday",
+        label: "timers.weekdays.sunday", shortLabel: "timers.weekdaysShort.sunday",
         dow: 0
     },
 ];
@@ -60,9 +62,10 @@ type TimerCardProps = {
     onExecNow: () => void;
 };
 
+// i18n keys
 export const timerActionLabels: Record<ValetudoTimerActionType, string> = {
-    [ValetudoTimerActionType.FULL_CLEANUP]: "Full cleanup",
-    [ValetudoTimerActionType.SEGMENT_CLEANUP]: "Segment cleanup",
+    [ValetudoTimerActionType.FULL_CLEANUP]: "timers.actions.fullCleanup",
+    [ValetudoTimerActionType.SEGMENT_CLEANUP]: "timers.actions.segmentCleanup",
 };
 
 const TimerCard: FunctionComponent<TimerCardProps> = ({
@@ -72,6 +75,7 @@ const TimerCard: FunctionComponent<TimerCardProps> = ({
     onDelete,
     onExecNow
 }): React.ReactElement => {
+    const {t} = useTranslation();
     const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
     const [editDialogOpen, setEditDialogOpen] = React.useState(false);
     const [execNowDialogOpen, setExecNowDialogOpen] = React.useState(false);
@@ -101,14 +105,14 @@ const TimerCard: FunctionComponent<TimerCardProps> = ({
                                 component={"span"}
                                 sx={i < weekdays.length - 1 ? { marginRight: 1 } : {}}
                             >
-                                {day.label.toUpperCase().slice(0, 3)}
+                                {t(day.shortLabel)}
                             </Typography>
                         </Grid2>
                     );
                 })}
             </Grid2>
         );
-    }, [timerInLocalTime]);
+    }, [timerInLocalTime, t]);
 
     const timeLabel = React.useMemo(() => {
         return (
@@ -127,40 +131,39 @@ const TimerCard: FunctionComponent<TimerCardProps> = ({
                     color={"textSecondary"}
                 >
                     {timer.hour.toString().padStart(2, "0")}:
-                    {timer.minute.toString().padStart(2, "0")} UTC
+                    {timer.minute.toString().padStart(2, "0")} {t("timers.utc")}
                 </Typography>
             </>
         );
-    }, [timerInLocalTime, timer]);
+    }, [timerInLocalTime, timer, t]);
 
     const actionLabel = React.useMemo(() => {
-        const label = timerActionLabels[timer.action.type];
+        const label = t(timerActionLabels[timer.action.type]);
 
         return <Typography variant={"subtitle1"}>{label}</Typography>;
-    }, [timer]);
+    }, [timer, t]);
 
     const preActionLabel = React.useMemo(() => {
         if (timer?.pre_actions?.length) {
             return <Typography variant={"subtitle1"}>
-                {`${timer.pre_actions.length} Pre-Action${timer.pre_actions.length > 1 ? "s" : ""}`}
+                {t("timers.preActionCount", {count: timer.pre_actions.length})}
             </Typography>;
         } else {
             return null;
         }
-    }, [timer]);
+    }, [timer, t]);
 
     const timerLabel = React.useMemo(() => {
-        return timer?.label || "Timer";
-    }, [timer]);
+        return timer?.label || t("timers.defaultLabel");
+    }, [timer, t]);
 
     const dialogTimerText = React.useMemo(() => {
         if (timer?.label) {
-            return `"${timer.label}"`;
+            return t("timers.quotedLabel", {label: timer.label});
         } else {
-            return "this timer";
+            return t("timers.thisTimer");
         }
-
-    }, [timer]);
+    }, [timer, t]);
 
     return (
         <Card
@@ -201,6 +204,7 @@ const TimerCard: FunctionComponent<TimerCardProps> = ({
                                 setDeleteDialogOpen(true);
                             }}
                             color="error"
+                            title={t("common.delete")}
                         >
                             <DeleteIcon />
                         </IconButton>
@@ -209,6 +213,7 @@ const TimerCard: FunctionComponent<TimerCardProps> = ({
                                 setEditDialogOpen(true);
                             }}
                             color="warning"
+                            title={t("common.edit")}
                         >
                             <EditIcon />
                         </IconButton>
@@ -217,6 +222,7 @@ const TimerCard: FunctionComponent<TimerCardProps> = ({
                                 setExecNowDialogOpen(true);
                             }}
                             color="success"
+                            title={t("timers.execNow")}
                         >
                             <ExecNowIcon />
                         </IconButton>
@@ -240,10 +246,10 @@ const TimerCard: FunctionComponent<TimerCardProps> = ({
                         setDeleteDialogOpen(false);
                     }}
                 >
-                    <DialogTitle>Delete timer?</DialogTitle>
+                    <DialogTitle>{t("timers.deleteTitle")}</DialogTitle>
                     <DialogContent>
                         <DialogContentText>
-                            Do you really want to delete {dialogTimerText}?
+                            {t("timers.deleteQuestion", {timer: dialogTimerText})}
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
@@ -252,7 +258,7 @@ const TimerCard: FunctionComponent<TimerCardProps> = ({
                                 setDeleteDialogOpen(false);
                             }}
                         >
-                            No
+                            {t("common.no")}
                         </Button>
                         <Button
                             onClick={() => {
@@ -261,7 +267,7 @@ const TimerCard: FunctionComponent<TimerCardProps> = ({
                             }}
                             autoFocus
                         >
-                            Yes
+                            {t("common.yes")}
                         </Button>
                     </DialogActions>
                 </Dialog>
@@ -287,10 +293,10 @@ const TimerCard: FunctionComponent<TimerCardProps> = ({
                         setExecNowDialogOpen(false);
                     }}
                 >
-                    <DialogTitle>Execute timer?</DialogTitle>
+                    <DialogTitle>{t("timers.execTitle")}</DialogTitle>
                     <DialogContent>
                         <DialogContentText>
-                            Do you really want to execute {dialogTimerText} right now?
+                            {t("timers.execQuestion", {timer: dialogTimerText})}
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
@@ -299,7 +305,7 @@ const TimerCard: FunctionComponent<TimerCardProps> = ({
                                 setExecNowDialogOpen(false);
                             }}
                         >
-                            No
+                            {t("common.no")}
                         </Button>
                         <Button
                             onClick={() => {
@@ -308,7 +314,7 @@ const TimerCard: FunctionComponent<TimerCardProps> = ({
                             }}
                             autoFocus
                         >
-                            Yes
+                            {t("common.yes")}
                         </Button>
                     </DialogActions>
                 </Dialog>

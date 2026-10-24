@@ -35,10 +35,11 @@ import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import PaperContainer from "../components/PaperContainer";
-import {UpdaterHelp} from "./res/UpdaterHelp";
 import DetailPageHeaderRow from "../components/DetailPageHeaderRow";
+import {Trans, useTranslation} from "react-i18next";
 
 const Updater = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         data: updaterState,
         isPending: updaterStatePending,
@@ -52,9 +53,9 @@ const Updater = (): React.ReactElement => {
             <Grid2 container direction="row">
                 <Box style={{width: "100%"}}>
                     <DetailPageHeaderRow
-                        title="Updater"
+                        title={t("updater.title")}
                         icon={<UpdaterIcon/>}
-                        helpText={UpdaterHelp}
+                        helpText={t("help.updater")}
                         onRefreshClick={() => {
                             refetchUpdaterState().catch(() => {
                                 /* intentional */
@@ -79,6 +80,8 @@ const UpdaterStateComponent : React.FunctionComponent<{ state: UpdaterState | un
     stateLoading,
     stateError
 }) => {
+    const {t} = useTranslation();
+
     if (stateLoading || !state) {
         return (
             <Skeleton height={"12rem"}/>
@@ -86,7 +89,7 @@ const UpdaterStateComponent : React.FunctionComponent<{ state: UpdaterState | un
     }
 
     if (stateError) {
-        return <Typography color="error">Error loading Updater state</Typography>;
+        return <Typography color="error">{t("updater.loadError")}</Typography>;
     }
 
     const getIconForState = () : React.ReactElement => {
@@ -115,7 +118,7 @@ const UpdaterStateComponent : React.FunctionComponent<{ state: UpdaterState | un
     const getContentForState = () : React.ReactElement | undefined => {
         if (state.busy && state.__class !== "ValetudoUpdaterDownloadingState") {
             return (
-                <Typography>The Updater is currently busy</Typography>
+                <Typography>{t("updater.busy")}</Typography>
             );
         } else {
             switch (state.__class) {
@@ -127,7 +130,7 @@ const UpdaterStateComponent : React.FunctionComponent<{ state: UpdaterState | un
                     return (
                         <>
                             <Typography>
-                                The Updater is currently downloading version
+                                {t("updater.downloading")}
                                 <br/>
                                 <span
                                     style={{
@@ -152,7 +155,7 @@ const UpdaterStateComponent : React.FunctionComponent<{ state: UpdaterState | un
                             defaultExpanded={true}
                         >
                             <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
-                                <Typography>Changelog for Valetudo {state.version}</Typography>
+                                <Typography>{t("updater.changelogFor", {version: state.version})}</Typography>
                             </AccordionSummary>
                             <AccordionDetails>
                                 <Box style={{width:"100%", paddingLeft: "1rem", paddingRight:"1rem"}}>
@@ -171,17 +174,16 @@ const UpdaterStateComponent : React.FunctionComponent<{ state: UpdaterState | un
                 case "ValetudoUpdaterIdleState":
                     return (
                         <Typography>
-                            You are currently running Valetudo {state.currentVersion}.<br/>
-                            There may be newer versions of Valetudo available.
+                            <Trans i18nKey="updater.idle" values={{version: state.currentVersion}}/>
                         </Typography>
                     );
                 case "ValetudoUpdaterApplyPendingState":
                     return (
-                        <Typography>Successfully downloaded {state.version}</Typography>
+                        <Typography>{t("updater.downloaded", {version: state.version})}</Typography>
                     );
                 case "ValetudoUpdaterDisabledState":
                     return (
-                        <Typography>The Updater was disabled in the Valetudo config.</Typography>
+                        <Typography>{t("updater.disabled")}</Typography>
                     );
                 case "ValetudoUpdaterNoUpdateRequiredState":
                     return (
@@ -189,7 +191,7 @@ const UpdaterStateComponent : React.FunctionComponent<{ state: UpdaterState | un
                             <Typography
                                 sx={{textAlign:"center", paddingBottom: "2rem"}}
                             >
-                                You are already running the latest version of Valetudo ({state.currentVersion})
+                                {t("updater.upToDate", {version: state.currentVersion})}
                             </Typography>
                             {
                                 state.changelog &&
@@ -198,7 +200,7 @@ const UpdaterStateComponent : React.FunctionComponent<{ state: UpdaterState | un
                                 >
                                     <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                                         <Typography sx={{ wordBreak: "break-all" }}>
-                                            Changelog for Valetudo {state.currentVersion}
+                                            {t("updater.changelogFor", {version: state.currentVersion})}
                                         </Typography>
                                     </AccordionSummary>
                                     <AccordionDetails>
@@ -239,8 +241,7 @@ const UpdaterStateComponent : React.FunctionComponent<{ state: UpdaterState | un
                 {
                     state.__class === "ValetudoUpdaterApplyPendingState" && !state.busy &&
                     <Typography color="red" style={{marginTop:"1rem", width: "80%"}}>
-                        Please keep in mind that each update can require troubleshooting post-update.<br/>
-                        Make sure that you&apos;ve thoroughly read the changelog to be aware of possible breaking changes.
+                        <Trans i18nKey="updater.applyWarning"/>
                     </Typography>
                 }
             </Grid2>
@@ -288,6 +289,7 @@ const StartUpdateControls: React.FunctionComponent<{
 }> = ({
     busyState
 }) => {
+    const {t} = useTranslation();
     const {mutate: sendCommand, isPending: commandExecuting} = useUpdaterCommandMutation();
 
     return (
@@ -300,7 +302,7 @@ const StartUpdateControls: React.FunctionComponent<{
             }}
             sx={{mt: 1, mb: 1}}
         >
-            Check for Updates
+            {t("updater.check")}
         </Button>
     );
 };
@@ -310,6 +312,7 @@ const DownloadUpdateControls: React.FunctionComponent<{
 }> = ({
     busyState
 }) => {
+    const {t} = useTranslation();
     const [dialogOpen, setDialogOpen] = React.useState(false);
     const {mutate: sendCommand, isPending: commandExecuting} = useUpdaterCommandMutation();
 
@@ -324,14 +327,14 @@ const DownloadUpdateControls: React.FunctionComponent<{
                 }}
                 sx={{mt: 1, mb: 1}}
             >
-                Download Update
+                {t("updater.download")}
             </Button>
             <ConfirmationDialog
-                title="Download Update?"
+                title={t("updater.downloadConfirmTitle")}
                 text={(
                     <>
-                        Do you want to download the displayed Valetudo update?<br/>
-                        Please make sure to fully read the provided changelog as it may contain breaking changes as well as other relevant information.
+                        {t("updater.downloadConfirmQuestion")}<br/>
+                        {t("updater.downloadConfirmWarning")}
                     </>
                 )}
                 open={dialogOpen}
@@ -351,6 +354,7 @@ const ApplyUpdateControls: React.FunctionComponent<{
 }> = ({
     busyState
 }) => {
+    const {t} = useTranslation();
     const [dialogOpen, setDialogOpen] = React.useState(false);
     const {mutate: sendCommand, isPending: commandExecuting} = useUpdaterCommandMutation();
 
@@ -366,11 +370,11 @@ const ApplyUpdateControls: React.FunctionComponent<{
                 }}
                 sx={{mt: 1, mb: 1}}
             >
-                Apply Update
+                {t("updater.apply")}
             </Button>
             <ConfirmationDialog
-                title="Apply Update?"
-                text="Do you want to apply the downloaded update? The robot may reboot during this procedure."
+                title={t("updater.applyConfirmTitle")}
+                text={t("updater.applyConfirmText")}
                 open={dialogOpen}
                 onClose={() => {
                     setDialogOpen(false);

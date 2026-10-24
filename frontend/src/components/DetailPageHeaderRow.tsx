@@ -5,6 +5,7 @@ import {
     Refresh as RefreshIcon,
 } from "@mui/icons-material";
 import HelpDialog from "./HelpDialog";
+import {useTranslation} from "react-i18next";
 
 const TopRightRefreshButton = styled(Button)(({theme}) => {
     return {
@@ -27,6 +28,7 @@ const DetailPageHeaderRow: FunctionComponent<DetailPageHeaderRowProps> = ({
     onRefreshClick,
     isRefreshing
 }): React.ReactElement => {
+    const {t} = useTranslation();
     const [helpDialogOpen, setHelpDialogOpen] = React.useState(false);
 
     return (
@@ -52,7 +54,7 @@ const DetailPageHeaderRow: FunctionComponent<DetailPageHeaderRowProps> = ({
                                         onClick={() => {
                                             return setHelpDialogOpen(true);
                                         }}
-                                        title="Help"
+                                        title={t("common.help")}
                                     >
                                         <HelpIcon/>
                                     </IconButton>
@@ -74,7 +76,7 @@ const DetailPageHeaderRow: FunctionComponent<DetailPageHeaderRowProps> = ({
                                 <TopRightRefreshButton
                                     loading={isRefreshing ?? false}
                                     onClick={onRefreshClick}
-                                    title="Refresh"
+                                    title={t("common.refresh")}
                                 >
                                     <RefreshIcon/>
                                 </TopRightRefreshButton>

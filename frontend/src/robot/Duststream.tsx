@@ -34,7 +34,7 @@ export const DuststreamCanvas = ({
             decodeFirstFrame: false,
             videoWidth: dimensions.width,
             videoHeight: dimensions.height,
-            createRenderer: (o) => new CRTCompositor(o, {label: "VALETUDO"})
+            createRenderer: (o) => new CRTCompositor(o, {label: "MOTA"})
         };
 
         const player = new Player(STREAM_URL, options);

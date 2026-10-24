@@ -8,9 +8,10 @@ import {
 } from "../../api";
 import {useCapabilitiesSupported} from "../../CapabilitiesProvider";
 import {CapabilityItem} from "./CapabilityLayout";
-import {VoicepackHelp} from "./res/VoicepackHelp";
+import {useTranslation} from "react-i18next";
 
 const VoicePackControl: FunctionComponent = () => {
+    const {t} = useTranslation();
     const {
         data: voicePack,
         isFetching: voicePackFetching,
@@ -43,7 +44,7 @@ const VoicePackControl: FunctionComponent = () => {
         if (voicePackError) {
             return (
                 <Typography color="error">
-                    Error loading voice pack management state.
+                    {t("robot.capabilities.voicePack.loadError")}
                 </Typography>
             );
         }
@@ -60,27 +61,27 @@ const VoicePackControl: FunctionComponent = () => {
         return (
             <>
                 <Typography variant="body1" sx={{mb: 1}}>
-                    Current language: {voicePack?.currentLanguage}
+                    {t("robot.capabilities.voicePack.currentLanguage", {language: voicePack?.currentLanguage})}
                 </Typography>
                 {isError && (
                     <Typography color="error">
-                        Error installing voice pack. Check the log for details.
+                        {t("robot.capabilities.voicePack.installError")}
                     </Typography>
                 )}
                 <Collapse in={isWorking}>
                     <Typography variant="subtitle1">
-                        {isDownloading ? "Downloading..." : "Installing..."}
+                        {isDownloading ? t("robot.capabilities.voicePack.downloading") : t("robot.capabilities.voicePack.installing")}
                     </Typography>
                     <LinearProgress color={isDownloading ? "success" : "secondary"} variant={progressVariant} value={progressValue} sx={{mb: 1}}/>
                 </Collapse>
 
-                <TextField label="URL" value={url} onChange={(e) => {
+                <TextField label={t("robot.capabilities.voicePack.url")} value={url} onChange={(e) => {
                     setUrl(e.target.value);
                 }} variant="standard" placeholder="https://" disabled={commandDisabled} fullWidth sx={{mb: 0.3}}/>
-                <TextField label="Language code" value={languageCode} onChange={(e) => {
+                <TextField label={t("robot.capabilities.voicePack.languageCode")} value={languageCode} onChange={(e) => {
                     setLanguageCode(e.target.value);
                 }} variant="standard" placeholder="VA" disabled={commandDisabled} fullWidth sx={{mb: 0.3}}/>
-                <TextField label="Hash" value={hash} onChange={(e) => {
+                <TextField label={t("robot.capabilities.voicePack.hash")} value={hash} onChange={(e) => {
                     setHash(e.target.value);
                 }} variant="standard" disabled={commandDisabled} fullWidth sx={{mb: 1}}/>
 
@@ -96,18 +97,18 @@ const VoicePackControl: FunctionComponent = () => {
                         };
                         sendVoicePackCommand(command);
                     }}>
-                    Set voice pack
+                    {t("robot.capabilities.voicePack.set")}
                 </Button>
             </>
         );
-    }, [sendVoicePackCommand, voicePack, voicePackError, voicePackMutating, hash, languageCode, url]);
+    }, [sendVoicePackCommand, voicePack, voicePackError, voicePackMutating, hash, languageCode, url, t]);
 
     const loading = voicePackFetching || voicePackMutating || !voicePack;
     return (
         <CapabilityItem
-            title="Voice packs"
+            title={t("robot.capabilities.voicePack.title")}
             loading={loading}
-            helpText={VoicepackHelp}
+            helpText={t("help.voicepack")}
         >
             {voicePackContent}
         </CapabilityItem>

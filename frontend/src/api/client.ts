@@ -86,6 +86,7 @@ import {
 import { floorObject } from "./utils";
 import {preprocessMap} from "./mapUtils";
 import ReconnectingEventSource from "reconnecting-eventsource";
+import i18n from "../i18n";
 
 export const valetudoAPIBaseURL = "./api/v2";
 export const valetudoAPI = axios.create({
@@ -384,7 +385,7 @@ export const sendSetSegmentMaterialCommand = async (parameters: MapSegmentMateri
         })
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not set segment material");
+                throw new Error(i18n.t("api.errors.setSegmentMaterial"));
             }
         });
 };
@@ -430,7 +431,7 @@ export const sendConsumableReset = async (parameters: ConsumableId): Promise<voi
         })
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not reset consumable");
+                throw new Error(i18n.t("api.errors.resetConsumable"));
             }
         });
 };
@@ -462,7 +463,7 @@ export const sendDismissWelcomeDialogAction = async (): Promise<void> => {
         .put("/valetudo/action", {"action": "dismissWelcomeDialog"})
         .then(({ status }) => {
             if (status !== 200) {
-                throw new Error("Could not dismiss welcome dialog");
+                throw new Error(i18n.t("api.errors.dismissWelcomeDialog"));
             }
         });
 };
@@ -472,7 +473,7 @@ export const sendRestoreDefaultConfigurationAction = async (): Promise<void> => 
         .put("/valetudo/action", {"action": "restoreDefaultConfiguration"})
         .then(({ status }) => {
             if (status !== 200) {
-                throw new Error("Could not restore default configuration.");
+                throw new Error(i18n.t("api.errors.restoreDefaultConfiguration"));
             }
         });
 };
@@ -519,7 +520,7 @@ export const sendValetudoLogLevel = async (logLevel: SetLogLevelRequest): Promis
         .put("/valetudo/log/level", logLevel)
         .then(({ status }) => {
             if (status !== 200) {
-                throw new Error("Could not set new log level");
+                throw new Error(i18n.t("api.errors.setNewLogLevel"));
             }
         });
 };
@@ -553,7 +554,7 @@ export const sendMQTTConfiguration = async (mqttConfiguration: MQTTConfiguration
         .put("/valetudo/config/interfaces/mqtt", mqttConfiguration)
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not update MQTT configuration");
+                throw new Error(i18n.t("api.errors.updateMQTTConfiguration"));
             }
         });
 };
@@ -587,7 +588,7 @@ export const sendHTTPBasicAuthConfiguration = async (configuration: HTTPBasicAut
         .put("/valetudo/config/interfaces/http/auth/basic", configuration)
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not update HTTP basic auth configuration");
+                throw new Error(i18n.t("api.errors.updateHTTPBasicAuthConfiguration"));
             }
         });
 };
@@ -605,7 +606,7 @@ export const sendNetworkAdvertisementConfiguration = async (configuration: Netwo
         .put("/networkadvertisement/config", configuration)
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not update NetworkAdvertisement configuration");
+                throw new Error(i18n.t("api.errors.updateNetworkAdvertisementConfiguration"));
             }
         });
 };
@@ -639,7 +640,7 @@ export const sendNTPClientConfiguration = async (configuration: NTPClientConfigu
         .put("/ntpclient/config", configuration)
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not update NTP client configuration");
+                throw new Error(i18n.t("api.errors.updateNTPClientConfiguration"));
             }
         });
 };
@@ -657,7 +658,7 @@ export const deleteTimer = async (id: string): Promise<void> => {
 export const sendTimerCreation = async (timerData: Timer): Promise<void> => {
     await valetudoAPI.post("/timers", timerData).then(({ status }) => {
         if (status !== 200) {
-            throw new Error("Could not create timer");
+            throw new Error(i18n.t("api.errors.createTimer"));
         }
     });
 };
@@ -667,7 +668,7 @@ export const sendTimerUpdate = async (timerData: Timer): Promise<void> => {
         .put(`/timers/${timerData.id}`, timerData)
         .then(({ status }) => {
             if (status !== 200) {
-                throw new Error("Could not update timer");
+                throw new Error(i18n.t("api.errors.updateTimer"));
             }
         });
 };
@@ -677,7 +678,7 @@ export const sendTimerAction = async (timerId: string, timerAction: "execute_now
         .put(`/timers/${timerId}/action`, {action: timerAction})
         .then(({ status }) => {
             if (status !== 200) {
-                throw new Error("Could not send timer action");
+                throw new Error(i18n.t("api.errors.sendTimerAction"));
             }
         });
 };
@@ -703,7 +704,7 @@ export const sendValetudoEventInteraction = async (interaction: ValetudoEventInt
         .put(`/events/${interaction.id}/interact`, interaction.interaction)
         .then(({ status }) => {
             if (status !== 200) {
-                throw new Error("Could not interact with event");
+                throw new Error(i18n.t("api.errors.interactWithEvent"));
             }
         });
 };
@@ -723,7 +724,7 @@ const sendToggleMutation = async (capability: Capability, enable: boolean): Prom
         })
         .then(({ status }) => {
             if (status !== 200) {
-                throw new Error(`Could not change ${capability} state`);
+                throw new Error(i18n.t("api.errors.changeCapabilityState", {capability: capability}));
             }
         });
 };
@@ -739,7 +740,7 @@ export const sendMapReset = async (): Promise<void> => {
         })
         .then(({ status }) => {
             if (status !== 200) {
-                throw new Error("Could not reset the map");
+                throw new Error(i18n.t("api.errors.resetTheMap"));
             }
         });
 };
@@ -751,7 +752,7 @@ export const sendStartMappingPass = async (): Promise<void> => {
         })
         .then(({ status }) => {
             if (status !== 200) {
-                throw new Error("Could not start the mapping pass");
+                throw new Error(i18n.t("api.errors.startTheMappingPass"));
             }
         });
 };
@@ -772,7 +773,7 @@ export const sendSpeakerVolume = async (volume: number): Promise<void> => {
         })
         .then(({ status }) => {
             if (status !== 200) {
-                throw new Error("Could not change speaker volume");
+                throw new Error(i18n.t("api.errors.changeSpeakerVolume"));
             }
         });
 };
@@ -790,7 +791,7 @@ export const sendVoicePackManagementCommand = async (command: VoicePackManagemen
         .put(`/robot/capabilities/${Capability.VoicePackManagement}`, command)
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not send voice pack management command");
+                throw new Error(i18n.t("api.errors.sendVoicePackManagementCommand"));
             }
         });
 };
@@ -875,7 +876,7 @@ export const sendDoNotDisturbConfiguration = async (configuration: DoNotDisturbC
         .put(`/robot/capabilities/${Capability.DoNotDisturb}`, configuration)
         .then(({ status }) => {
             if (status !== 200) {
-                throw new Error("Could not update DND configuration");
+                throw new Error(i18n.t("api.errors.updateDNDConfiguration"));
             }
         });
 };
@@ -902,7 +903,7 @@ export const sendWifiConfiguration = async (configuration: WifiConfiguration): P
         .put(`/robot/capabilities/${Capability.WifiConfiguration}`, configuration)
         .then(({ status }) => {
             if (status !== 200) {
-                throw new Error("Could not set Wifi configuration");
+                throw new Error(i18n.t("api.errors.setWifiConfiguration"));
             }
         });
 };
@@ -936,7 +937,7 @@ export const sendManualControlInteraction = async (interaction: ManualControlInt
         .put(`/robot/capabilities/${Capability.ManualControl}`, interaction)
         .then(({ status }) => {
             if (status !== 200) {
-                throw new Error("Could not send manual control interaction");
+                throw new Error(i18n.t("api.errors.sendManualControlInteraction"));
             }
         });
 };
@@ -954,7 +955,7 @@ export const sendHighResolutionManualControlInteraction = async (interaction: Hi
         .put(`/robot/capabilities/${Capability.HighResolutionManualControl}`, interaction)
         .then(({ status }) => {
             if (status !== 200) {
-                throw new Error("Could not send high resolution manual control interaction");
+                throw new Error(i18n.t("api.errors.sendHighResolutionManualControlInteraction"));
             }
         });
 };
@@ -991,7 +992,7 @@ export const sendUpdaterConfiguration = async (configuration: UpdaterConfigurati
         .put("/updater/config", configuration)
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not update updater configuration");
+                throw new Error(i18n.t("api.errors.updateUpdaterConfiguration"));
             }
         });
 };
@@ -1158,7 +1159,7 @@ export const sendValetudoCustomizations = async (customizations: ValetudoCustomi
         .put("/valetudo/config/customizations", customizations)
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not update ValetudoCustomizations");
+                throw new Error(i18n.t("api.errors.updateValetudoCustomizations"));
             }
         });
 };
@@ -1169,7 +1170,7 @@ export const sendCarpetSensorMode = async (payload: CarpetSensorModePayload): Pr
         .put(`/robot/capabilities/${Capability.CarpetSensorModeControl}`, payload)
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not send carpet sensor mode");
+                throw new Error(i18n.t("api.errors.sendCarpetSensorMode"));
             }
         });
 };
@@ -1197,7 +1198,7 @@ export const sendAutoEmptyDockAutoEmptyInterval = async (payload: AutoEmptyDockA
         .put(`/robot/capabilities/${Capability.AutoEmptyDockAutoEmptyIntervalControl}`, payload)
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not send auto empty dock auto empty interval");
+                throw new Error(i18n.t("api.errors.sendAutoEmptyDockAutoEmptyInterval"));
             }
         });
 };
@@ -1261,7 +1262,7 @@ export const sendDuststreamingConfiguration = async (configuration: Duststreamin
         .put("/valetudo/config/duststreaming", configuration)
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not update dust streaming configuration");
+                throw new Error(i18n.t("api.errors.updateDustStreamingConfiguration"));
             }
         });
 };
@@ -1271,7 +1272,7 @@ export const sendMopDockMopWashTemperature = async (payload: MopDockMopWashTempe
         .put(`/robot/capabilities/${Capability.MopDockMopWashTemperatureControl}`, payload)
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not send mop dock mop wash temperature");
+                throw new Error(i18n.t("api.errors.sendMopDockMopWashTemperature"));
             }
         });
 };
@@ -1343,7 +1344,7 @@ export const sendCleanRoute = async (payload: CleanRoutePayload): Promise<void> 
         .put(`/robot/capabilities/${Capability.CleanRouteControl}`, payload)
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not send clean route");
+                throw new Error(i18n.t("api.errors.sendCleanRoute"));
             }
         });
 };
@@ -1371,7 +1372,7 @@ export const sendMopDockMopDryingTime = async (payload: MopDockMopDryingTimePayl
         .put(`/robot/capabilities/${Capability.MopDockMopDryingTimeControl}`, payload)
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not send mop dock mop drying time");
+                throw new Error(i18n.t("api.errors.sendMopDockMopDryingTime"));
             }
         });
 };
@@ -1399,7 +1400,7 @@ export const sendAutoEmptyDockAutoEmptyDuration = async (payload: AutoEmptyDockA
         .put(`/robot/capabilities/${Capability.AutoEmptyDockAutoEmptyDurationControl}`, payload)
         .then(({status}) => {
             if (status !== 200) {
-                throw new Error("Could not send auto empty dock auto empty duration");
+                throw new Error(i18n.t("api.errors.sendAutoEmptyDockAutoEmptyDuration"));
             }
         });
 };

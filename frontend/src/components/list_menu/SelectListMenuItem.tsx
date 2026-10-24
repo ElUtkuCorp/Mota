@@ -9,6 +9,7 @@ import {
     Select,
     Typography
 } from "@mui/material";
+import {useTranslation} from "react-i18next";
 
 export type SelectListMenuItemOption = {
     value: string,
@@ -36,12 +37,13 @@ export const SelectListMenuItem: React.FunctionComponent<{
     secondaryLabel,
     icon
 }): React.ReactElement => {
+    const {t} = useTranslation();
     let select;
 
     if (loadingOptions) {
         select = <CircularProgress/>;
     } else if (loadError) {
-        select = <Typography variant="body2" color="error">Error</Typography>;
+        select = <Typography variant="body2" color="error">{t("common.error")}</Typography>;
     } else {
         select = (
             <Select

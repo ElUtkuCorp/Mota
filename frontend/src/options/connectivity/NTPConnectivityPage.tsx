@@ -28,6 +28,15 @@ import InfoBox from "../../components/InfoBox";
 import PaperContainer from "../../components/PaperContainer";
 import DetailPageHeaderRow from "../../components/DetailPageHeaderRow";
 import {extractHostFromUrl} from "../../utils";
+import {useTranslation} from "react-i18next";
+import {formatNumber} from "../../i18n";
+import {formatDateTime} from "../../utils";
+
+const formatRobotTime = (robotTime: string): string => {
+    const date = new Date(robotTime);
+
+    return isNaN(date.getTime()) ? robotTime : formatDateTime(date);
+};
 
 const NTPClientStatusComponent: React.FunctionComponent<{
     status: NTPClientStatus | undefined,
@@ -38,6 +47,8 @@ const NTPClientStatusComponent: React.FunctionComponent<{
     statusLoading,
     stateError
 }) => {
+    const {t} = useTranslation();
+
     if (statusLoading || !status) {
         return (
             <Skeleton height={"8rem"}/>
@@ -45,7 +56,7 @@ const NTPClientStatusComponent: React.FunctionComponent<{
     }
 
     if (stateError) {
-        return <Typography color="error">Error loading NTPClient state</Typography>;
+        return <Typography color="error">{t("options.ntp.stateLoadError")}</Typography>;
     }
 
     const getIconForState = (): React.ReactElement => {
@@ -66,23 +77,23 @@ const NTPClientStatusComponent: React.FunctionComponent<{
             case "ValetudoNTPClientErrorState":
                 return (
                     <>
-                        <Typography variant="h5" color="red">Error: {status.state.type}</Typography>
+                        <Typography variant="h5" color="red">{t("options.ntp.errorState", {type: status.state.type})}</Typography>
                         <Typography color="red">{status.state.message}</Typography>
                     </>
                 );
             case "ValetudoNTPClientEnabledState":
                 return (
-                    <Typography variant="h5">Time sync enabled</Typography>
+                    <Typography variant="h5">{t("options.ntp.syncEnabled")}</Typography>
                 );
             case "ValetudoNTPClientDisabledState":
                 return (
-                    <Typography variant="h5">Time sync disabled</Typography>
+                    <Typography variant="h5">{t("options.ntp.syncDisabled")}</Typography>
                 );
             case "ValetudoNTPClientSyncedState":
                 return (
                     <>
-                        <Typography variant="h5">Time sync successful</Typography>
-                        <Typography>Offset: {status.state.offset} ms</Typography>
+                        <Typography variant="h5">{t("options.ntp.syncSuccessful")}</Typography>
+                        <Typography>{t("options.ntp.offset", {offset: status.state.offset !== undefined ? formatNumber(status.state.offset) : "?"})}</Typography>
                     </>
                 );
         }
@@ -113,13 +124,14 @@ const NTPClientStatusComponent: React.FunctionComponent<{
                     marginTop: "0.5rem"
                 }}
             >
-                Current robot time: {status.robotTime}
+                {t("options.ntp.robotTime", {time: formatRobotTime(status.robotTime)})}
             </Grid2>
         </Grid2>
     );
 };
 
 const NTPConnectivity = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         data: ntpClientStatus,
         isPending: ntpClientStatusPending,
@@ -159,7 +171,7 @@ const NTPConnectivity = (): React.ReactElement => {
     }
 
     if (ntpClientStatusError || ntpClientConfigError || !ntpClientStatus || !ntpClientConfig) {
-        return <Typography color="error">Error loading NTP Client configuration</Typography>;
+        return <Typography color="error">{t("options.ntp.configLoadError")}</Typography>;
     }
 
     return (
@@ -180,14 +192,14 @@ const NTPConnectivity = (): React.ReactElement => {
                         }}
                     />
                 }
-                label="NTP enabled"
+                label={t("options.ntp.enabled")}
                 sx={{mb: 1}}
             />
             <Grid2 container spacing={1} sx={{mb: 2}}>
                 <Grid2 style={{flexGrow: 1}}>
                     <TextField
                         style={{width: "100%"}}
-                        label="Server"
+                        label={t("options.ntp.server")}
                         value={server}
                         disabled={!enabled}
                         variant="standard"
@@ -200,7 +212,7 @@ const NTPConnectivity = (): React.ReactElement => {
                 <Grid2 style={{flexGrow: 1}}>
                     <TextField
                         style={{width: "100%"}}
-                        label="Port"
+                        label={t("options.ntp.port")}
                         value={port}
                         disabled={!enabled}
                         type="number"
@@ -215,7 +227,7 @@ const NTPConnectivity = (): React.ReactElement => {
                 <Grid2 style={{flexGrow: 1}}>
                     <TextField
                         style={{width: "100%"}}
-                        label="Interval (hours)"
+                        label={t("options.ntp.interval")}
                         value={ntpInterval / 3_600_000}
                         sx={{minWidth: 100}}
                         disabled={!enabled}
@@ -231,7 +243,7 @@ const NTPConnectivity = (): React.ReactElement => {
                 <Grid2 style={{flexGrow: 1}}>
                     <TextField
                         style={{width: "100%"}}
-                        label="Timeout (seconds)"
+                        label={t("options.ntp.timeout")}
                         value={ntpTimeout / 1000}
                         sx={{minWidth: 150}}
                         disabled={!enabled}
@@ -254,8 +266,7 @@ const NTPConnectivity = (): React.ReactElement => {
                 }}
             >
                 <Typography color="info">
-                    Valetudo needs a synchronized clock for timers to work and the log timestamps to make sense.
-                    Additionally, anything using TLS (e.g. the inbuilt Updater) also requires the correct current time to work.
+                    {t("options.ntp.info")}
                 </Typography>
             </InfoBox>
 
@@ -278,7 +289,7 @@ const NTPConnectivity = (): React.ReactElement => {
                             setConfigurationModified(false);
                         }}
                     >
-                        Save configuration
+                        {t("options.common.saveConfiguration")}
                     </Button>
                 </Grid2>
             </Grid2>
@@ -287,6 +298,7 @@ const NTPConnectivity = (): React.ReactElement => {
 };
 
 const NTPConnectivityPage = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         isFetching: ntpClientStatusFetching,
         refetch: refetchNtpClientState
@@ -297,7 +309,7 @@ const NTPConnectivityPage = (): React.ReactElement => {
             <Grid2 container direction="row">
                 <Box style={{width: "100%"}}>
                     <DetailPageHeaderRow
-                        title="NTP Connectivity"
+                        title={t("options.ntp.header")}
                         icon={<NTPIcon/>}
                         onRefreshClick={() => {
                             refetchNtpClientState().catch(() => {

@@ -31,6 +31,7 @@ import { InputModeToggle } from "./manual_control/InputModeToggle";
 import { KeyboardInput } from "./manual_control/KeyboardInput";
 import { DPadInput } from "./manual_control/DPadInput";
 import { ControllerVisual } from "./manual_control/ControllerVisual";
+import {useTranslation} from "react-i18next";
 
 function ModeSwitchReset({ mode }: { mode: InputMode }) {
     const { resetState } = useVirtualController();
@@ -45,6 +46,7 @@ function ModeSwitchReset({ mode }: { mode: InputMode }) {
 }
 
 const HighResolutionControlToggle = () => {
+    const {t} = useTranslation();
     const {
         data: manualControlState,
         isPending: manualControlStatePending,
@@ -64,13 +66,14 @@ const HighResolutionControlToggle = () => {
                     }}
                 />
             }
-            label="Enable manual control"
+            label={t("manualControl.enable")}
             style={{ marginLeft: 0 }}
         />
     );
 };
 
 const StandardControlToggle = () => {
+    const {t} = useTranslation();
     const {
         data: manualControlState,
         isPending: manualControlStatePending,
@@ -90,7 +93,7 @@ const StandardControlToggle = () => {
                     }}
                 />
             }
-            label="Enable manual control"
+            label={t("manualControl.enable")}
             style={{ marginLeft: 0 }}
         />
     );
@@ -187,6 +190,7 @@ const StandardMovementControls = () => {
 };
 
 const HighResolutionManualControlInternal: React.FunctionComponent = (): React.ReactElement => {
+    const {t} = useTranslation();
     const { isPending: stateLoading, isError: stateError } = useHighResolutionManualControlStateQuery();
 
     return (
@@ -195,7 +199,7 @@ const HighResolutionManualControlInternal: React.FunctionComponent = (): React.R
                 <Skeleton height={"12rem"} />
             ) : (
                 <>
-                    {stateError && <Typography color="error">Error loading manual controls</Typography>}
+                    {stateError && <Typography color="error">{t("manualControl.loadError")}</Typography>}
                     <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
                         <HighResolutionControlToggle />
                     </Box>
@@ -207,6 +211,7 @@ const HighResolutionManualControlInternal: React.FunctionComponent = (): React.R
 };
 
 const ManualControlInternal: React.FunctionComponent = (): React.ReactElement => {
+    const {t} = useTranslation();
     const { isPending: stateLoading, isError: stateError } = useManualControlStateQuery();
     const { isPending: propertiesLoading, isError: propertiesError } = useManualControlPropertiesQuery();
 
@@ -219,7 +224,7 @@ const ManualControlInternal: React.FunctionComponent = (): React.ReactElement =>
                 <Skeleton height={"12rem"} />
             ) : (
                 <>
-                    {hasError && <Typography color="error">Error loading manual controls</Typography>}
+                    {hasError && <Typography color="error">{t("manualControl.loadError")}</Typography>}
                     <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
                         <StandardControlToggle />
                     </Box>
@@ -231,6 +236,7 @@ const ManualControlInternal: React.FunctionComponent = (): React.ReactElement =>
 };
 
 const ManualControl = (): React.ReactElement => {
+    const {t} = useTranslation();
     const [highResSupported, standardSupported] = useCapabilitiesSupported(
         Capability.HighResolutionManualControl,
         Capability.ManualControl
@@ -247,7 +253,7 @@ const ManualControl = (): React.ReactElement => {
     } else if (standardSupported) {
         controlComponent = <ManualControlInternal />;
     } else {
-        controlComponent = <Typography color="error">This robot does not support manual control.</Typography>;
+        controlComponent = <Typography color="error">{t("manualControl.notSupported")}</Typography>;
     }
 
     return (

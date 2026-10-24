@@ -3,7 +3,6 @@ import {
     RestartAlt as ConfigRestoreIcon,
     SystemUpdateAlt as UpdaterIcon,
     Badge as FriendlyNameIcon,
-    Equalizer as StatisticsIcon,
     Source as RepositoryIcon,
 } from "@mui/icons-material";
 import {ListMenu} from "../components/list_menu/ListMenu";
@@ -23,12 +22,11 @@ import {SelectListMenuItem, SelectListMenuItemOption} from "../components/list_m
 import {SpacerListMenuItem} from "../components/list_menu/SpacerListMenuItem";
 import { TextEditModalListMenuItem } from "../components/list_menu/TextEditModalListMenuItem";
 import { DuststreamingListMenuItem } from "../components/list_menu/DuststreamingListMenuItem";
-import { ActivationListMenuItem } from "./ValetudoActivation";
-import {isAprilFools} from "../utils";
-import {LinkListMenuItem} from "../components/list_menu/LinkListMenuItem";
+import {useTranslation} from "react-i18next";
 
 
 const ConfigRestoreButtonListMenuItem = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         mutate: restoreDefaultConfiguration,
         isPending: restoreDefaultConfigurationIsExecuting
@@ -36,14 +34,14 @@ const ConfigRestoreButtonListMenuItem = (): React.ReactElement => {
 
     return (
         <ButtonListMenuItem
-            primaryLabel="Restore Default Configuration"
-            secondaryLabel="This will only affect Valetudo"
+            primaryLabel={t("options.mota.restoreDefaults.title")}
+            secondaryLabel={t("options.mota.restoreDefaults.description")}
             icon={<ConfigRestoreIcon/>}
-            buttonLabel="Go"
+            buttonLabel={t("options.mota.restoreDefaults.button")}
             buttonColor={"error"}
             confirmationDialog={{
-                title: "Restore default Valetudo configuration?",
-                body: "Are you sure that you want to restore the default configuration? This will not affect Wi-Fi settings, Map data etc."
+                title: t("options.mota.restoreDefaults.confirmTitle"),
+                body: t("options.mota.restoreDefaults.confirmBody")
             }}
             action={() => {
                 restoreDefaultConfiguration();
@@ -54,6 +52,7 @@ const ConfigRestoreButtonListMenuItem = (): React.ReactElement => {
 };
 
 const FriendlyNameEditModalListMenuItem = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         data: valetudoCustomizations,
         isPending: valetudoCustomizationsPending,
@@ -63,7 +62,7 @@ const FriendlyNameEditModalListMenuItem = (): React.ReactElement => {
         isPending: valetudoCustomizationsUpdating
     } = useValetudoCustomizationsMutation();
 
-    const description = "Set a custom friendly name for Network Advertisement, MQTT etc.";
+    const description = t("options.mota.friendlyName.description");
     let secondaryLabel = description;
 
     if (valetudoCustomizations && valetudoCustomizations.friendlyName !== "") {
@@ -76,7 +75,7 @@ const FriendlyNameEditModalListMenuItem = (): React.ReactElement => {
             value={valetudoCustomizations?.friendlyName ?? ""}
 
             dialog={{
-                title: "Custom Friendly Name",
+                title: t("options.mota.friendlyName.title"),
                 description: description,
 
                 validatingTransformer: (newValue: string) => {
@@ -90,24 +89,26 @@ const FriendlyNameEditModalListMenuItem = (): React.ReactElement => {
             }}
 
             icon={<FriendlyNameIcon/>}
-            primaryLabel={"Custom Friendly Name"}
+            primaryLabel={t("options.mota.friendlyName.title")}
             secondaryLabel={secondaryLabel}
         />
     );
 };
 
+// Labels are i18n keys
 const updateProviders : Array<SelectListMenuItemOption> = [
     {
         value: "github",
-        label: "Estable"
+        label: "options.updater.channel.stable"
     },
     {
         value: "github_nightly",
-        label: "Pruebas (pre-releases)"
+        label: "options.updater.channel.prerelease"
     }
 ];
 
 const UpdateProviderSelectListMenuItem = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         data: storedConfiguration,
         isPending: configurationPending,
@@ -118,11 +119,20 @@ const UpdateProviderSelectListMenuItem = (): React.ReactElement => {
 
     const disabled = configurationPending || configurationUpdating || configurationError;
 
-    const currentValue = updateProviders.find(provider => provider.value === storedConfiguration?.updateProvider) ?? {value: "", label: ""};
+    const translatedUpdateProviders = React.useMemo(() => {
+        return updateProviders.map(provider => {
+            return {
+                value: provider.value,
+                label: t(provider.label)
+            };
+        });
+    }, [t]);
+
+    const currentValue = translatedUpdateProviders.find(provider => provider.value === storedConfiguration?.updateProvider) ?? {value: "", label: ""};
 
     return (
         <SelectListMenuItem
-            options={updateProviders}
+            options={translatedUpdateProviders}
             currentValue={currentValue}
             setValue={(e) => {
                 updateConfiguration({
@@ -132,8 +142,8 @@ const UpdateProviderSelectListMenuItem = (): React.ReactElement => {
             disabled={disabled}
             loadingOptions={false}
             loadError={configurationError}
-            primaryLabel="Canal de actualizaciones"
-            secondaryLabel="Estable usa solo las releases publicadas; Pruebas incluye también las pre-releases"
+            primaryLabel={t("options.updater.channel.title")}
+            secondaryLabel={t("options.updater.channel.description")}
             icon={<UpdaterIcon/>}
         />
     );
@@ -142,13 +152,14 @@ const UpdateProviderSelectListMenuItem = (): React.ReactElement => {
 // Mota: repositorio de GitHub del que se descargan las actualizaciones (modo avanzado), para que
 // quien haga su propio fork pueda cambiarlo sin tocar código
 const UpdateRepositoryEditModalListMenuItem = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         data: storedConfiguration,
         isPending: configurationPending,
     } = useUpdaterConfigurationQuery();
     const {mutate: updateConfiguration, isPending: configurationUpdating} = useUpdaterConfigurationMutation();
 
-    const description = "Avanzado: repositorio de GitHub (propietario/nombre) del que se descargan las actualizaciones. Déjalo vacío para usar el de Mota.";
+    const description = t("options.updater.repository.description");
 
     return (
         <TextEditModalListMenuItem
@@ -156,7 +167,7 @@ const UpdateRepositoryEditModalListMenuItem = (): React.ReactElement => {
             value={storedConfiguration?.repository ?? ""}
 
             dialog={{
-                title: "Repositorio de actualizaciones",
+                title: t("options.updater.repository.title"),
                 description: description,
 
                 validatingTransformer: (newValue: string) => {
@@ -171,13 +182,14 @@ const UpdateRepositoryEditModalListMenuItem = (): React.ReactElement => {
             }}
 
             icon={<RepositoryIcon/>}
-            primaryLabel="Repositorio de actualizaciones"
+            primaryLabel={t("options.updater.repository.title")}
             secondaryLabel={storedConfiguration?.repository ?? description}
         />
     );
 };
 
 const ValetudoOptions = (): React.ReactElement => {
+    const {t} = useTranslation();
     const [duststreamingCapabilitySupported] = useCapabilitiesSupported(
         Capability.Duststreaming,
     );
@@ -189,13 +201,6 @@ const ValetudoOptions = (): React.ReactElement => {
             <FriendlyNameEditModalListMenuItem key={"friendlyName"}/>,
             <UpdateProviderSelectListMenuItem key={"updateProviderSelect"}/>,
             <UpdateRepositoryEditModalListMenuItem key={"updateRepository"}/>,
-            <LinkListMenuItem
-                key={"analytics"}
-                url="/options/valetudo/analytics"
-                primaryLabel="Analytics"
-                secondaryLabel="Learn how we use your data"
-                icon={<StatisticsIcon />}
-            />,
         ];
 
         if (duststreamingCapabilitySupported) {
@@ -205,21 +210,14 @@ const ValetudoOptions = (): React.ReactElement => {
             );
         }
 
-        if (isAprilFools) {
-            items.unshift(
-                <ActivationListMenuItem key={"activation"}/>,
-                <SpacerListMenuItem key={"spacer2"}/>
-            );
-        }
-
         return items;
     }, [duststreamingCapabilitySupported]);
 
     return (
         <PaperContainer>
             <ListMenu
-                primaryHeader={"Valetudo Options"}
-                secondaryHeader={"Tunables and actions provided by Valetudo"}
+                primaryHeader={t("options.mota.title")}
+                secondaryHeader={t("options.mota.description")}
                 listItems={listItems}
             />
         </PaperContainer>

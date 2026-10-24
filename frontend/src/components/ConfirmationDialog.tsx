@@ -1,5 +1,6 @@
 import {Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from "@mui/material";
 import React, {FunctionComponent} from "react";
+import {useTranslation} from "react-i18next";
 
 interface YesNoDialogProps {
     title: string;
@@ -18,6 +19,8 @@ const ConfirmationDialog: FunctionComponent<YesNoDialogProps> = ({
     onClose,
     onAccept,
 }): React.ReactElement => {
+    const {t} = useTranslation();
+
     return (
         <Dialog
             open={open}
@@ -43,11 +46,11 @@ const ConfirmationDialog: FunctionComponent<YesNoDialogProps> = ({
                     onAccept();
                     onClose();
                 }} autoFocus>
-                    Yes
+                    {t("common.yes")}
                 </Button>
                 <Button onClick={() => {
                     onClose();
-                }}>No</Button>
+                }}>{t("common.no")}</Button>
             </DialogActions>
         </Dialog>
     );

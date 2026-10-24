@@ -12,8 +12,10 @@ import {
 import {ListMenu} from "../../components/list_menu/ListMenu";
 import {SpacerListMenuItem} from "../../components/list_menu/SpacerListMenuItem";
 import PaperContainer from "../../components/PaperContainer";
+import {useTranslation} from "react-i18next";
 
 const ConnectivityOptions = (): React.ReactElement => {
+    const {t} = useTranslation();
     const [
         wifiConfigurationCapabilitySupported,
     ] = useCapabilitiesSupported(
@@ -28,8 +30,8 @@ const ConnectivityOptions = (): React.ReactElement => {
                 <LinkListMenuItem
                     key="wifiConfiguration"
                     url="/options/connectivity/wifi"
-                    primaryLabel="Wi-Fi Connectivity"
-                    secondaryLabel="Check connection details and modify the configuration"
+                    primaryLabel={t("options.connectivity.wifi.title")}
+                    secondaryLabel={t("options.connectivity.wifi.description")}
                     icon={<WifiIcon/>}
                 />
             );
@@ -41,8 +43,8 @@ const ConnectivityOptions = (): React.ReactElement => {
             <LinkListMenuItem
                 key="mqttConnectivity"
                 url="/options/connectivity/mqtt"
-                primaryLabel="MQTT Connectivity"
-                secondaryLabel="Connect Valetudo to your MQTT Broker"
+                primaryLabel={t("options.connectivity.mqtt.title")}
+                secondaryLabel={t("options.connectivity.mqtt.description")}
                 icon={<MQTTIcon/>}
             />
         );
@@ -51,8 +53,8 @@ const ConnectivityOptions = (): React.ReactElement => {
             <LinkListMenuItem
                 key="ntpConnectivity"
                 url="/options/connectivity/ntp"
-                primaryLabel="NTP Connectivity"
-                secondaryLabel="Configure the integrated Network Time Protocol (NTP) client"
+                primaryLabel={t("options.connectivity.ntp.title")}
+                secondaryLabel={t("options.connectivity.ntp.description")}
                 icon={<NTPIcon/>}
             />
         );
@@ -61,8 +63,8 @@ const ConnectivityOptions = (): React.ReactElement => {
             <LinkListMenuItem
                 key="networkAdvertisementSettings"
                 url="/options/connectivity/networkadvertisement"
-                primaryLabel="Network Advertisement"
-                secondaryLabel="Control Bonjour/mDNS and SSDP/UPnP discoverability"
+                primaryLabel={t("options.connectivity.networkAdvertisement.title")}
+                secondaryLabel={t("options.connectivity.networkAdvertisement.description")}
                 icon={<NetworkAdvertisementIcon/>}
             />
         );
@@ -71,22 +73,23 @@ const ConnectivityOptions = (): React.ReactElement => {
             <LinkListMenuItem
                 key="authSettings"
                 url="/options/connectivity/auth"
-                primaryLabel="Auth Settings"
-                secondaryLabel="Restrict access to Valetudo"
+                primaryLabel={t("options.connectivity.auth.title")}
+                secondaryLabel={t("options.connectivity.auth.description")}
                 icon={<AuthIcon/>}
             />
         );
 
         return items;
     }, [
-        wifiConfigurationCapabilitySupported
+        wifiConfigurationCapabilitySupported,
+        t
     ]);
 
     return (
         <PaperContainer>
             <ListMenu
-                primaryHeader={"Connectivity Options"}
-                secondaryHeader={"Configure how Valetudo and your robot communicate with the outside world"}
+                primaryHeader={t("options.connectivity.title")}
+                secondaryHeader={t("options.connectivity.description")}
                 listItems={listItems}
             />
         </PaperContainer>

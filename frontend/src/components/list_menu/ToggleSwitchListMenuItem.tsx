@@ -1,5 +1,6 @@
 import React from "react";
 import {Avatar, ListItem, ListItemAvatar, ListItemText, Switch, Typography} from "@mui/material";
+import {useTranslation} from "react-i18next";
 
 export const ToggleSwitchListMenuItem: React.FunctionComponent<{
     value: boolean,
@@ -18,11 +19,12 @@ export const ToggleSwitchListMenuItem: React.FunctionComponent<{
     secondaryLabel,
     icon
 }): React.ReactElement => {
+    const {t} = useTranslation();
 
     let toggle;
 
     if (loadError) {
-        toggle = <Typography variant="body2" color="error">Error</Typography>;
+        toggle = <Typography variant="body2" color="error">{t("common.error")}</Typography>;
     } else {
         toggle = (
             <Switch

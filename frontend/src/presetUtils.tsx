@@ -19,6 +19,7 @@ import {
     WaterGradeMinIcon,
     WaterGradeOffIcon
 } from "./components/CustomIcons";
+import i18n from "./i18n";
 
 const order: Array<PresetValue> = ["off", "min", "low", "medium", "high", "max", "turbo", "vacuum", "vacuum_and_mop", "vacuum_then_mop", "mop"];
 export const sortPresets = (presets: PresetSelectionState["value"][]) => {
@@ -26,22 +27,54 @@ export const sortPresets = (presets: PresetSelectionState["value"][]) => {
         return order.indexOf(a) - order.indexOf(b);
     });
 };
-export const presetFriendlyNames: {[key in PresetValue]: string} = Object.freeze({
-    "off": "Off",
-    "min": "Min",
-    "low": "Low",
-    "medium": "Medium",
-    "high": "High",
-    "max": "Max",
-    "turbo": "Turbo",
+const presetValues: Array<PresetValue> = [
+    "off", "min", "low", "medium", "high", "max", "turbo", "custom",
+    "vacuum_and_mop", "vacuum_then_mop", "vacuum", "mop"
+];
 
-    "custom": "Custom",
+// Translated lazily via getters so that the current UI language is always used
+export const presetFriendlyNames: {readonly [key in PresetValue]: string} = Object.freeze(
+    presetValues.reduce((acc, preset) => {
+        Object.defineProperty(acc, preset, {
+            enumerable: true,
+            get: () => {
+                return i18n.t(`presets.${preset}`);
+            }
+        });
 
-    "vacuum_and_mop": "Vacuum & Mop",
-    "vacuum_then_mop": "Vacuum then Mop",
-    "vacuum": "Vacuum",
-    "mop": "Mop"
-});
+        return acc;
+    }, {} as {[key in PresetValue]: string})
+);
+
+/**
+ * Like presetFriendlyNames, but with wording specific to the capability (e.g. grammatical gender in Spanish:
+ * "Potencia de aspiración: Alta" vs. "Nivel de agua: Alto")
+ *
+ * @param {Capability} capability
+ * @param {PresetValue} preset
+ * @returns {string}
+ */
+export function getPresetFriendlyName(capability: Capability, preset: PresetValue): string {
+    let group: string | undefined;
+
+    switch (capability) {
+        case Capability.FanSpeedControl:
+            group = "fanSpeed";
+            break;
+        case Capability.WaterUsageControl:
+            group = "waterUsage";
+            break;
+        case Capability.OperationModeControl:
+            group = "operationMode";
+            break;
+    }
+
+    if (group !== undefined && i18n.exists(`presets.${group}.${preset}`)) {
+        return i18n.t(`presets.${group}.${preset}`);
+    }
+
+    return presetFriendlyNames[preset];
+}
 
 export function getPresetIconOrLabel(capability: Capability, preset: PresetValue, style?: React.CSSProperties): ReactElement | string {
     switch (capability) {
@@ -62,7 +95,7 @@ export function getPresetIconOrLabel(capability: Capability, preset: PresetValue
                 case "turbo":
                     return <FanSpeedTurboIcon style={style}/>;
                 default:
-                    return presetFriendlyNames[preset];
+                    return getPresetFriendlyName(capability, preset);
 
             }
         case Capability.WaterUsageControl:
@@ -80,7 +113,7 @@ export function getPresetIconOrLabel(capability: Capability, preset: PresetValue
                 case "max":
                     return <WaterGradeMaxIcon style={style}/>;
                 default:
-                    return presetFriendlyNames[preset];
+                    return getPresetFriendlyName(capability, preset);
             }
         case Capability.OperationModeControl:
             switch (preset) {
@@ -93,9 +126,9 @@ export function getPresetIconOrLabel(capability: Capability, preset: PresetValue
                 case "vacuum_then_mop":
                     return <OperationModeVacuumThenMop style={style}/>;
                 default:
-                    return presetFriendlyNames[preset];
+                    return getPresetFriendlyName(capability, preset);
             }
         default:
-            return presetFriendlyNames[preset];
+            return getPresetFriendlyName(capability, preset);
     }
 }

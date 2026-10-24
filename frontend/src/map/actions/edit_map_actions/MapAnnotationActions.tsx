@@ -16,6 +16,7 @@ import MapActionsCombinedActionsMenuPopoverButton from "../../MapActionsCombined
 import ThresholdClientStructure from "../../structures/client_structures/ThresholdClientStructure";
 import CurtainClientStructure from "../../structures/client_structures/CurtainClientStructure";
 import RampClientStructure from "../../structures/client_structures/RampClientStructure";
+import {useTranslation} from "react-i18next";
 
 interface MapAnnotationActionsProperties {
     robotStatus: StatusState,
@@ -37,6 +38,7 @@ interface MapAnnotationActionsProperties {
 const MapAnnotationActions = (
     props: MapAnnotationActionsProperties
 ): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         thresholds,
         curtains,
@@ -139,14 +141,14 @@ const MapAnnotationActions = (
         return (
             <Container>
                 <Typography color="error">
-                    Error loading {Capability.MapAnnotations} properties
+                    {t("map.actions.propertiesLoadError", {capability: Capability.MapAnnotations})}
                 </Typography>
                 <Box m={1}/>
                 <Button color="primary" variant="contained" onClick={() => {
                     return refetchMapAnnotationsProperties();
                 }}>
                     <RefreshIcon style={{marginRight: "0.25rem", marginLeft: "-0.25rem"}}/>
-                    Retry
+                    {t("common.retry")}
                 </Button>
             </Container>
         );
@@ -164,7 +166,7 @@ const MapAnnotationActions = (
         return (
             <Container>
                 <Typography align="center">
-                    No {Capability.MapAnnotations} properties
+                    {t("map.actions.noProperties", {capability: Capability.MapAnnotations})}
                 </Typography>
             </Container>
         );
@@ -184,7 +186,7 @@ const MapAnnotationActions = (
                         onClick={handleSaveClick}
                     >
                         <SaveIcon style={{marginRight: "0.25rem", marginLeft: "-0.25rem"}}/>
-                        Save
+                        {t("common.save")}
                         {annotationsSaving && (
                             <CircularProgress
                                 color="inherit"
@@ -200,7 +202,7 @@ const MapAnnotationActions = (
 
                 <MapActionsCombinedActionsMenuPopoverButton
                     icon={<AddIcon/>}
-                    label="Add"
+                    label={t("common.add")}
                     disabled={annotationsSaving}
                 >
                     {(close) => (
@@ -217,7 +219,7 @@ const MapAnnotationActions = (
                                     }}
                                 >
                                     <AddThresholdIcon style={{marginRight: "0.25rem", marginLeft: "-0.25rem"}}/>
-                                    Threshold ({thresholds.length})
+                                    {t("map.annotations.thresholdCount", {count: thresholds.length})}
                                 </ActionButton>
                             }
                             {
@@ -232,7 +234,7 @@ const MapAnnotationActions = (
                                     }}
                                 >
                                     <AddCurtainIcon style={{marginRight: "0.25rem", marginLeft: "-0.25rem"}}/>
-                                    Curtain ({curtains.length})
+                                    {t("map.annotations.curtainCount", {count: curtains.length})}
                                 </ActionButton>
                             }
                             {
@@ -247,7 +249,7 @@ const MapAnnotationActions = (
                                     }}
                                 >
                                     <AddRampIcon style={{marginRight: "0.25rem", marginLeft: "-0.25rem"}}/>
-                                    Ramp ({ramps.length})
+                                    {t("map.annotations.rampCount", {count: ramps.length})}
                                 </ActionButton>
                             }
                         </>
@@ -265,7 +267,7 @@ const MapAnnotationActions = (
                         onClick={onClear}
                     >
                         <ClearIcon style={{marginRight: "0.25rem", marginLeft: "-0.25rem"}}/>
-                        Clear
+                        {t("map.actions.clear")}
                     </ActionButton>
                 </Grid2>
             }
@@ -279,7 +281,7 @@ const MapAnnotationActions = (
                         onClick={onRefresh}
                     >
                         <RefreshIcon style={{marginRight: "0.25rem", marginLeft: "-0.25rem"}}/>
-                        Refresh
+                        {t("common.refresh")}
                     </ActionButton>
                 </Grid2>
             }
@@ -287,7 +289,7 @@ const MapAnnotationActions = (
                 !canEdit &&
                 <Grid2>
                     <Typography variant="caption" color="textSecondary">
-                        Editing map annotations requires the robot to be docked
+                        {t("map.annotations.requiresDocked")}
                     </Typography>
                 </Grid2>
             }

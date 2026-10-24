@@ -48,7 +48,9 @@ import {
     ValetudoMonochromeIcon,
     ValetudoHeartMonochromeIcon
 } from "./CustomIcons";
+import {useTranslation} from "react-i18next";
 
+// Note: "title" and "menuText" are i18n keys
 interface MenuEntry {
     kind: "MenuEntry";
     route: string;
@@ -84,13 +86,13 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     {
         kind: "MenuEntry",
         route: "/",
-        title: "Home",
+        title: "nav.home",
         menuIcon: HomeIcon,
-        menuText: "Home"
+        menuText: "nav.home"
     },
     {
         kind: "Subheader",
-        title: "Robot",
+        title: "nav.robot",
         requiredCapabilities: {
             capabilities: [
                 Capability.ConsumableMonitoring,
@@ -105,9 +107,9 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     {
         kind: "MenuEntry",
         route: "/robot/consumables",
-        title: "Consumables",
+        title: "nav.consumables",
         menuIcon: PendingActionsIcon,
-        menuText: "Consumables",
+        menuText: "nav.consumables",
         requiredCapabilities: {
             capabilities: [Capability.ConsumableMonitoring],
             type: "allof"
@@ -116,9 +118,9 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     {
         kind: "MenuEntry",
         route: "/robot/manual_control",
-        title: "Manual control",
+        title: "nav.manualControl",
         menuIcon: SettingsRemoteIcon,
-        menuText: "Manual control",
+        menuText: "nav.manualControl",
         requiredCapabilities: {
             capabilities: [Capability.ManualControl, Capability.HighResolutionManualControl],
             type: "anyof"
@@ -127,9 +129,9 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     {
         kind: "MenuEntry",
         route: "/robot/total_statistics",
-        title: "Statistics",
+        title: "nav.statistics",
         menuIcon: StatisticsIcon,
-        menuText: "Statistics",
+        menuText: "nav.statistics",
         requiredCapabilities: {
             capabilities: [Capability.TotalStatistics],
             type: "allof"
@@ -138,9 +140,9 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     {
         kind: "MenuEntry",
         route: "/robot/camera",
-        title: "Camera",
+        title: "nav.camera",
         menuIcon: CameraIcon,
-        menuText: "Camera",
+        menuText: "nav.camera",
         requiredCapabilities: {
             capabilities: [Capability.Duststreaming],
             type: "allof"
@@ -148,14 +150,14 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     },
     {
         kind: "Subheader",
-        title: "Options"
+        title: "nav.options"
     },
     {
         kind: "MenuEntry",
         route: "/options/map_management",
-        title: "Map Options",
+        title: "nav.mapOptions",
         menuIcon: MapManagementIcon,
-        menuText: "Map",
+        menuText: "nav.map",
         requiredCapabilities: {
             capabilities: [
                 Capability.PersistentMapControl,
@@ -174,154 +176,149 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     {
         kind: "MenuSubEntry",
         route: "/options/map_management/segments",
-        title: "Segment Management",
+        title: "nav.segmentManagement",
         parentRoute: "/options/map_management"
     },
     {
         kind: "MenuSubEntry",
         route: "/options/map_management/virtual_restrictions",
-        title: "Virtual Restriction Management",
+        title: "nav.virtualRestrictionManagement",
         parentRoute: "/options/map_management"
     },
     {
         kind: "MenuSubEntry",
         route: "/options/map_management/annotations",
-        title: "Map Annotations",
+        title: "nav.mapAnnotations",
         parentRoute: "/options/map_management"
     },
     {
         kind: "MenuSubEntry",
         route: "/options/map_management/robot_coverage",
-        title: "Robot Coverage Map",
+        title: "nav.robotCoverageMap",
         parentRoute: "/options/map_management"
     },
     {
         kind: "MenuSubEntry",
         route: "/options/map_management/spectator",
-        title: "Spectator Map",
+        title: "nav.spectatorMap",
         parentRoute: "/options/map_management"
     },
     {
         kind: "MenuEntry",
         route: "/options/connectivity",
-        title: "Connectivity Options",
+        title: "nav.connectivityOptions",
         menuIcon: ConnectivityIcon,
-        menuText: "Connectivity"
+        menuText: "nav.connectivity"
     },
     {
         kind: "MenuSubEntry",
         route: "/options/connectivity/auth",
-        title: "Auth Settings",
+        title: "nav.authSettings",
         parentRoute: "/options/connectivity"
     },
     {
         kind: "MenuSubEntry",
         route: "/options/connectivity/mqtt",
-        title: "MQTT Connectivity",
+        title: "nav.mqtt",
         parentRoute: "/options/connectivity"
     },
     {
         kind: "MenuSubEntry",
         route: "/options/connectivity/networkadvertisement",
-        title: "Network Advertisement",
+        title: "nav.networkAdvertisement",
         parentRoute: "/options/connectivity"
     },
     {
         kind: "MenuSubEntry",
         route: "/options/connectivity/ntp",
-        title: "NTP Connectivity",
+        title: "nav.ntp",
         parentRoute: "/options/connectivity"
     },
     {
         kind: "MenuSubEntry",
         route: "/options/connectivity/wifi",
-        title: "Wi-Fi Connectivity",
+        title: "nav.wifi",
         parentRoute: "/options/connectivity"
     },
     {
         kind: "MenuEntry",
         route: "/options/robot",
-        title: "Robot Options",
+        title: "nav.robotOptions",
         menuIcon: RobotMonochromeIcon,
-        menuText: "Robot"
+        menuText: "nav.robot"
     },
     {
         kind: "MenuSubEntry",
         route: "/options/robot/system",
-        title: "System Options",
+        title: "nav.systemOptions",
         parentRoute: "/options/robot"
     },
     {
         kind: "MenuSubEntry",
         route: "/options/robot/quirks",
-        title: "Quirks",
+        title: "nav.quirks",
         parentRoute: "/options/robot"
     },
     {
         kind: "MenuEntry",
         route: "/options/valetudo",
-        title: "Valetudo Options",
+        title: "nav.motaOptions",
         menuIcon: ValetudoMonochromeIcon,
-        menuText: "Valetudo"
+        menuText: "nav.mota"
     },
-    {
-        kind: "MenuSubEntry",
-        route: "/options/valetudo/analytics",
-        title: "Analytics",
-        parentRoute: "/options/valetudo"
-    },
+
     {
         kind: "Subheader",
-        title: "Misc"
+        title: "nav.misc"
     },
     {
         kind: "MenuEntry",
         route: "/valetudo/timers",
-        title: "Timers",
+        title: "nav.timers",
         menuIcon: TimeIcon,
-        menuText: "Timers"
+        menuText: "nav.timers"
     },
     {
         kind: "MenuEntry",
         route: "/valetudo/log",
-        title: "Log",
+        title: "nav.log",
         menuIcon: LogIcon,
-        menuText: "Log"
+        menuText: "nav.log"
     },
     {
         kind: "MenuEntry",
         route: "/valetudo/updater",
-        title: "Updater",
+        title: "nav.updater",
         menuIcon: UpdaterIcon,
-        menuText: "Updater"
+        menuText: "nav.updater"
     },
     {
         kind: "MenuEntry",
         route: "/valetudo/system_information",
-        title: "System Information",
+        title: "nav.systemInformation",
         menuIcon: SystemInformationIcon,
-        menuText: "System Information"
+        menuText: "nav.systemInformation"
     },
     {
         kind: "MenuEntry",
         route: "/valetudo/ai",
-        title: "AI Assistant",
+        title: "nav.aiAssistant",
         menuIcon: AiIcon,
-        menuText: "AI Assistant"
+        menuText: "nav.aiAssistant"
     },
     {
         kind: "MenuEntry",
         route: "/valetudo/help",
-        title: "General Help",
+        title: "nav.generalHelp",
         menuIcon: HelpIcon,
-        menuText: "General Help"
+        menuText: "nav.generalHelp"
     },
     {
         kind: "MenuEntry",
         route: "/valetudo/about",
-        title: "About Valetudo",
+        title: "nav.about",
         menuIcon: AboutIcon,
-        menuText: "About Valetudo"
+        menuText: "nav.about"
     },
 ];
 
@@ -329,6 +326,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
     paletteMode,
     setPaletteMode
 }): React.ReactElement => {
+    const {t} = useTranslation();
     const [drawerOpen, setDrawerOpen] = React.useState<boolean>(false);
     const currentLocation = useLocation()?.pathname;
     const robotCapabilities = useCapabilitiesSupported(...Object.values(Capability));
@@ -355,18 +353,20 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                     ret += " - ";
                 }
 
-                ret += element.title;
+                ret += t(element.title);
             }
         });
 
+        const productName = t("app.name");
+
         if (ret !== "") {
-            document.title = `Valetudo - ${ret}`;
+            document.title = `${productName} - ${ret}`;
         } else {
-            document.title = "Valetudo";
+            document.title = productName;
         }
 
-        return currentMenuEntry.title;
-    }, [currentLocation, currentMenuEntry]);
+        return t(currentMenuEntry.title);
+    }, [currentLocation, currentMenuEntry, t]);
 
     const drawerContent = React.useMemo(() => {
         return (
@@ -425,7 +425,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                                         disableSticky={true}
                                         onClick={(e) => e.stopPropagation()}
                                     >
-                                        {value.title}
+                                        {t(value.title)}
                                     </ListSubheader>
                                 );
 
@@ -472,7 +472,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                                         <ListItemIcon>
                                             <ItemIcon/>
                                         </ListItemIcon>
-                                        <ListItemText primary={value.menuText}/>
+                                        <ListItemText primary={t(value.menuText)}/>
                                     </ListItemButton>
                                 );
                             }
@@ -489,7 +489,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                         <ListItemIcon>
                             <DarkModeIcon/>
                         </ListItemIcon>
-                        <ListItemText primary="Dark mode"/>
+                        <ListItemText primary={t("nav.darkMode")}/>
                         <Switch
                             edge="end"
                             onChange={(e) => {
@@ -507,7 +507,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                         }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        Links
+                        {t("nav.links")}
                     </ListSubheader>
                     <ListItemButton
                         component="a"
@@ -519,7 +519,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                         <ListItemIcon>
                             <SwaggerUIIcon/>
                         </ListItemIcon>
-                        <ListItemText primary="Swagger UI"/>
+                        <ListItemText primary={t("nav.swaggerUi")}/>
                     </ListItemButton>
                     <Divider/>
                     <ListItemButton
@@ -532,7 +532,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                         <ListItemIcon>
                             <DocsIcon/>
                         </ListItemIcon>
-                        <ListItemText primary="Docs"/>
+                        <ListItemText primary={t("nav.docs")}/>
                     </ListItemButton>
                     <ListItemButton
                         component="a"
@@ -544,7 +544,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                         <ListItemIcon>
                             <GithubIcon/>
                         </ListItemIcon>
-                        <ListItemText primary="Hypfer/Valetudo"/>
+                        <ListItemText primary={t("nav.upstreamRepository")}/>
                     </ListItemButton>
                     <ListItemButton
                         component="a"
@@ -556,14 +556,14 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                         <ListItemIcon>
                             <ValetudoHeartMonochromeIcon/>
                         </ListItemIcon>
-                        <ListItemText primary="Donate"/>
+                        <ListItemText primary={t("nav.donate")}/>
                     </ListItemButton>
 
 
                 </List>
             </Box>
         );
-    }, [currentLocation, paletteMode, setPaletteMode, robotCapabilities, duststreamingEnabled]);
+    }, [currentLocation, paletteMode, setPaletteMode, robotCapabilities, duststreamingEnabled, t]);
 
     const toolbarContent = React.useMemo(() => {
         switch (currentMenuEntry.kind) {
@@ -574,12 +574,12 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                             size="large"
                             edge="start"
                             color="inherit"
-                            aria-label="menu"
+                            aria-label={t("common.menu")}
                             sx={{mr: 2}}
                             onClick={() => {
                                 setDrawerOpen(true);
                             }}
-                            title="Menu"
+                            title={t("common.menu")}
                         >
                             <MenuIcon/>
                         </IconButton>
@@ -595,7 +595,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                             size="large"
                             edge="start"
                             color="inherit"
-                            aria-label="back"
+                            aria-label={t("common.back")}
                             sx={{mr: 2}}
 
                             component={Link}
@@ -612,7 +612,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                 //This can never happen
                 return (<></>);
         }
-    }, [currentMenuEntry, setDrawerOpen, pageTitle]);
+    }, [currentMenuEntry, setDrawerOpen, pageTitle, t]);
 
     return (
         <Box

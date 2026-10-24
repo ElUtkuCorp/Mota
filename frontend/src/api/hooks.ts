@@ -198,6 +198,7 @@ import {
     ZoneActionRequestParameters,
 } from "./types";
 import type { MutationFunction } from "@tanstack/query-core";
+import i18n from "../i18n";
 
 enum QueryKey {
     Capabilities = "capabilities",
@@ -278,6 +279,7 @@ enum QueryKey {
     MapAnnotationsProperties = "map_annotations_properties",
 }
 
+// "capability" is either a capability name or an i18n key
 const useOnCommandError = (capability: Capability | string): ((error: unknown) => void) => {
     const {enqueueSnackbar} = useSnackbar();
 
@@ -291,7 +293,7 @@ const useOnCommandError = (capability: Capability | string): ((error: unknown) =
             errorMessage = error.response.data;
         }
 
-        enqueueSnackbar(`An error occurred while sending command to ${capability}:\n${errorMessage}`, {
+        enqueueSnackbar(i18n.t("api.commandError", {capability: i18n.exists(capability) ? i18n.t(capability) : capability, message: errorMessage}), {
             preventDuplicate: true,
             key: capability,
             variant: "error",
@@ -299,11 +301,12 @@ const useOnCommandError = (capability: Capability | string): ((error: unknown) =
     }, [capability, enqueueSnackbar]);
 };
 
+// "setting" is an i18n key
 const useOnSettingsChangeError = (setting: string): ((error: unknown) => void) => {
     const {enqueueSnackbar} = useSnackbar();
 
     return React.useCallback((error: unknown) => {
-        enqueueSnackbar(`An error occurred while updating ${setting} settings: ${error}`, {
+        enqueueSnackbar(i18n.t("api.settingsError", {setting: i18n.t(setting), error: String(error)}), {
             preventDuplicate: true,
             key: setting,
             variant: "error",
@@ -752,7 +755,7 @@ export const useDismissWelcomeDialogMutation = () => {
                 });
             });
         },
-        onError: useOnSettingsChangeError("Welcome Dialog")
+        onError: useOnSettingsChangeError("api.settings.welcomeDialog")
     });
 };
 
@@ -767,7 +770,7 @@ export const useRestoreDefaultConfigurationMutation = () => {
                 });
             });
         },
-        onError: useOnSettingsChangeError("Config Restore")
+        onError: useOnSettingsChangeError("api.settings.configRestore")
     });
 };
 
@@ -812,7 +815,7 @@ export const useMQTTConfigurationMutation = () => {
         mutationFn: (mqttConfiguration: MQTTConfiguration) => {
             return sendMQTTConfiguration(mqttConfiguration).then(fetchMQTTConfiguration);
         },
-        onError: useOnSettingsChangeError("MQTT"),
+        onError: useOnSettingsChangeError("api.settings.mqtt"),
     });
 };
 
@@ -850,7 +853,7 @@ export const useHTTPBasicAuthConfigurationMutation = () => {
         mutationFn: (configuration: HTTPBasicAuthConfiguration) => {
             return sendHTTPBasicAuthConfiguration(configuration).then(fetchHTTPBasicAuthConfiguration);
         },
-        onError: useOnSettingsChangeError("HTTP Basic Auth")
+        onError: useOnSettingsChangeError("api.settings.httpBasicAuth")
     });
 };
 
@@ -869,7 +872,7 @@ export const useNetworkAdvertisementConfigurationMutation = () => {
         mutationFn: (networkAdvertisementConfiguration: NetworkAdvertisementConfiguration) => {
             return sendNetworkAdvertisementConfiguration(networkAdvertisementConfiguration).then(fetchNetworkAdvertisementConfiguration);
         },
-        onError: useOnSettingsChangeError("Network Advertisement")
+        onError: useOnSettingsChangeError("api.settings.networkAdvertisement")
     });
 };
 
@@ -916,7 +919,7 @@ export const useNTPClientConfigurationMutation = () => {
                 });
             });
         },
-        onError: useOnSettingsChangeError("NTP Client")
+        onError: useOnSettingsChangeError("api.settings.ntpClient")
     });
 };
 
@@ -942,7 +945,7 @@ export const useTimerCreationMutation = () => {
         mutationFn: (timer: Timer) => {
             return sendTimerCreation(timer).then(fetchTimerInformation);
         },
-        onError: useOnSettingsChangeError("Timer")
+        onError: useOnSettingsChangeError("api.settings.timer")
     });
 };
 
@@ -952,7 +955,7 @@ export const useTimerModificationMutation = () => {
         mutationFn: (timer: Timer) => {
             return sendTimerUpdate(timer).then(fetchTimerInformation);
         },
-        onError: useOnSettingsChangeError("Timer")
+        onError: useOnSettingsChangeError("api.settings.timer")
     });
 };
 
@@ -962,7 +965,7 @@ export const useTimerActionMutation = () => {
         mutationFn: (params: {timerId: string, timerAction: "execute_now"}) => {
             return sendTimerAction(params.timerId, params.timerAction).then(fetchTimerInformation);
         },
-        onError: useOnSettingsChangeError("Timer")
+        onError: useOnSettingsChangeError("api.settings.timer")
     });
 };
 
@@ -972,7 +975,7 @@ export const useTimerDeletionMutation = () => {
         mutationFn:(timerId: string) => {
             return deleteTimer(timerId).then(fetchTimerInformation);
         },
-        onError: useOnSettingsChangeError("Timer")
+        onError: useOnSettingsChangeError("api.settings.timer")
     });
 };
 
@@ -992,7 +995,7 @@ export const useValetudoEventsInteraction = () => {
         mutationFn: (interaction: ValetudoEventInteractionContext) => {
             return sendValetudoEventInteraction(interaction).then(fetchValetudoEvents);
         },
-        onError: useOnSettingsChangeError("Valetudo Events")
+        onError: useOnSettingsChangeError("api.settings.events")
     });
 };
 
@@ -1026,7 +1029,7 @@ export const useLogLevelMutation = () => {
         mutationFn: (logLevel: SetLogLevelRequest) => {
             return sendValetudoLogLevel(logLevel).then(fetchValetudoLogLevel);
         },
-        onError: useOnSettingsChangeError("Log level")
+        onError: useOnSettingsChangeError("api.settings.logLevel")
     });
 };
 
@@ -1371,7 +1374,7 @@ export const useUpdaterConfigurationMutation = () => {
         mutationFn: (updaterConfiguration: UpdaterConfiguration) => {
             return sendUpdaterConfiguration(updaterConfiguration).then(fetchUpdaterConfiguration);
         },
-        onError: useOnSettingsChangeError("Updater")
+        onError: useOnSettingsChangeError("api.settings.updater")
     });
 };
 
@@ -1392,7 +1395,7 @@ export const useUpdaterCommandMutation = () => {
 
     return useMutation({
         mutationFn: sendUpdaterCommand,
-        onError: useOnCommandError("Updater"),
+        onError: useOnCommandError("api.settings.updaterCommand"),
         onSuccess: () => {
             refetchUpdaterState().catch(() => {/*intentional*/});
         }
@@ -1553,7 +1556,7 @@ export const useValetudoCustomizationsMutation = () => {
         mutationFn: (configuration: ValetudoCustomizations) => {
             return sendValetudoCustomizations(configuration).then(fetchValetudoCustomizations);
         },
-        onError: useOnSettingsChangeError("Valetudo Customizations")
+        onError: useOnSettingsChangeError("api.settings.customizations")
     });
 };
 
@@ -1684,7 +1687,7 @@ export const useDuststreamingConfigurationMutation = () => {
                 });
             });
         },
-        onError: useOnSettingsChangeError("Camera Streaming")
+        onError: useOnSettingsChangeError("api.settings.cameraStreaming")
     });
 };
 

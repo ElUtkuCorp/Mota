@@ -9,6 +9,7 @@ import {
     Typography
 } from "@mui/material";
 import InfoBox from "./InfoBox";
+import {useTranslation} from "react-i18next";
 
 const IntegrationHelpDialog: React.FunctionComponent<{
     dialogOpen: boolean,
@@ -23,6 +24,8 @@ const IntegrationHelpDialog: React.FunctionComponent<{
     coordinatesWarning,
     payload
 }): React.ReactElement => {
+    const {t} = useTranslation();
+
     return (
         <Dialog
             onClose={() =>{
@@ -33,7 +36,7 @@ const IntegrationHelpDialog: React.FunctionComponent<{
             style={{userSelect: "none"}}
         >
             <DialogTitle>
-                Connect with other applications
+                {t("components.integrationHelp.title")}
             </DialogTitle>
             <DialogContent>
                 <DialogContentText component={"span"}>
@@ -48,7 +51,7 @@ const IntegrationHelpDialog: React.FunctionComponent<{
                             }}
                         >
                             <Typography color="info">
-                                Please note that the coordinates displayed here can become invalid if the underlying map changes.
+                                {t("components.integrationHelp.coordinatesWarning")}
                             </Typography>
                         </InfoBox>
                     }
@@ -74,7 +77,7 @@ const IntegrationHelpDialog: React.FunctionComponent<{
                 <Button autoFocus onClick={() => {
                     setDialogOpen(false);
                 }}>
-                    OK
+                    {t("common.ok")}
                 </Button>
             </DialogActions>
         </Dialog>

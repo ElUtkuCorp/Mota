@@ -10,8 +10,10 @@ import {useCapabilitiesSupported} from "../../CapabilitiesProvider";
 import {VolumeDown as VolumeDownIcon, VolumeUp as VolumeUpIcon,} from "@mui/icons-material";
 import {useCommittingSlider} from "../../hooks/useCommittingSlider";
 import {CapabilityItem} from "./CapabilityLayout";
+import {useTranslation} from "react-i18next";
 
 const SpeakerControl: FunctionComponent = () => {
+    const {t} = useTranslation();
     const {
         data: speakerVolume,
         isFetching: speakerVolumeLoading,
@@ -31,7 +33,7 @@ const SpeakerControl: FunctionComponent = () => {
         if (speakerVolumeError) {
             return (
                 <Typography color="error">
-                    Error loading speaker state.
+                    {t("robot.speaker.loadError")}
                 </Typography>
             );
         }
@@ -49,15 +51,15 @@ const SpeakerControl: FunctionComponent = () => {
                 </Stack>
                 <Button loading={speakerTesting} variant="outlined" color="success" onClick={() => {
                     return testSpeaker();
-                }}>Test sound volume</Button>
+                }}>{t("robot.speaker.test")}</Button>
             </>
         );
-    }, [onChange, onCommit, sliderValue, speakerTesting, speakerVolumeError, speakerVolumeLoading, testSpeaker]);
+    }, [onChange, onCommit, sliderValue, speakerTesting, speakerVolumeError, speakerVolumeLoading, testSpeaker, t]);
 
 
     const loading = speakerVolumeChanging || speakerVolumeLoading || !speakerVolume;
     return (
-        <CapabilityItem title={"Speaker"} loading={loading}>
+        <CapabilityItem title={t("robot.speaker.title")} loading={loading}>
             {speakerVolumeContent}
         </CapabilityItem>
     );

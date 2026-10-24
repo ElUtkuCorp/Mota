@@ -4,8 +4,10 @@ import {Equalizer as StatisticsIcon} from "@mui/icons-material";
 import React from "react";
 import {getFriendlyStatName, getHumanReadableStatValue} from "../utils";
 import ControlsCard from "./ControlsCard";
+import {useTranslation} from "react-i18next";
 
 const CurrentStatistics = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         data: currentStatistics,
         isPending: statisticsPending,
@@ -25,7 +27,7 @@ const CurrentStatistics = (): React.ReactElement => {
             return (
                 <Paper>
                     <Box p={1}>
-                        <Typography color="error">Error loading current statistics</Typography>
+                        <Typography color="error">{t("controls.currentStatistics.loadError")}</Typography>
                     </Box>
                 </Paper>
             );
@@ -46,11 +48,12 @@ const CurrentStatistics = (): React.ReactElement => {
     }, [
         statisticsPending,
         statisticsLoadError,
-        currentStatistics
+        currentStatistics,
+        t
     ]);
 
     return (
-        <ControlsCard icon={StatisticsIcon} title="Current Statistics" isLoading={statisticsPending}>
+        <ControlsCard icon={StatisticsIcon} title={t("controls.currentStatistics.title")} isLoading={statisticsPending}>
             <Grid2 container direction="row">
                 {body}
             </Grid2>

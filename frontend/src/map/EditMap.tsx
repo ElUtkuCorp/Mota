@@ -17,6 +17,7 @@ import ThresholdClientStructure from "./structures/client_structures/ThresholdCl
 import MapAnnotationActions from "./actions/edit_map_actions/MapAnnotationActions";
 import CurtainClientStructure from "./structures/client_structures/CurtainClientStructure";
 import RampClientStructure from "./structures/client_structures/RampClientStructure";
+import i18n from "../i18n";
 
 export type mode = "segments" | "virtual_restrictions" | "annotations";
 
@@ -596,7 +597,7 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
                             onSave={() => {
                                 this.pendingVirtualRestrictionsStructuresUpdate = true;
 
-                                this.props.enqueueSnackbar("Saved successfully", {
+                                this.props.enqueueSnackbar(i18n.t("map.savedSuccessfully"), {
                                     preventDuplicate: true,
                                     key: "virtual_restrictions_saved",
                                     variant: "info",
@@ -716,7 +717,7 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
                             onSave={() => {
                                 this.pendingMapAnnotationsStructuresUpdate = true;
 
-                                this.props.enqueueSnackbar("Saved successfully", {
+                                this.props.enqueueSnackbar(i18n.t("map.savedSuccessfully"), {
                                     preventDuplicate: true,
                                     key: "map_annotations_saved",
                                     variant: "info",

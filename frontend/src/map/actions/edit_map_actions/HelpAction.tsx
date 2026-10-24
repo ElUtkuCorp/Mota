@@ -4,6 +4,7 @@ import {ActionButton} from "../../Styled";
 import {
     Help as HelpIcon
 } from "@mui/icons-material";
+import {useTranslation} from "react-i18next";
 
 const HelpButtonContainer = styled(Box)(({theme}) => {
     return {
@@ -22,6 +23,8 @@ const ModeSwitchAction: React.FunctionComponent<{ helpDialogOpen: boolean, setHe
         setHelpDialogOpen
     }
 ): React.ReactElement => {
+    const {t} = useTranslation();
+
     return (
         <HelpButtonContainer>
             <ActionButton
@@ -31,7 +34,7 @@ const ModeSwitchAction: React.FunctionComponent<{ helpDialogOpen: boolean, setHe
                 onClick={() => {
                     setHelpDialogOpen(true);
                 }}
-                title="Help"
+                title={t("common.help")}
             >
                 <HelpIcon/>
             </ActionButton>

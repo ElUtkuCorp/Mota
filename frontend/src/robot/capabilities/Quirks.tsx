@@ -16,7 +16,7 @@ import {
     useSetQuirkValueMutation
 } from "../../api";
 
-import {QuirksHelp} from "./res/QuirksHelp";
+import {useTranslation} from "react-i18next";
 import {Star as QuirksIcon} from "@mui/icons-material";
 import PaperContainer from "../../components/PaperContainer";
 import DetailPageHeaderRow from "../../components/DetailPageHeaderRow";
@@ -96,6 +96,7 @@ const QuirkControl: FunctionComponent<{ quirk: Quirk, style?: React.CSSPropertie
 };
 
 const Quirks: FunctionComponent = () => {
+    const {t} = useTranslation();
     const {
         data: quirks,
         isError: quirksLoadingError,
@@ -108,7 +109,7 @@ const Quirks: FunctionComponent = () => {
         if (quirksLoadingError) {
             return (
                 <Typography color="error" style={{textAlign: "center"}}>
-                    Error loading quirks.
+                    {t("robot.quirks.loadError")}
                 </Typography>
             );
         }
@@ -116,7 +117,7 @@ const Quirks: FunctionComponent = () => {
         if (!quirksPending && (!quirks || (Array.isArray(quirks) && quirks.length === 0))) {
             return (
                 <Typography style={{textAlign: "center"}}>
-                    No quirks. You might want to reload
+                    {t("robot.quirks.none")}
                 </Typography>
             );
         }
@@ -145,7 +146,7 @@ const Quirks: FunctionComponent = () => {
         );
 
 
-    }, [quirksLoadingError, quirksPending, quirks]);
+    }, [quirksLoadingError, quirksPending, quirks, t]);
 
 
     return (
@@ -153,9 +154,9 @@ const Quirks: FunctionComponent = () => {
             <Grid2 container direction="row">
                 <Box style={{width: "100%"}}>
                     <DetailPageHeaderRow
-                        title="Quirks"
+                        title={t("robot.quirks.title")}
                         icon={<QuirksIcon/>}
-                        helpText={QuirksHelp}
+                        helpText={t("help.quirks")}
                         onRefreshClick={() => {
                             refetchQuirks().catch(() => {
                                 /* intentional */

@@ -4,6 +4,7 @@ import segmentSelectedIconSVG from "../icons/segment_selected.svg";
 import {Canvas2DContextTrackingWrapper} from "../../utils/Canvas2DContextTrackingWrapper";
 import {considerHiDPI} from "../../utils/helpers";
 import {RawMapLayerMaterial} from "../../../api";
+import {formatNumber} from "../../../i18n";
 
 const img = new Image();
 img.src = segmentIconSVG;
@@ -125,7 +126,7 @@ class SegmentLabelMapStructure extends MapStructure {
         }
 
         if (scaleFactor >= considerHiDPI(11)) {
-            let metaString = (this.area / 10000).toPrecision(2) + " m²";
+            let metaString = formatNumber(this.area / 10000, {maximumSignificantDigits: 2}) + " m²";
             metaString += ` (id=${this.id})`;
 
             linesToDraw.push({ text: metaString, fontSize: baseFontSize - 5 });

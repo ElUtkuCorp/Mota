@@ -1,6 +1,7 @@
 //Adapted from https://stackoverflow.com/a/34270811/10951033
 import {ConsumableSubType, ConsumableType, ValetudoDataPoint} from "./api";
 import {useCallback, useLayoutEffect, useRef} from "react";
+import i18n, {DISPLAY_LOCALE, formatNumber} from "./i18n";
 
 export function convertSecondsToHumans(seconds: number, showSeconds = true, showDays = true): string {
     let levels;
@@ -9,15 +10,15 @@ export function convertSecondsToHumans(seconds: number, showSeconds = true, show
         levels = [
             {
                 value: Math.floor(seconds / 86400),
-                label: "d"
+                label: i18n.t("units.daysShort")
             },
             {
                 value: Math.floor((seconds % 86400) / 3600).toString().padStart(2, "0"),
-                label: "h"
+                label: i18n.t("units.hoursShort")
             },
             {
                 value: Math.floor(((seconds % 86400) % 3600) / 60).toString().padStart(2, "0"),
-                label: "m"
+                label: i18n.t("units.minutesShort")
             }
         ];
 
@@ -26,7 +27,7 @@ export function convertSecondsToHumans(seconds: number, showSeconds = true, show
             levels.push(
                 {
                     value: (((seconds % 86400) % 3600) % 60).toString().padStart(2, "0"),
-                    label: "s"
+                    label: i18n.t("units.secondsShort")
                 }
             );
         }
@@ -34,11 +35,11 @@ export function convertSecondsToHumans(seconds: number, showSeconds = true, show
         levels = [
             {
                 value: Math.floor(seconds / 3600).toString().padStart(2, "0"),
-                label: "h"
+                label: i18n.t("units.hoursShort")
             },
             {
                 value: Math.floor((seconds % 3600) / 60).toString().padStart(2, "0"),
-                label: "m"
+                label: i18n.t("units.minutesShort")
             }
         ];
 
@@ -47,7 +48,7 @@ export function convertSecondsToHumans(seconds: number, showSeconds = true, show
             levels.push(
                 {
                     value: ((seconds % 3600) % 60).toString().padStart(2, "0"),
-                    label: "s"
+                    label: i18n.t("units.secondsShort")
                 }
             );
         }
@@ -64,14 +65,16 @@ export function convertSecondsToHumans(seconds: number, showSeconds = true, show
 }
 
 export function convertBytesToHumans(bytes: number): string {
+    const twoDecimals = {minimumFractionDigits: 2, maximumFractionDigits: 2};
+
     if (bytes >= 1024*1024*1024) {
-        return `${(((bytes/1024)/1024)/1024).toFixed(2)} GiB`;
+        return `${formatNumber(((bytes/1024)/1024)/1024, twoDecimals)} GiB`;
     } else if (bytes >= 1024*1024) {
-        return `${((bytes/1024)/1024).toFixed(2)} MiB`;
+        return `${formatNumber((bytes/1024)/1024, twoDecimals)} MiB`;
     } else if (bytes >= 1024) {
-        return `${(bytes/1024).toFixed(2)} KiB`;
+        return `${formatNumber(bytes/1024, twoDecimals)} KiB`;
     } else {
-        return `${bytes} bytes`;
+        return i18n.t("units.bytes", {count: bytes, value: formatNumber(bytes)});
     }
 }
 
@@ -126,36 +129,37 @@ export const deepCopy = <T>(target: T): T => {
     return target;
 };
 
-const consumableTypeMapping: Record<ConsumableType, string> = {
-    "brush": "Brush",
-    "filter": "Filter",
-    "cleaning": "Cleaning",
-    "mop": "Mop",
-    "detergent": "Detergent",
-    "bin": "Bin"
-};
+const consumableTypes: Array<ConsumableType> = ["brush", "filter", "cleaning", "mop", "detergent", "bin"];
+const consumableSubTypes: Array<ConsumableSubType> = ["main", "secondary", "side_right", "side_left", "all", "none", "dock", "sensor", "wheel"];
 
-const consumableSubtypeMapping: Record<ConsumableSubType, string> = {
-    "main": "Main",
-    "secondary": "Secondary",
-    "side_right": "Right",
-    "side_left": "Left",
-    "all": "",
-    "none": "",
-    "dock": "Dock",
-    "sensor": "Sensor",
-    "wheel": "Wheel",
-};
-
+/*
+ * Consumable names are composed from type and subtype (e.g. "main" + "brush").
+ * Since word order differs between languages, the combined name comes from a single translation key
+ * ("consumables.names.<type>_<subType>") with a generic "<subType> <type>" pattern as fallback.
+ */
 export const getConsumableName = (type: ConsumableType, subType?: ConsumableSubType): string => {
-    let ret = "";
-    if (subType && subType in consumableSubtypeMapping) {
-        ret += consumableSubtypeMapping[subType] + " ";
+    const typeKnown = consumableTypes.includes(type);
+    const subTypeKnown = subType !== undefined && consumableSubTypes.includes(subType);
+
+    if (!typeKnown) {
+        return i18n.t("consumables.names.unknown", {type: type, subType: subType});
     }
-    if (type in consumableTypeMapping) {
-        ret += consumableTypeMapping[type];
+
+    const typeName = i18n.t(`consumables.types.${type}`);
+
+    if (!subTypeKnown || subType === "all" || subType === "none") {
+        return typeName;
     }
-    return ret.trim() || "Unknown consumable: " + type + ", " + subType;
+
+    const specificKey = `consumables.names.${type}_${subType}`;
+    if (i18n.exists(specificKey)) {
+        return i18n.t(specificKey);
+    }
+
+    return i18n.t("consumables.names.pattern", {
+        type: typeName,
+        subType: i18n.t(`consumables.subTypes.${subType}`)
+    });
 };
 
 // Adapted from https://stackoverflow.com/a/53660837
@@ -176,22 +180,22 @@ export const median = (numbers: Array<number>): number => { //Note that this wil
 export function getFriendlyStatName(stat: ValetudoDataPoint) : string {
     switch (stat.type) {
         case "area":
-            return "Area";
+            return i18n.t("statistics.types.area");
         case "time":
-            return "Time";
+            return i18n.t("statistics.types.time");
         case "count":
-            return "Count";
+            return i18n.t("statistics.types.count");
     }
 }
 
 export function getHumanReadableStatValue(stat: ValetudoDataPoint): string {
     switch (stat.type) {
         case "area":
-            return (stat.value / 10000).toFixed(2).padStart(6, "0") + " m²";
+            return formatNumber(stat.value / 10000, {minimumFractionDigits: 2, maximumFractionDigits: 2, minimumIntegerDigits: 2}) + " m²";
         case "time":
             return convertSecondsToHumans(stat.value, true, false);
         case "count":
-            return stat.value.toString();
+            return formatNumber(stat.value);
     }
 }
 
@@ -247,24 +251,42 @@ export function formatRelative(timestamp: number | string | Date): string {
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diffInSeconds < 0) {
-        return "In the future";
+        return i18n.t("time.inTheFuture");
     }
 
     if (diffInSeconds < 60) {
-        return "Just now";
+        return i18n.t("time.justNow");
     }
 
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     if (diffInMinutes < 60) {
-        return `${diffInMinutes} minute${diffInMinutes !== 1 ? "s" : ""} ago`;
+        return i18n.t("time.minutesAgo", {count: diffInMinutes});
     }
 
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) {
-        return `${diffInHours} hour${diffInHours !== 1 ? "s" : ""} ago`;
+        return i18n.t("time.hoursAgo", {count: diffInHours});
     }
 
-    return format8601Ish(date);
+    return formatDateTime(date);
+}
+
+/**
+ * Formats date and time using the display locale (es-ES)
+ *
+ * @param {Date} date
+ * @param {Intl.DateTimeFormatOptions} [options]
+ * @returns {string}
+ */
+export function formatDateTime(date: Date, options?: Intl.DateTimeFormatOptions): string {
+    return date.toLocaleString(DISPLAY_LOCALE, options ?? {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    });
 }
 
 export function format8601Ish(date: Date) {
@@ -278,7 +300,3 @@ export function format8601Ish(date: Date) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-export let isAprilFools = ((d) => d.getMonth() === 3 && d.getDate() === 1)(new Date());
-export function setAprilFools(value: boolean) {
-    isAprilFools = value;
-}

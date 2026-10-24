@@ -22,8 +22,9 @@ import {
 import {ExpandLess as CloseIcon, ExpandMore as OpenIcon} from "@mui/icons-material";
 import LoadingFade from "../components/LoadingFade";
 import {useCommittingSlider} from "../hooks/useCommittingSlider";
-import {getPresetIconOrLabel, presetFriendlyNames, sortPresets} from "../presetUtils";
+import {getPresetFriendlyName, getPresetIconOrLabel, sortPresets} from "../presetUtils";
 import {Mark} from "@mui/material/Slider/useSlider.types";
+import {useTranslation} from "react-i18next";
 
 const StyledIcon = styled(Icon)(({theme}) => {
     return {
@@ -59,6 +60,7 @@ export interface PresetSelectionProps {
 }
 
 const PresetSelectionControl = (props: PresetSelectionProps): React.ReactElement => {
+    const {t} = useTranslation();
     const [presetSelectionSliderOpen, setPresetSelectionSliderOpen] = React.useState(false);
 
     const { capability, label, icon } = props;
@@ -131,7 +133,7 @@ const PresetSelectionControl = (props: PresetSelectionProps): React.ReactElement
         if (presetLoadError || preset === undefined) {
             return (
                 <Grid2>
-                    <Typography color="error">Error loading {capability}</Typography>
+                    <Typography color="error">{t("controls.presets.loadError", {capability: capability})}</Typography>
                 </Grid2>
             );
         }
@@ -161,6 +163,7 @@ const PresetSelectionControl = (props: PresetSelectionProps): React.ReactElement
         presetsPending,
         marks,
         sliderValue,
+        t
     ]);
 
     return (
@@ -198,7 +201,7 @@ const PresetSelectionControl = (props: PresetSelectionProps): React.ReactElement
                                         !pending &&
                                         <Grid2 sx={{marginTop: "-2px" /* ugh */}}>
                                             <Typography variant="subtitle1" sx={{paddingRight: "8px"}}>
-                                                {preset?.value ? presetFriendlyNames[preset.value] : ""}
+                                                {preset?.value ? getPresetFriendlyName(capability, preset.value) : ""}
                                             </Typography>
                                         </Grid2>
                                     }

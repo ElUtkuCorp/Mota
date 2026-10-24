@@ -2,6 +2,7 @@ import {Button, Card, CardContent, Divider, Grid2, IconButton, styled, Typograph
 import React, {FunctionComponent} from "react";
 import {Help as HelpIcon, Refresh as RefreshIcon} from "@mui/icons-material";
 import HelpDialog from "./HelpDialog";
+import {useTranslation} from "react-i18next";
 
 const TopRightIconButton = styled(Button)(({theme}) => {
     return {
@@ -31,6 +32,7 @@ const ReloadableCard: FunctionComponent<ReloadableCardProps> = ({
     boxShadow,
     helpText,
 }): React.ReactElement => {
+    const {t} = useTranslation();
     const [helpDialogOpen, setHelpDialogOpen] = React.useState(false);
 
 
@@ -61,7 +63,7 @@ const ReloadableCard: FunctionComponent<ReloadableCardProps> = ({
                                             onClick={() => {
                                                 return setHelpDialogOpen(true);
                                             }}
-                                            title="Help"
+                                            title={t("common.help")}
                                         >
                                             <HelpIcon/>
                                         </IconButton>
@@ -69,7 +71,7 @@ const ReloadableCard: FunctionComponent<ReloadableCardProps> = ({
                                 )}
                                 {reloadButton || (onReload && (
                                     <Grid2>
-                                        <TopRightIconButton loading={loading} onClick={onReload} title="Refresh">
+                                        <TopRightIconButton loading={loading} onClick={onReload} title={t("common.refresh")}>
                                             <RefreshIcon/>
                                         </TopRightIconButton>
                                     </Grid2>

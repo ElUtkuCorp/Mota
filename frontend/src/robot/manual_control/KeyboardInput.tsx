@@ -4,6 +4,7 @@ import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useRef } from "react";
 import { useVirtualController } from "./VirtualController";
 import { useKonamiCode } from "./useKonamiCode";
+import {useTranslation} from "react-i18next";
 
 interface KeyboardInputProps {
     enabled: boolean;
@@ -12,9 +13,10 @@ interface KeyboardInputProps {
 
 export function KeyboardInput({ enabled, highResSupported }: KeyboardInputProps) {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+    const {t} = useTranslation();
 
     const handleKonamiUnlock = useCallback(() => {
-        enqueueSnackbar("I found an easter egg and all I got was this lousy notification.", {
+        enqueueSnackbar(t("manualControl.easterEgg"), {
             variant: "success",
             persist: true,
             key: "konami",
@@ -26,7 +28,7 @@ export function KeyboardInput({ enabled, highResSupported }: KeyboardInputProps)
                 </IconButton>
             ),
         });
-    }, [enqueueSnackbar, closeSnackbar]);
+    }, [enqueueSnackbar, closeSnackbar, t]);
 
     useKonamiCode(handleKonamiUnlock);
     const { updateState, resetState } = useVirtualController();

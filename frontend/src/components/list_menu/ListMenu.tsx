@@ -3,6 +3,7 @@ import React from "react";
 import {SpacerListMenuItem} from "./SpacerListMenuItem";
 import HelpDialog from "../HelpDialog";
 import {Help as HelpIcon} from "@mui/icons-material";
+import {useTranslation} from "react-i18next";
 
 
 export const ListMenu: React.FunctionComponent<{
@@ -18,6 +19,7 @@ export const ListMenu: React.FunctionComponent<{
     helpText,
     style
 }): React.ReactElement => {
+    const {t} = useTranslation();
     const [helpDialogOpen, setHelpDialogOpen] = React.useState(false);
 
     return (
@@ -53,7 +55,7 @@ export const ListMenu: React.FunctionComponent<{
                                     onClick={() => {
                                         return setHelpDialogOpen(true);
                                     }}
-                                    title="Help"
+                                    title={t("common.help")}
                                 >
                                     <HelpIcon/>
                                 </IconButton>

@@ -5,6 +5,7 @@ import {StructureInterceptionHandlerResult} from "../Structure";
 import {Canvas2DContextTrackingWrapper} from "../../utils/Canvas2DContextTrackingWrapper";
 import {PointCoordinates} from "../../utils/types";
 import {calculateBoxAroundPoint, considerHiDPI, isInsideBox} from "../../utils/helpers";
+import {formatNumber} from "../../../i18n";
 
 const img_delete_button = new Image();
 img_delete_button.src = deleteButtonIconSVG;
@@ -50,7 +51,8 @@ class ZoneClientStructure extends ClientStructure {
             x: ((Math.round(this.x1) - Math.round(this.x0)) * pixelSize) / 100,
             y: ((Math.round(this.y1) - Math.round(this.y0)) * pixelSize) / 100
         };
-        const label = dimensions.x.toFixed(2) + " x " + dimensions.y.toFixed(2) + "m";
+        const twoDecimals = {minimumFractionDigits: 2, maximumFractionDigits: 2};
+        const label = formatNumber(dimensions.x, twoDecimals) + " x " + formatNumber(dimensions.y, twoDecimals) + " m";
 
         ctxWrapper.save();
 

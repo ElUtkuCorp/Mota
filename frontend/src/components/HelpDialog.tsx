@@ -4,6 +4,7 @@ import gfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import {Button, Dialog, DialogActions, styled} from "@mui/material";
 import style from "./HelpDialog.module.css";
+import {useTranslation} from "react-i18next";
 
 const StyledDialog = styled(Dialog)(({ theme }) => {
     return {
@@ -25,6 +26,8 @@ const HelpDialog: React.FunctionComponent<{
     setDialogOpen,
     helpText
 }): React.ReactElement => {
+    const {t} = useTranslation();
+
     return (
         <StyledDialog
             onClose={() =>{
@@ -44,7 +47,7 @@ const HelpDialog: React.FunctionComponent<{
                 <Button autoFocus onClick={() => {
                     setDialogOpen(false);
                 }}>
-                    OK
+                    {t("common.ok")}
                 </Button>
             </DialogActions>
         </StyledDialog>

@@ -9,6 +9,7 @@ import React from "react";
 import {useCapabilitiesSupported} from "../CapabilitiesProvider";
 import {DuststreamCanvas, DuststreamPlaceholder} from "../robot/Duststream";
 import BaseMap, {MapContainer, MapProps, MapState} from "./BaseMap";
+import {useTranslation} from "react-i18next";
 
 
 const Container = styled(Box)({
@@ -61,6 +62,7 @@ const CAMERA_SIZES: Record<CameraSize, {width: string, borderRadius: string, mar
 const CAMERA_SIZE_ORDER: CameraSize[] = ["small", "medium", "large", "xlarge", "fullscreen"];
 
 const SpectatorMapPage = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         data: mapData,
         isPending: mapIsPending,
@@ -122,12 +124,12 @@ const SpectatorMapPage = (): React.ReactElement => {
     if (mapLoadError) {
         return (
             <Container>
-                <Typography color="error">Error loading map data</Typography>
+                <Typography color="error">{t("map.loadError")}</Typography>
                 <Box m={1}/>
                 <Button color="primary" variant="contained" onClick={() => {
                     return refetchMap();
                 }}>
-                    Retry
+                    {t("common.retry")}
                 </Button>
             </Container>
         );
@@ -144,7 +146,7 @@ const SpectatorMapPage = (): React.ReactElement => {
     if (!mapData) {
         return (
             <Container>
-                <Typography align="center">No map data</Typography>
+                <Typography align="center">{t("map.noMapData")}</Typography>
             </Container>
         );
     }

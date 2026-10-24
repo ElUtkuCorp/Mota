@@ -24,6 +24,7 @@ import {
 import React from "react";
 import ConfirmationDialog from "../components/ConfirmationDialog";
 import {usePendingMapAction} from "../map/BaseMap";
+import {useTranslation} from "react-i18next";
 
 const StartStates: StatusState["value"][] = ["idle", "docked", "paused", "error"];
 const PauseStates: StatusState["value"][] = ["cleaning", "returning", "moving"];
@@ -36,6 +37,7 @@ interface CommandButton {
 }
 
 const BasicControls = (): React.ReactElement => {
+    const {t} = useTranslation();
     const [startConfirmationDialogOpen, setStartConfirmationDialogOpen] = React.useState(false);
     const { data: status, isPending: statusPending } = useRobotStatusQuery();
     const {
@@ -74,7 +76,7 @@ const BasicControls = (): React.ReactElement => {
             <Grid2>
                 <Paper>
                     <Box p={1}>
-                        <Typography color="error">Error loading basic controls</Typography>
+                        <Typography color="error">{t("controls.basic.loadError")}</Typography>
                     </Box>
                 </Paper>
             </Grid2>
@@ -87,26 +89,26 @@ const BasicControls = (): React.ReactElement => {
         {
             command: "start",
             enabled: StartStates.includes(state),
-            label: flag === "resumable" ? "Resume" : "Start",
+            label: flag === "resumable" ? t("controls.basic.resume") : t("controls.basic.start"),
             Icon: StartIcon,
         },
         {
             command: "pause",
             enabled: PauseStates.includes(state),
             Icon: PauseIcon,
-            label: "Pause",
+            label: t("controls.basic.pause"),
         },
         {
             command: "stop",
             enabled: flag === "resumable" || (state !== "idle" && state !== "docked"),
             Icon: StopIcon,
-            label: "Stop",
+            label: t("controls.basic.stop"),
         },
         {
             command: "home",
             enabled: state === "idle" || state === "error" || state === "paused",
             Icon: HomeIcon,
-            label: "Dock",
+            label: t("controls.basic.home"),
         },
     ];
 
@@ -133,6 +135,8 @@ const BasicControls = (): React.ReactElement => {
                                                     sendCommand(command);
                                                 }}
                                                 color="inherit"
+                                                title={label}
+                                                aria-label={label}
                                                 style={{height: "3.5em", borderColor: "inherit"}}
                                             >
                                                 <Icon />
@@ -147,7 +151,7 @@ const BasicControls = (): React.ReactElement => {
             </Grid2>
 
             <ConfirmationDialog
-                title="Are you sure you want to start a full cleanup?"
+                title={t("controls.basic.fullCleanupConfirmTitle")}
                 open={startConfirmationDialogOpen}
                 onClose={() => {
                     setStartConfirmationDialogOpen(false);
@@ -156,12 +160,12 @@ const BasicControls = (): React.ReactElement => {
                     executeBasicControlCommand("start");
                 }}>
                 <DialogContentText>
-                    You currently have a pending MapAction.
+                    {t("controls.basic.pendingMapAction")}
                     <br/>
                     <br/>
-                    <strong>Hint:</strong>
+                    <strong>{t("controls.basic.hint")}</strong>
                     <br/>
-                    You might instead be looking for the button on the bottom right of the map.
+                    {t("controls.basic.hintText")}
                 </DialogContentText>
             </ConfirmationDialog>
         </>

@@ -36,6 +36,7 @@ import {
     OperationModeControlPreActionControl,
     WaterUsageControlPreActionControl
 } from "./PreActionControls";
+import {useTranslation} from "react-i18next";
 
 const actionControls: Record<
     ValetudoTimerActionType,
@@ -67,6 +68,7 @@ const TimerEditDialog: FunctionComponent<TimerDialogProps> = ({
     onSave,
     onCancel,
 }): React.ReactElement => {
+    const {t} = useTranslation();
     const theme = useTheme();
     const narrowScreen = useMediaQuery(theme.breakpoints.down("md"), {
         noSsr: true,
@@ -111,9 +113,9 @@ const TimerEditDialog: FunctionComponent<TimerDialogProps> = ({
                     <ToggleButton
                         key={weekday.label}
                         value={weekday.dow}
-                        aria-label={weekday.label}
+                        aria-label={t(weekday.label)}
                     >
-                        {weekday.label}
+                        {t(weekday.label)}
                     </ToggleButton>
                 );
             } else {
@@ -139,8 +141,8 @@ const TimerEditDialog: FunctionComponent<TimerDialogProps> = ({
                                 }}
                             />
                         }
-                        label={weekday.label}
-                        aria-label={weekday.label}
+                        label={t(weekday.label)}
+                        aria-label={t(weekday.label)}
                     />
                 );
             }
@@ -167,17 +169,17 @@ const TimerEditDialog: FunctionComponent<TimerDialogProps> = ({
         }
 
         return checkboxes;
-    }, [editTimer, narrowScreen]);
+    }, [editTimer, narrowScreen, t]);
 
     const actionMenuItems = React.useMemo(() => {
         return timerProperties.supportedActions.map((action) => {
             return (
                 <MenuItem key={action} value={action}>
-                    {timerActionLabels[action]}
+                    {t(timerActionLabels[action])}
                 </MenuItem>
             );
         });
-    }, [timerProperties]);
+    }, [timerProperties, t]);
 
     const utcTime = React.useMemo(() => {
         const date = new Date();
@@ -191,10 +193,10 @@ const TimerEditDialog: FunctionComponent<TimerDialogProps> = ({
     return (
         <Dialog open={true} maxWidth={"lg"} fullScreen={narrowScreen}>
             <DialogTitle>
-                {editTimer.id === "" ? "Add timer" : "Edit timer"}
+                {editTimer.id === "" ? t("timers.addTitle") : t("timers.editTitle")}
             </DialogTitle>
             <DialogContent>
-                <Divider textAlign="left" sx={{mb: 1}}>General</Divider>
+                <Divider textAlign="left" sx={{mb: 1}}>{t("timers.sections.general")}</Divider>
                 <Grid2
                     container
                     direction="column"
@@ -213,7 +215,7 @@ const TimerEditDialog: FunctionComponent<TimerDialogProps> = ({
                                     }}
                                 />
                             }
-                            label="Enabled"
+                            label={t("timers.enabled")}
                         />
                     </Grid2>
 
@@ -221,7 +223,7 @@ const TimerEditDialog: FunctionComponent<TimerDialogProps> = ({
                         sx={{paddingLeft: "0.5rem", marginTop: "0.5rem"}}
                     >
                         <TextField
-                            label="Custom Label"
+                            label={t("timers.customLabel")}
                             value={editTimer.label}
                             variant="standard"
                             onChange={e => {
@@ -239,14 +241,14 @@ const TimerEditDialog: FunctionComponent<TimerDialogProps> = ({
                 </Grid2>
 
 
-                <Divider textAlign="left" sx={{mt: 1, mb: 1.5}}>Schedule</Divider>
+                <Divider textAlign="left" sx={{mt: 1, mb: 1.5}}>{t("timers.sections.schedule")}</Divider>
 
                 {weekdayCheckboxes}
 
                 <Box pt={2.5} />
 
                 <TextField
-                    label={`Select time (${CurrentBrowserTimezone})`}
+                    label={t("timers.selectTime", {timezone: CurrentBrowserTimezone})}
                     type="time"
                     fullWidth
                     value={`${editTimer.hour.toString().padStart(2, "0")}:${editTimer.minute.toString().padStart(2, "0")}`}
@@ -262,13 +264,13 @@ const TimerEditDialog: FunctionComponent<TimerDialogProps> = ({
                     }}
                 />
                 <Typography variant="subtitle2" color="textSecondary" sx={{mb: 1, mt: 1}}>
-                    UTC: {utcTime}
+                    {t("timers.utcTime", {time: utcTime})}
                 </Typography>
 
                 {
                     timerProperties.supportedPreActions.length > 0 &&
                     <>
-                        <Divider textAlign="left" sx={{mt: 1, mb: 1.5}}>Pre-Actions</Divider>
+                        <Divider textAlign="left" sx={{mt: 1, mb: 1.5}}>{t("timers.sections.preActions")}</Divider>
 
                         {timerProperties.supportedPreActions.map(preActionType => {
                             const PreActionControl = preActionControls[preActionType];
@@ -298,14 +300,14 @@ const TimerEditDialog: FunctionComponent<TimerDialogProps> = ({
 
 
 
-                <Divider textAlign="left" sx={{mt: 1, mb: 1.5}}>Action</Divider>
+                <Divider textAlign="left" sx={{mt: 1, mb: 1.5}}>{t("timers.sections.action")}</Divider>
                 <FormControl>
-                    <InputLabel id={editTimer.id + "_label"}>Action</InputLabel>
+                    <InputLabel id={editTimer.id + "_label"}>{t("timers.action")}</InputLabel>
                     <Select
                         labelId={editTimer.id + "_label"}
                         id={editTimer.id + "-action-select"}
                         value={editTimer.action.type}
-                        label="Action"
+                        label={t("timers.action")}
                         onChange={(e) => {
                             const newTimer = deepCopy(editTimer);
                             newTimer.action.type = e.target.value as ValetudoTimerActionType;
@@ -346,7 +348,7 @@ const TimerEditDialog: FunctionComponent<TimerDialogProps> = ({
                         onCancel();
                     }}
                 >
-                    Cancel
+                    {t("common.cancel")}
                 </Button>
                 <Button
                     onClick={() => {
@@ -355,7 +357,7 @@ const TimerEditDialog: FunctionComponent<TimerDialogProps> = ({
                     disabled={!validAction}
                     autoFocus
                 >
-                    Save
+                    {t("common.save")}
                 </Button>
             </DialogActions>
         </Dialog>

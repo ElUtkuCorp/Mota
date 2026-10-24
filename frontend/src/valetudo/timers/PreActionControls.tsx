@@ -12,7 +12,8 @@ import {
     Typography
 } from "@mui/material";
 import {Capability, PresetSelectionState, usePresetSelectionsQuery} from "../../api";
-import {presetFriendlyNames, sortPresets} from "../../presetUtils";
+import {getPresetFriendlyName, sortPresets} from "../../presetUtils";
+import {useTranslation} from "react-i18next";
 
 
 const PresetSelectionPreActionControl: FunctionComponent<{
@@ -30,6 +31,7 @@ const PresetSelectionPreActionControl: FunctionComponent<{
     capability,
     label
 }) => {
+    const {t} = useTranslation();
     const [enabled, setEnabled] = React.useState(wasEnabled);
     const [selectedPreset, setSelectedPreset] = React.useState<string>(params.value as string ?? "");
 
@@ -53,11 +55,11 @@ const PresetSelectionPreActionControl: FunctionComponent<{
         return filteredPresets.map((preset) => {
             return (
                 <MenuItem key={preset} value={preset}>
-                    {presetFriendlyNames[preset]}
+                    {getPresetFriendlyName(capability, preset)}
                 </MenuItem>
             );
         });
-    }, [filteredPresets]);
+    }, [filteredPresets, capability]);
 
 
     if (presetsPending) {
@@ -71,7 +73,7 @@ const PresetSelectionPreActionControl: FunctionComponent<{
     if (presetLoadError) {
         return (
             <Grid2>
-                <Typography color="error">Error loading {capability}</Typography>
+                <Typography color="error">{t("controls.presets.loadError", {capability: capability})}</Typography>
             </Grid2>
         );
     }
@@ -109,11 +111,11 @@ const PresetSelectionPreActionControl: FunctionComponent<{
             </Grid2>
             <Grid2 sx={{flexGrow: 1, marginLeft: "1rem"}}>
                 <FormControl sx={{width: "100%"}}>
-                    <InputLabel id={"FanSpeedControlPreActionControl_presets_label"}>Preset</InputLabel>
+                    <InputLabel id={"FanSpeedControlPreActionControl_presets_label"}>{t("timers.preset")}</InputLabel>
                     <Select
                         labelId={"FanSpeedControlPreActionControl_presets_label"}
                         id={"FanSpeedControlPreActionControl_presets-select"}
-                        label="Preset"
+                        label={t("timers.preset")}
                         value={selectedPreset}
                         onChange={(e) => {
                             setSelectedPreset(e.target.value);
@@ -139,6 +141,8 @@ export const FanSpeedControlPreActionControl: FunctionComponent<TimerPreActionCo
     params,
     setParams
 }) => {
+    const {t} = useTranslation();
+
     return (
         <PresetSelectionPreActionControl
             wasEnabled={wasEnabled}
@@ -146,7 +150,7 @@ export const FanSpeedControlPreActionControl: FunctionComponent<TimerPreActionCo
             setParams={setParams}
 
             capability={Capability.FanSpeedControl}
-            label={"Set Fan to"}
+            label={t("timers.preActions.fanSpeed")}
         />
     );
 };
@@ -156,6 +160,8 @@ export const WaterUsageControlPreActionControl: FunctionComponent<TimerPreAction
     params,
     setParams
 }) => {
+    const {t} = useTranslation();
+
     return (
         <PresetSelectionPreActionControl
             wasEnabled={wasEnabled}
@@ -163,7 +169,7 @@ export const WaterUsageControlPreActionControl: FunctionComponent<TimerPreAction
             setParams={setParams}
 
             capability={Capability.WaterUsageControl}
-            label={"Set Water to"}
+            label={t("timers.preActions.waterUsage")}
         />
     );
 };
@@ -173,6 +179,8 @@ export const OperationModeControlPreActionControl: FunctionComponent<TimerPreAct
     params,
     setParams
 }) => {
+    const {t} = useTranslation();
+
     return (
         <PresetSelectionPreActionControl
             wasEnabled={wasEnabled}
@@ -180,7 +188,7 @@ export const OperationModeControlPreActionControl: FunctionComponent<TimerPreAct
             setParams={setParams}
 
             capability={Capability.OperationModeControl}
-            label={"Set Mode to"}
+            label={t("timers.preActions.operationMode")}
         />
     );
 };

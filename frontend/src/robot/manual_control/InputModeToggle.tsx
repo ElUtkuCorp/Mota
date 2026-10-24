@@ -1,6 +1,7 @@
 import React from "react";
 import { ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { InputMode } from "./VirtualController";
+import {useTranslation} from "react-i18next";
 
 interface InputModeToggleProps {
     mode: InputMode;
@@ -8,6 +9,7 @@ interface InputModeToggleProps {
 }
 
 export function InputModeToggle({ mode, onChange }: InputModeToggleProps) {
+    const {t} = useTranslation();
     const handleChange = (_: React.MouseEvent<HTMLElement>, newMode: InputMode | null) => {
         if (newMode) {
             onChange(newMode);
@@ -22,9 +24,9 @@ export function InputModeToggle({ mode, onChange }: InputModeToggleProps) {
             size="small"
             sx={{ mb: 8 }}
         >
-            <ToggleButton value="joystick">Joystick</ToggleButton>
-            <ToggleButton value="dpad">D-Pad</ToggleButton>
-            <ToggleButton value="keyboard">Keyboard</ToggleButton>
+            <ToggleButton value="joystick">{t("manualControl.modes.joystick")}</ToggleButton>
+            <ToggleButton value="dpad">{t("manualControl.modes.dpad")}</ToggleButton>
+            <ToggleButton value="keyboard">{t("manualControl.modes.keyboard")}</ToggleButton>
         </ToggleButtonGroup>
     );
 }

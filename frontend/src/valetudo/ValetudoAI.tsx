@@ -11,8 +11,9 @@ import DetailPageHeaderRow from "../components/DetailPageHeaderRow";
 import ElizaBot from "eliza-as-promised";
 import ValetudoBounce from "../components/ValetudoBounce";
 import {filter} from "./res/Badwords";
-import {setAprilFools} from "../utils";
+
 import Woodcock from "../components/Woodcock";
+import {useTranslation} from "react-i18next";
 
 interface AiChatMessage {
     sender: "user" | "ai";
@@ -20,6 +21,7 @@ interface AiChatMessage {
 }
 
 const ValetudoAI = (): React.ReactElement => {
+    const {t} = useTranslation();
     const [messages, setMessages] = useState<AiChatMessage[]>([]);
     const [inputValue, setInputValue] = useState("");
     const [elizaInstance, setElizaInstance] = useState<ElizaBot | null>(null);
@@ -68,13 +70,6 @@ const ValetudoAI = (): React.ReactElement => {
             inputRef.current?.blur();
 
             return;
-        } else if (trimmedInput.toLowerCase() === "aprilfools") {
-            setAprilFools(true);
-
-            setInputValue("");
-            inputRef.current?.blur();
-
-            return;
         }
 
         if (!trimmedInput || !elizaInstance || isLoading || isFinished) {
@@ -100,7 +95,7 @@ const ValetudoAI = (): React.ReactElement => {
                     inputValue.replace(/\n/g, " ").trim()
                 );
 
-                aiResponseText = response.reply || response.final || "I seem to be at a loss for words.";
+                aiResponseText = response.reply || response.final || t("ai.noWords");
                 isFinal = !!response.final;
             }
 
@@ -119,7 +114,7 @@ const ValetudoAI = (): React.ReactElement => {
         } catch (error) {
             const errorMessage: AiChatMessage = {
                 sender: "ai",
-                text: "I'm sorry, I'm afraid I can't do that."
+                text: t("ai.error")
             };
             setMessages(prev => [...prev, errorMessage]);
 
@@ -161,7 +156,7 @@ const ValetudoAI = (): React.ReactElement => {
         <PaperContainer>
             <Box sx={{ display: "flex", flexDirection: "column", height: "70vh", maxHeight:"90%" }}>
                 <DetailPageHeaderRow
-                    title="AI Assistant"
+                    title={t("ai.title")}
                     icon={<AiIcon/>}
                 />
                 <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2, display: "flex", flexDirection: "column", gap: 2 }}>
@@ -214,7 +209,7 @@ const ValetudoAI = (): React.ReactElement => {
                                 }}
                             >
                                 <Typography variant="body1" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                    {messages.length === 0 ? "Initializing..." : "Thinking..."}
+                                    {messages.length === 0 ? t("ai.initializing") : t("ai.thinking")}
                                     <CircularProgress size={16} />
                                 </Typography>
                             </Paper>
@@ -229,7 +224,7 @@ const ValetudoAI = (): React.ReactElement => {
                             inputRef={inputRef}
                             fullWidth
                             variant="outlined"
-                            placeholder={isFinished ? "Session ended. Start a new one?" : "Tell me about your problems..."}
+                            placeholder={isFinished ? t("ai.sessionEnded") : t("ai.placeholder")}
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyDown={handleKeyPress}
@@ -242,6 +237,7 @@ const ValetudoAI = (): React.ReactElement => {
                             color={isFinished ? "secondary" : "primary"}
                             onClick={isFinished ? handleReset : handleSend}
                             disabled={!isFinished && (isLoading || !inputValue.trim())}
+                            title={isFinished ? t("ai.restart") : t("ai.send")}
                         >
                             {isFinished ? <ReplayIcon /> : <SendIcon />}
                         </IconButton>

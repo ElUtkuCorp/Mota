@@ -14,6 +14,7 @@ import {
 import {RobotMonochromeIcon} from "../components/CustomIcons";
 import ControlsCard from "./ControlsCard";
 import {useValetudoColorsInverse} from "../hooks/useValetudoColors";
+import {useTranslation} from "react-i18next";
 
 const BatteryProgress = styled(LinearProgress)(({ theme }) => {
     return {
@@ -27,6 +28,7 @@ const BatteryProgress = styled(LinearProgress)(({ theme }) => {
 });
 
 const RobotStatus = (): React.ReactElement => {
+    const {t} = useTranslation();
     const palette = useValetudoColorsInverse();
     const {
         data: status,
@@ -42,7 +44,7 @@ const RobotStatus = (): React.ReactElement => {
 
     const stateDetails = React.useMemo(() => {
         if (isStatusError) {
-            return <Typography color="error">Error loading robot state</Typography>;
+            return <Typography color="error">{t("controls.robotStatus.loadError")}</Typography>;
         }
 
         if (status === undefined) {
@@ -51,11 +53,11 @@ const RobotStatus = (): React.ReactElement => {
 
         return (
             <Typography variant="overline">
-                {status.value}
-                {status.flag !== "none" ? <> &ndash; {status.flag}</> : ""}
+                {t(`robot.status.${status.value}`, {defaultValue: status.value})}
+                {status.flag !== "none" ? <> &ndash; {t(`robot.statusFlag.${status.flag}`, {defaultValue: status.flag})}</> : ""}
             </Typography>
         );
-    }, [isStatusError, status]);
+    }, [isStatusError, status, t]);
 
     const batteriesDetails = React.useMemo(() => {
         const getBatteryColor = (level: number) => {
@@ -69,7 +71,7 @@ const RobotStatus = (): React.ReactElement => {
         };
 
         if (isBatteryError) {
-            return <Typography color="error">Error loading battery state</Typography>;
+            return <Typography color="error">{t("controls.robotStatus.batteryLoadError")}</Typography>;
         }
 
         if (batteries === undefined) {
@@ -77,7 +79,7 @@ const RobotStatus = (): React.ReactElement => {
         }
 
         if (batteries.length === 0) {
-            return <Typography color="textSecondary">No batteries found</Typography>;
+            return <Typography color="textSecondary">{t("controls.robotStatus.noBatteries")}</Typography>;
         }
 
         return batteries.map((battery, index) => {
@@ -93,7 +95,10 @@ const RobotStatus = (): React.ReactElement => {
                                 fontWeight: 500
                             }}
                         >
-                            Battery{batteries.length > 1 ? ` ${index + 1}` : ""}: {Math.round(battery.level)}%
+                            {batteries.length > 1 ?
+                                t("controls.robotStatus.batteryNumbered", {number: index + 1, level: Math.round(battery.level)}) :
+                                t("controls.robotStatus.battery", {level: Math.round(battery.level)})
+                            }
                         </Typography>
                     </Grid2>
                     <Grid2 sx={{ flexGrow: 1, minHeight: "1rem" }}>
@@ -110,12 +115,12 @@ const RobotStatus = (): React.ReactElement => {
                 </Grid2>
             );
         });
-    }, [batteries, isBatteryError, palette]);
+    }, [batteries, isBatteryError, palette, t]);
 
     return (
         <ControlsCard
             icon={RobotMonochromeIcon}
-            title="Robot"
+            title={t("controls.robotStatus.title")}
             isLoading={isPending}
         >
             <Grid2 size="grow" container direction="column">

@@ -1,0 +1,1139 @@
+{
+    "ai": {
+        "title": "Asistente de IA",
+        "noWords": "Parece que me he quedado sin palabras.",
+        "error": "Lo siento, me temo que no puedo hacer eso.",
+        "initializing": "Iniciando…",
+        "thinking": "Pensando…",
+        "sessionEnded": "Sesión terminada. ¿Empezamos otra?",
+        "placeholder": "Cuéntame tus problemas (ELIZA solo habla inglés)…",
+        "send": "Enviar",
+        "restart": "Empezar de nuevo"
+    },
+    "log": {
+        "loadError": "Error al cargar el registro",
+        "filter": "Filtrar…",
+        "filterLabel": "filtro",
+        "currentLevel": "Nivel actual"
+    },
+    "capabilities": {
+        "loaded": "¡Funciones cargadas correctamente!",
+        "loadError": "Error al cargar las funciones del robot"
+    },
+    "api": {
+        "commandError": "Se ha producido un error al enviar la orden a {{capability}}:\n{{message}}",
+        "settingsError": "Se ha producido un error al actualizar los ajustes de {{setting}}: {{error}}",
+        "settings": {
+            "cameraStreaming": "la retransmisión de la cámara",
+            "configRestore": "la restauración de la configuración",
+            "httpBasicAuth": "la autenticación HTTP básica",
+            "logLevel": "nivel de registro",
+            "mqtt": "MQTT",
+            "ntpClient": "cliente NTP",
+            "networkAdvertisement": "anuncio en la red",
+            "timer": "la programación",
+            "updater": "las actualizaciones",
+            "customizations": "personalización de Mota",
+            "events": "eventos de Mota",
+            "welcomeDialog": "la pantalla de bienvenida",
+            "updaterCommand": "actualizaciones"
+        },
+        "errors": {
+            "setSegmentMaterial": "No se ha podido cambiar el tipo de suelo de la habitación",
+            "resetConsumable": "No se ha podido restablecer el consumible",
+            "dismissWelcomeDialog": "No se ha podido cerrar la pantalla de bienvenida",
+            "restoreDefaultConfiguration": "No se ha podido restaurar la configuración predeterminada.",
+            "setNewLogLevel": "No se ha podido cambiar el nivel de registro",
+            "updateMQTTConfiguration": "No se ha podido actualizar la configuración de MQTT",
+            "updateHTTPBasicAuthConfiguration": "No se ha podido actualizar la configuración de la autenticación HTTP básica",
+            "updateNetworkAdvertisementConfiguration": "No se ha podido actualizar la configuración del anuncio en la red",
+            "updateNTPClientConfiguration": "No se ha podido actualizar la configuración del cliente NTP",
+            "createTimer": "No se ha podido crear el programa",
+            "updateTimer": "No se ha podido actualizar el programa",
+            "sendTimerAction": "No se ha podido enviar la acción del programa",
+            "interactWithEvent": "No se ha podido procesar el evento",
+            "resetTheMap": "No se ha podido restablecer el mapa",
+            "startTheMappingPass": "No se ha podido iniciar la pasada de mapeo",
+            "changeSpeakerVolume": "No se ha podido cambiar el volumen del altavoz",
+            "sendVoicePackManagementCommand": "No se ha podido enviar la orden del paquete de voz",
+            "updateDNDConfiguration": "No se ha podido actualizar la configuración de «No molestar»",
+            "setWifiConfiguration": "No se ha podido aplicar la configuración wifi",
+            "sendManualControlInteraction": "No se ha podido enviar la orden de control manual",
+            "sendHighResolutionManualControlInteraction": "No se ha podido enviar la orden de control manual de alta resolución",
+            "updateUpdaterConfiguration": "No se ha podido actualizar la configuración de las actualizaciones",
+            "updateValetudoCustomizations": "No se ha podido actualizar la personalización de Mota",
+            "sendCarpetSensorMode": "No se ha podido cambiar el modo del sensor de alfombras",
+            "sendAutoEmptyDockAutoEmptyInterval": "No se ha podido cambiar la frecuencia del vaciado automático",
+            "updateDustStreamingConfiguration": "No se ha podido actualizar la configuración de la retransmisión de la cámara",
+            "sendMopDockMopWashTemperature": "No se ha podido cambiar la temperatura del lavado de la mopa",
+            "sendCleanRoute": "No se ha podido cambiar la ruta de limpieza",
+            "sendMopDockMopDryingTime": "No se ha podido cambiar el tiempo de secado de la mopa",
+            "sendAutoEmptyDockAutoEmptyDuration": "No se ha podido cambiar la duración del vaciado automático",
+            "changeCapabilityState": "No se ha podido cambiar el estado de {{capability}}"
+        }
+    },
+    "common": {
+        "yes": "Sí",
+        "no": "No",
+        "ok": "Aceptar",
+        "help": "Ayuda",
+        "refresh": "Actualizar",
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "close": "Cerrar",
+        "reset": "Restablecer",
+        "delete": "Eliminar",
+        "back": "Atrás",
+        "menu": "Menú",
+        "unknown": "Desconocido",
+        "edit": "Editar",
+        "add": "Añadir",
+        "error": "Error",
+        "retry": "Reintentar"
+    },
+    "components": {
+        "integrationHelp": {
+            "title": "Conectar con otras aplicaciones",
+            "coordinatesWarning": "Ten en cuenta que las coordenadas que se muestran aquí pueden dejar de ser válidas si cambia el mapa."
+        },
+        "duststreaming": {
+            "enableDialogTitle": "¿Seguro que quieres activar la retransmisión de la cámara?",
+            "understandCountdown": "Lo entiendo ({{seconds}} s)",
+            "understand": "Lo entiendo",
+            "notDoneTitle": "¡Todavía no has terminado!",
+            "note": "<strong>Nota</strong>: que esta función sea algo engorrosa no es un descuido, sino algo intencionado.<br/>Valetudo (la base de Mota) podría hacer todo esto por ti sin problema, pero entonces sería una cámara espía de un solo botón, sin pensar y sin ninguna prueba de habilidad.<br/><br/>Debería ser evidente que crear herramientas de abuso de un solo botón, sin pensar y sin prueba de habilidad es poco ético, y nadie que quiera considerarse adulto debería hacerlo.<br/>Por tanto, y diciéndolo claramente, querer «ayudar» eliminando esta fricción intencionada es ingenuo, descuidado, temerario o, simplemente, una tontería.<br/><br/>Para más información y otras reflexiones, consulta las <releaseNotesLink>notas de la versión 2026.08.0 de Valetudo</releaseNotesLink>, la primera que incluyó esta función.<br/>(Este cuadro existe solo porque, tras su lanzamiento, una cantidad desmesurada de gente escribió al autor de Valetudo con «¡Eh, Hypfer, mira lo que he hecho! ¡Así se lo puedes poner más fácil a la gente!»)",
+            "understood": "Entendido",
+            "seeWhatRobotSees": "Mira lo que ve tu robot",
+            "setupIncomplete": "Configuración incompleta",
+            "activeSong": "Rockwell - Somebody's Watching Me ♫",
+            "title": "Retransmisión de la cámara",
+            "enable": "Activar",
+            "disable": "Desactivar",
+            "disableDialogTitle": "¿Desactivar la retransmisión de la cámara?",
+            "disableDialogText": "También se borrará duststreamer, para que no se pueda volver a activar solo con acceso HTTP.",
+            "installInstructions": "La captura, el procesado y la codificación de vídeo de la retransmisión de la cámara se hacen en [duststreamer](https://github.com/hypfer/duststreamer), basado en GStreamer.\nEs otro binario único enlazado estáticamente que hay que copiar al robot (y que basta con borrar para que la retransmisión de la cámara vuelva a ser técnicamente imposible).\n\nPara terminar la configuración, coloca un binario `duststreamer` ejecutable en `{{binaryPath}}` y actualiza.\n",
+            "lecture": "Hola:\n\nPara un momento.\n\nEstás a punto de activar una función muy interesante, pero que también cambia por completo tu modelo de amenazas.<br/>\nY no solo para ti, sino **también(!)** para las personas que viven contigo o que te visitan.\n\nLo que antes era solo un robot aspirador ahora puede funcionar como una cámara espía oculta, sin que los demás tengan forma alguna de saber que podrían estar siendo grabados.\n\nEsto es malo para terceros, como tu pareja o los amigos que vienen a verte, porque la privacidad es un derecho humano fundamental. Ignorarla, aunque sea solo por descuido, puede provocar pérdida de confianza y todas las consecuencias que vienen después.\nAdemás, también es malo para ti, porque te puede afectar de la misma forma: cualquier dispositivo conectado a la red puede acabar controlado en algún momento por un tercero con malas intenciones.\n\nPor eso, cualquiera que entre en tu casa **tiene que** saber que alguien o algo podría estar observándole a través del robot.\nEs una obligación ética y, según dónde vivas, puede que también legal.\n\nComo a ti te afecta exactamente igual, tú también tienes que tenerlo presente.\nSin embargo, tarde o temprano se te olvidará, y deberías contar con ese resultado casi inevitable.\n\nPuede tener sentido jugar un rato con esta función, divertirse y después volver a desactivarla, en lugar de dejarla ahí sin usar, lista para que alguien haga un mal uso de ella.\nMientras tanto, verás lo discreta que es y todo lo que pueden ver estos robots.\n\nEn un mundo mejor, los fabricantes harían robots con cámaras con un LED de actividad cableado directamente. E, idealmente, funcionarían totalmente sin conexión.\n\n<br/>\n\n**Nota**:\n\nEsta función incluye un interruptor de apagado remoto sin autenticación, para que justicieros de internet puedan limitar daños mientras revisan dispositivos IoT expuestos por accidente en Shodan. Pero eso solo ayuda en parte, y solo frente a amenazas externas, que aquí son con diferencia el caso menos probable.\n\nDebería ser obvio que la vigilancia no puede arreglar una falta de confianza, por mucho que los vendedores de seguridad quieran hacerte creer lo contrario.\nMás cámaras no hacen tu casa más segura y, desde luego, tampoco arreglan las relaciones.\n\n- No decidas por tu cuenta activarla en secreto.\n- No pidas consentimiento de una forma pensada para que decir que sí sea la única opción fácil.\n- No cargues a la otra persona con la responsabilidad de negarse.\n- No interpretes que nadie se queje como consentimiento.\n\nEn resumen: resiste a lo que viene por defecto.<br/>\nSé lo contrario de la tendencia actual del mercado: haz que negarse y decir que no sea lo más fácil del mundo.\n\nTenemos que vivir en este mundo, pero no tenemos por qué formar parte de él.<br/>\nY ahora, a divertirse de forma ética™.\n"
+        },
+        "events": {
+            "title": "Eventos",
+            "tooltip": "Eventos y notificaciones",
+            "noEvents": "No hay eventos",
+            "dismiss": "Descartar",
+            "consumableWithoutType": "Se ha agotado un consumible sin tipo ni subtipo",
+            "consumableDepleted": "El consumible <em>{{name}}</em> se ha agotado",
+            "errorOccurred": "Se ha producido un error: {{message}}",
+            "unknownError": "Error desconocido",
+            "pendingMapChange": "Hay un cambio de mapa pendiente. ¿Quieres aceptar el mapa nuevo?",
+            "updated": "Mota se ha actualizado correctamente de «{{previousVersion}}» a «{{newVersion}}».",
+            "runtimeError": "Mota ha tenido un problema y se ha reiniciado sola. Esto no debería pasar nunca.",
+            "runtimeErrorReason": "Motivo: {{reason}}",
+            "unknownType": "Tipo de evento desconocido: {{type}}",
+            "dustBinFull": "El depósito de polvo está lleno. Vacíalo, por favor.",
+            "mopAttached": "La mopa sigue puesta en el robot."
+        }
+    },
+    "robot": {
+        "status": {
+            "error": "Error",
+            "docked": "En la base",
+            "idle": "En espera",
+            "returning": "Volviendo a la base",
+            "cleaning": "Limpiando",
+            "paused": "En pausa",
+            "manual_control": "Control manual",
+            "moving": "Desplazándose"
+        },
+        "statusFlag": {
+            "none": "",
+            "zone": "Zona",
+            "segment": "Habitación",
+            "spot": "Punto",
+            "target": "Destino",
+            "resumable": "Se puede reanudar"
+        },
+        "attachments": {
+            "dustbin": "Depósito de polvo",
+            "watertank": "Depósito de agua",
+            "mop": "Mopa"
+        },
+        "consumables": {
+            "title": "Mantenimiento",
+            "description": "Consulta y restablece el estado de los consumibles",
+            "remaining": "Restante: {{value}}",
+            "depleted": "Agotado",
+            "resetTitle": "¿Restablecer el consumible?",
+            "resetBody": "¿Seguro que quieres restablecer el consumible «{{name}}»?"
+        },
+        "speaker": {
+            "title": "Altavoz",
+            "loadError": "Error al cargar el estado del altavoz.",
+            "test": "Probar el volumen"
+        },
+        "capabilities": {
+            "dnd": {
+                "title": "No molestar",
+                "loadError": "Error al cargar la configuración de «No molestar».",
+                "enabled": "Activado",
+                "startTime": "Hora de inicio",
+                "endTime": "Hora de fin",
+                "utc": "UTC: {{start}} — {{end}}",
+                "apply": "Aplicar"
+            },
+            "voicePack": {
+                "title": "Paquetes de voz",
+                "loadError": "Error al cargar el estado de los paquetes de voz.",
+                "currentLanguage": "Idioma actual: {{language}}",
+                "installError": "Error al instalar el paquete de voz. Consulta el registro para ver los detalles.",
+                "downloading": "Descargando…",
+                "installing": "Instalando…",
+                "url": "URL",
+                "languageCode": "Código de idioma",
+                "hash": "Hash",
+                "set": "Instalar paquete de voz"
+            }
+        },
+        "quirks": {
+            "title": "Ajustes específicos del modelo",
+            "loadError": "Error al cargar los ajustes específicos.",
+            "none": "No hay ajustes específicos. Prueba a recargar."
+        }
+    },
+    "controls": {
+        "mode": "Modo",
+        "fanSpeed": "Potencia de aspiración",
+        "waterUsage": "Nivel de agua",
+        "attachments": {
+            "title": "Accesorios",
+            "loadError": "Error al cargar el estado de los accesorios",
+            "none": "No se han encontrado accesorios"
+        },
+        "currentStatistics": {
+            "title": "Limpieza actual",
+            "loadError": "Error al cargar las estadísticas actuales"
+        },
+        "robotStatus": {
+            "title": "Robot",
+            "loadError": "Error al cargar el estado del robot",
+            "batteryLoadError": "Error al cargar el estado de la batería",
+            "noBatteries": "No se han encontrado baterías",
+            "battery": "Batería: {{level}} %",
+            "batteryNumbered": "Batería {{number}}: {{level}} %"
+        },
+        "basic": {
+            "loadError": "Error al cargar los controles básicos",
+            "start": "Iniciar",
+            "resume": "Reanudar",
+            "pause": "Pausa",
+            "stop": "Detener",
+            "home": "Volver a la base",
+            "fullCleanupConfirmTitle": "¿Seguro que quieres iniciar una limpieza completa?",
+            "pendingMapAction": "Tienes una acción del mapa pendiente.",
+            "hint": "Consejo:",
+            "hintText": "Quizá lo que buscas es el botón de la esquina inferior derecha del mapa."
+        },
+        "dock": {
+            "title": "Base",
+            "loadError": "Error al cargar los controles de la base",
+            "componentsTitle": "Componentes",
+            "notOk": "Revisar",
+            "components": {
+                "water_tank_clean": "Agua limpia",
+                "water_tank_dirty": "Agua sucia",
+                "detergent": "Detergente",
+                "dustbag": "Bolsa de polvo"
+            },
+            "componentState": {
+                "ok": "Correcto",
+                "empty": "Vacío",
+                "full": "Lleno",
+                "missing": "No está",
+                "unknown": "Desconocido"
+            },
+            "state": {
+                "error": "Error",
+                "idle": "En espera",
+                "pause": "En pausa",
+                "emptying": "Vaciando",
+                "cleaning": "Limpiando la mopa",
+                "drying": "Secando la mopa"
+            },
+            "stop": "Detener",
+            "clean": "Limpiar",
+            "dry": "Secar",
+            "empty": "Vaciar"
+        },
+        "presets": {
+            "loadError": "Error al cargar {{capability}}"
+        }
+    },
+    "map": {
+        "loadError": "Error al cargar los datos del mapa",
+        "noMapData": "No hay datos del mapa",
+        "noRobotStatus": "No hay estado del robot",
+        "obstacleInformation": "Información del obstáculo",
+        "savedSuccessfully": "Guardado correctamente",
+        "modeSelector": "Selector de modo del mapa",
+        "modes": {
+            "segments": "Habitaciones",
+            "zones": "Zonas",
+            "goto": "Ir a",
+            "none": "Ninguno"
+        },
+        "actions": {
+            "clear": "Borrar selección",
+            "goToLocation": "Ir a este punto",
+            "goToBusy": "No se puede ir al punto mientras el robot está ocupado",
+            "goToIntegrationHelp": "Para lanzar un «Ir a» al punto seleccionado por MQTT o REST, usa este contenido.",
+            "propertiesLoadError": "Error al cargar las propiedades de {{capability}}",
+            "noProperties": "No hay propiedades de {{capability}}",
+            "cleanSegments_one": "Limpiar {{count}} habitación",
+            "cleanSegments_other": "Limpiar {{count}} habitaciones",
+            "cleanZones_one": "Limpiar {{count}} zona",
+            "cleanZones_other": "Limpiar {{count}} zonas",
+            "iterationCount": "Número de pasadas",
+            "segmentsBusy": "No se puede limpiar por habitaciones mientras el robot está ocupado",
+            "segmentsIntegrationHelp": "Para iniciar por MQTT o REST una limpieza de las habitaciones seleccionadas con los parámetros actuales, usa este contenido.",
+            "addCounter": "Añadir ({{current}}/{{max}})",
+            "zonesBusy": "No se puede limpiar por zonas mientras el robot está ocupado",
+            "zonesIntegrationHelp": "Para iniciar por MQTT o REST una limpieza de las zonas dibujadas con los parámetros actuales, usa este contenido."
+        },
+        "segments": {
+            "renameTitle": "Renombrar habitación",
+            "renameQuestion": "¿Cómo quieres llamar a la habitación «{{name}}»?",
+            "nameLabel": "Nombre de la habitación",
+            "rename": "Renombrar",
+            "materialTitle": "Tipo de suelo de la habitación",
+            "materialQuestion": "¿De qué material es el suelo de la habitación «{{name}}»?",
+            "material": "Suelo",
+            "materials": {
+                "generic": "Genérico",
+                "tile": "Baldosa",
+                "wood": "Madera",
+                "woodHorizontal": "Madera (horizontal)",
+                "woodVertical": "Madera (vertical)",
+                "carpet": "Alfombra",
+                "carpetLow": "Alfombra (pelo corto)",
+                "carpetHigh": "Alfombra (pelo largo)"
+            },
+            "join": "Unir {{first}} y {{second}}",
+            "split": "Dividir {{name}}",
+            "cuttingLine": "Línea de corte",
+            "requiresDocked": "Para editar habitaciones, el robot tiene que estar en la base",
+            "selectToEdit": "Selecciona una habitación para empezar a editar"
+        },
+        "restrictions": {
+            "virtualWallCount": "Pared virtual ({{count}})",
+            "noGoAreaCount": "Zona prohibida ({{count}})",
+            "noMopAreaCount": "Zona sin fregado ({{count}})",
+            "requiresDocked": "Para editar las restricciones virtuales, el robot tiene que estar en la base"
+        },
+        "annotations": {
+            "thresholdCount": "Umbral ({{count}})",
+            "curtainCount": "Cortina ({{count}})",
+            "rampCount": "Rampa ({{count}})",
+            "requiresDocked": "Para editar las anotaciones del mapa, el robot tiene que estar en la base"
+        }
+    },
+    "app": {
+        "name": "Mota"
+    },
+    "nav": {
+        "home": "Inicio",
+        "robot": "Robot",
+        "consumables": "Mantenimiento",
+        "manualControl": "Control manual",
+        "statistics": "Estadísticas",
+        "camera": "Cámara",
+        "options": "Ajustes",
+        "mapOptions": "Ajustes del mapa",
+        "map": "Mapa",
+        "segmentManagement": "Gestión de habitaciones",
+        "virtualRestrictionManagement": "Restricciones virtuales",
+        "mapAnnotations": "Anotaciones del mapa",
+        "robotCoverageMap": "Mapa de cobertura",
+        "spectatorMap": "Mapa de espectador",
+        "connectivityOptions": "Ajustes de conexión",
+        "connectivity": "Conexión",
+        "authSettings": "Acceso y contraseña",
+        "mqtt": "Conexión MQTT",
+        "networkAdvertisement": "Anuncio en la red",
+        "ntp": "Hora por red (NTP)",
+        "wifi": "Conexión wifi",
+        "robotOptions": "Ajustes del robot",
+        "systemOptions": "Ajustes del sistema",
+        "quirks": "Ajustes específicos del modelo",
+        "motaOptions": "Ajustes de Mota",
+        "mota": "Mota",
+        "misc": "Varios",
+        "timers": "Programación",
+        "log": "Registro",
+        "updater": "Actualizaciones",
+        "systemInformation": "Información del sistema",
+        "aiAssistant": "Asistente de IA",
+        "generalHelp": "Ayuda general",
+        "about": "Acerca de Mota",
+        "darkMode": "Modo oscuro",
+        "links": "Enlaces",
+        "swaggerUi": "API (Swagger UI)",
+        "docs": "Documentación de Valetudo",
+        "upstreamRepository": "Valetudo en GitHub (Hypfer/Valetudo)",
+        "donate": "Donar a Valetudo"
+    },
+    "options": {
+        "common": {
+            "saveConfiguration": "Guardar configuración"
+        },
+        "connectivity": {
+            "title": "Ajustes de conexión",
+            "description": "Configura cómo se comunican Mota y el robot con el exterior",
+            "wifi": {
+                "title": "Conexión wifi",
+                "description": "Consulta los datos de la conexión y cambia la configuración"
+            },
+            "mqtt": {
+                "title": "Conexión MQTT",
+                "description": "Conecta Mota a tu bróker MQTT"
+            },
+            "ntp": {
+                "title": "Hora por red (NTP)",
+                "description": "Configura el cliente NTP (protocolo de hora en red) integrado"
+            },
+            "networkAdvertisement": {
+                "title": "Anuncio en la red",
+                "description": "Controla la detección por Bonjour/mDNS y SSDP/UPnP"
+            },
+            "auth": {
+                "title": "Acceso y contraseña",
+                "description": "Restringe el acceso a Mota"
+            }
+        },
+        "auth": {
+            "header": "Autenticación HTTP básica",
+            "loadError": "Error al cargar la configuración de la autenticación HTTP básica",
+            "enabled": "Autenticación HTTP básica activada",
+            "username": "Usuario",
+            "password": "Contraseña",
+            "togglePasswordVisibility": "Mostrar u ocultar la contraseña",
+            "info": "Por defecto, Mota intenta bloquear el acceso desde direcciones IP públicas, por tu seguridad y comodidad.<br/>Si quieres permitir el acceso desde fuera de casa, plantéate usar una VPN como WireGuard u OpenVPN para mantener segura tu red.<br/><br/>Si no quieres usar una VPN, se recomienda encarecidamente poner un proxy inverso delante de Mota y del resto de tus servicios de IoT y de red (por ejemplo, Home Assistant o Jellyfin). Un servidor web de verdad (como nginx o Apache) está diseñado y reforzado para estar expuesto a internet. Además, una configuración así te da registros de acceso centralizados y la posibilidad de tener una autenticación central."
+        },
+        "networkAdvertisement": {
+            "header": "Anuncio en la red",
+            "loadError": "Error al cargar la configuración del anuncio en la red",
+            "enabled": "Anuncio en la red activado",
+            "zeroconfHostname": "Nombre de equipo Zeroconf",
+            "info": "Para que las aplicaciones complementarias lo detecten rápidamente, Mota anuncia su presencia en tu red local mediante mDNS/Bonjour y SSDP/UPnP. No se recomienda desactivarlo, porque esas aplicaciones dejarán de funcionar.<br/><br/>Un problema habitual de estas tecnologías de «funciona sin más» es que son dificilísimas de depurar en cuanto dejan de funcionar. Usan difusión multicast, que por defecto no atraviesa los límites de la subred. Además, es una función de red lo bastante rara como para que a veces la estropeen actualizaciones de controladores wifi o del sistema operativo, una mala configuración o, simplemente, hardware defectuoso.<br/>Aun así, son opcionales: para hablar con Mota solo necesitas saber la IP del robot. Puedes consultarla en la página de configuración de tu router y, por ejemplo, guardarla como marcador en el navegador."
+        },
+        "map": {
+            "robotManagedTitle": "Funciones del mapa del robot",
+            "robotManagedDescription": "Estas funciones las gestiona y ofrece el firmware del robot",
+            "utilitiesTitle": "Utilidades del mapa",
+            "utilitiesDescription": "Cosas útiles que hacer con el mapa",
+            "mappingPass": {
+                "title": "Pasada de mapeo",
+                "description": "Crear un mapa nuevo",
+                "button": "Iniciar",
+                "confirmTitle": "¿Iniciar la pasada de mapeo?",
+                "confirmBody": "¿Seguro que quieres iniciar una pasada de mapeo?"
+            },
+            "reset": {
+                "title": "Restablecer el mapa",
+                "description": "Borrar el mapa actual",
+                "button": "Borrar",
+                "confirmTitle": "¿Restablecer el mapa?",
+                "confirmBody": "¿Seguro que quieres restablecer el mapa?"
+            },
+            "persistent": {
+                "title": "Mapa persistente",
+                "description": "Guardar un mapa permanente",
+                "disableTitle": "¿Desactivar el mapa persistente?",
+                "disableQuestion": "¿Seguro que quieres desactivar el mapa persistente?",
+                "disableWarning": "Se borrará el mapa guardado."
+            },
+            "export": {
+                "title": "Exportar el mapa",
+                "description": "Descargar los datos del mapa (formato ValetudoMap) para usarlos con otras herramientas",
+                "button": "Descargar"
+            },
+            "segmentManagement": {
+                "title": "Gestión de habitaciones",
+                "description": "Modificar las habitaciones del mapa"
+            },
+            "virtualRestrictions": {
+                "title": "Restricciones virtuales",
+                "description": "Crear, modificar y eliminar paredes virtuales y zonas prohibidas"
+            },
+            "annotations": {
+                "title": "Anotaciones del mapa",
+                "description": "Crear, modificar y eliminar otros elementos del mapa"
+            },
+            "coverage": {
+                "title": "Mapa de cobertura",
+                "description": "Comprobar por dónde ha pasado el robot"
+            },
+            "spectator": {
+                "title": "Mapa de espectador",
+                "description": "Míralo limpiar"
+            }
+        },
+        "mota": {
+            "title": "Ajustes de Mota",
+            "description": "Ajustes y acciones que ofrece Mota",
+            "restoreDefaults": {
+                "title": "Restaurar la configuración predeterminada",
+                "description": "Solo afecta a Mota",
+                "button": "Restaurar",
+                "confirmTitle": "¿Restaurar la configuración predeterminada de Mota?",
+                "confirmBody": "¿Seguro que quieres restaurar la configuración predeterminada? No afecta a la configuración wifi, a los datos del mapa, etc."
+            },
+            "friendlyName": {
+                "title": "Nombre personalizado",
+                "description": "Nombre con el que el robot se anuncia en la red, en MQTT, etc."
+            }
+        },
+        "updater": {
+            "channel": {
+                "title": "Canal de actualizaciones",
+                "description": "Estable usa solo las versiones publicadas; Pruebas incluye también las versiones preliminares",
+                "stable": "Estable",
+                "prerelease": "Pruebas (versiones preliminares)"
+            },
+            "repository": {
+                "title": "Repositorio de actualizaciones",
+                "description": "Avanzado: repositorio de GitHub (propietario/nombre) del que se descargan las actualizaciones. Déjalo vacío para usar el de Mota."
+            }
+        },
+        "mqtt": {
+            "header": "Conexión MQTT",
+            "statusLoadError": "Error al cargar el estado de MQTT",
+            "configLoadError": "Error al cargar la configuración de MQTT",
+            "state": {
+                "disconnected": "Desconectado",
+                "connected": "Conectado",
+                "connecting": "Conectando o reconfigurando",
+                "error": "Error de conexión"
+            },
+            "stats": {
+                "messagesSent": "Mensajes enviados",
+                "bytesSent": "Bytes enviados",
+                "messagesReceived": "Mensajes recibidos",
+                "bytesReceived": "Bytes recibidos",
+                "connects": "Conexiones",
+                "disconnects": "Desconexiones",
+                "reconnects": "Reconexiones",
+                "errors": "Errores",
+                "messageStatistics": "Estadísticas de mensajes",
+                "connectionStatistics": "Estadísticas de conexión"
+            },
+            "enabled": "MQTT activado",
+            "connection": "Conexión",
+            "host": "Servidor",
+            "hostHelp": "Nombre o IP del bróker MQTT",
+            "port": "Puerto",
+            "portHelp": "Puerto del bróker MQTT",
+            "tls": "TLS",
+            "ca": "CA",
+            "caHelp": "Autoridad de certificación (opcional) con la que verificar la conexión",
+            "ignoreCertificateErrors": "Ignorar errores de certificado",
+            "authentication": "Autenticación",
+            "credentials": "Credenciales",
+            "username": "Usuario",
+            "usernameHelp": "Usuario para la autenticación",
+            "password": "Contraseña",
+            "passwordHelp": "Contraseña para la autenticación",
+            "togglePasswordVisibility": "Mostrar u ocultar la contraseña",
+            "clientCertificate": "Certificado de cliente",
+            "certificate": "Certificado",
+            "certificateHelp": "El certificado completo como texto de varias líneas",
+            "key": "Clave",
+            "keyHelp": "La clave completa como texto de varias líneas",
+            "customizations": "Personalización",
+            "topicPrefix": "Prefijo de los temas",
+            "topicPrefixHelp": "Prefijo de los temas MQTT",
+            "identifier": "Identificador",
+            "identifierHelp": "Nombre del robot legible por máquina",
+            "topicStructure": "La estructura de los temas MQTT será así:",
+            "optionalCapabilities": "Funciones que se pueden exponer opcionalmente",
+            "info": "Mota se desarrolla y se prueba con el bróker MQTT Mosquitto.<br/>En un mundo ideal funcionaría cualquier bróker, pero en realidad algunos solo implementan partes de la especificación MQTT. Así que, si tienes problemas, prueba con Mosquitto.<br/>Otro problema habitual son las ACL mal configuradas. Como el protocolo MQTT v3 no informa de los fallos de ACL, Mota no puede avisarte de ellos y las cosas fallan sin decir nada."
+        },
+        "ntp": {
+            "header": "Hora por red (NTP)",
+            "stateLoadError": "Error al cargar el estado del cliente NTP",
+            "configLoadError": "Error al cargar la configuración del cliente NTP",
+            "errorState": "Error: {{type}}",
+            "syncEnabled": "Sincronización de hora activada",
+            "syncDisabled": "Sincronización de hora desactivada",
+            "syncSuccessful": "Hora sincronizada correctamente",
+            "offset": "Desfase: {{offset}} ms",
+            "robotTime": "Hora actual del robot: {{time}}",
+            "enabled": "NTP activado",
+            "server": "Servidor",
+            "port": "Puerto",
+            "interval": "Intervalo (horas)",
+            "timeout": "Tiempo de espera (segundos)",
+            "info": "Mota necesita un reloj sincronizado para que funcione la programación y para que las horas del registro tengan sentido. Además, todo lo que use TLS (por ejemplo, el actualizador integrado) también necesita la hora correcta para funcionar."
+        },
+        "wifi": {
+            "header": "Conexión wifi",
+            "statusLoadError": "Error al cargar el estado de la wifi",
+            "configLoadError": "Error al cargar el estado de la wifi",
+            "notConnected": "No conectado",
+            "unknown": "Desconocido",
+            "unknownSsid": "Red desconocida",
+            "signal": "{{signal}} dBm",
+            "changeConfiguration": "Cambiar la configuración wifi",
+            "ssid": "SSID (nombre de la red wifi)",
+            "psk": "Contraseña (PSK)",
+            "togglePasswordVisibility": "Mostrar u ocultar la contraseña",
+            "resetInfo": "Para conectar el robot a otra red wifi, tienes que hacer un reinicio de la wifi y luego configurar la nueva desde Mota. En la mayoría de los robots del ecosistema Xiaomi, eso significa mantener pulsados los dos botones exteriores (normalmente «Base» y «Limpieza puntual», o «Base» y «Encendido» si solo hay dos) hasta que el robot hable.<br/><br/>Algunos robots compatibles tienen botones de conexión específicos que hay que mantener pulsados. Si es algo más especial, encontrarás indicaciones para tu modelo en la página «Supported Robots» de la documentación de Valetudo en <docsLink>valetudo.cloud</docsLink>.<br/>Puede que el manual del fabricante que venía con el robot también lo explique.<br/><br/><strong>Nota:</strong><br/>No te confundas con los botones «Reset» que hay cerca de un LED de wifi.<br/>Que estén cerca no significa que tengan relación: normalmente restablecen el robot a los valores de fábrica, y eso no es lo que quieres.",
+            "applyTitle": "¿Aplicar la nueva configuración wifi?",
+            "applyQuestion": "¿Seguro que quieres aplicar la nueva configuración wifi?",
+            "hint": "Consejo:",
+            "applyHint": "Siempre puedes volver al punto de acceso wifi integrado. Consulta la documentación del robot para ver cómo hacerlo.",
+            "applyingTitle": "Aplicando la nueva configuración wifi",
+            "applyingText": "Al pulsar «Aceptar», la página se recargará. Aun así, lo más probable es que tengas que cambiar la dirección, porque el robot se conectará a otra red wifi."
+        },
+        "robot": {
+            "title": "Ajustes del robot",
+            "description": "Ajustes y acciones que ofrece el firmware del robot",
+            "quoted": "«{{value}}»",
+            "groups": {
+                "general": "General",
+                "behavior": "Comportamiento",
+                "perception": "Percepción",
+                "dock": "Base",
+                "misc": "Varios"
+            },
+            "locate": {
+                "title": "Localizar el robot",
+                "description": "El robot emitirá un sonido para que sepas dónde está",
+                "button": "Localizar"
+            },
+            "keyLock": {
+                "title": "Bloqueo de botones",
+                "description": "Impide usar el robot con sus botones físicos."
+            },
+            "carpetMode": {
+                "title": "Modo alfombra",
+                "description": "Si está activado, el robot detecta las alfombras automáticamente y aumenta la potencia de aspiración."
+            },
+            "carpetSensor": {
+                "title": "Sensor de alfombras",
+                "description": "Elige qué debe hacer el robot si detecta una alfombra mientras friega.",
+                "none": "Nada",
+                "avoid": "Evitar la alfombra",
+                "lift": "Levantar la mopa",
+                "detach": "Soltar la mopa"
+            },
+            "autoEmptyInterval": {
+                "title": "Vaciado automático en la base",
+                "description": "Elige si la base debe vaciar el robot automáticamente y con qué frecuencia.",
+                "frequent": "Frecuente",
+                "normal": "Normal",
+                "infrequent": "Poco frecuente",
+                "off": "Desactivado"
+            },
+            "obstacleAvoidance": {
+                "title": "Evitar obstáculos",
+                "description": "Evita obstáculos con sensores como láseres o cámaras. Puede dar falsos positivos."
+            },
+            "petObstacleAvoidance": {
+                "title": "Evitar obstáculos de mascotas",
+                "description": "Ajusta la detección de obstáculos para evitar lo que dejan las mascotas. Aumentará los falsos positivos en general."
+            },
+            "obstacleImages": {
+                "title": "Fotos de obstáculos",
+                "description": "Hace fotos de todos los obstáculos que encuentra."
+            },
+            "collisionAvoidantNavigation": {
+                "title": "Navegación prudente",
+                "description": "Sigue una ruta más prudente para chocar menos. Puede dejarse zonas sin limpiar."
+            },
+            "mopExtension": {
+                "title": "Extensión de la mopa",
+                "description": "Saca la mopa hacia fuera para llegar más cerca de paredes y muebles."
+            },
+            "cameraLight": {
+                "title": "Luz de la cámara",
+                "description": "Ilumina la oscuridad para mejorar el reconocimiento de obstáculos por imagen."
+            },
+            "mopWashTemperature": {
+                "title": "Temperatura del lavado de la mopa",
+                "description": "Elige si la base debe calentar el agua para aclarar las mopas, y cuánto.",
+                "cold": "Fría",
+                "warm": "Templada",
+                "hot": "Caliente",
+                "scalding": "Muy caliente",
+                "boiling": "Hirviendo"
+            },
+            "mopTwist": {
+                "title": "Giro de la mopa",
+                "descriptionExtended": "Con la mopa extendida, el robot gira para llegar mejor debajo de los muebles y otros salientes.",
+                "description": "El robot gira para fregar más cerca de paredes y muebles. La limpieza durará más."
+            },
+            "mopExtensionFurnitureLegs": {
+                "title": "Extensión de la mopa en patas de muebles",
+                "description": "Usa la mopa extensible para fregar muy cerca de las patas de sillas y mesas."
+            },
+            "mopAutoDrying": {
+                "title": "Secado automático de la mopa",
+                "description": "Seca automáticamente las mopas después de cada limpieza."
+            },
+            "materialAlignedNavigation": {
+                "title": "Navegación según el suelo",
+                "description": "Limpia siguiendo la dirección del tipo de suelo configurado o detectado (si procede)."
+            },
+            "cleanRoute": {
+                "title": "Pasadas de limpieza",
+                "description": "Intensiva repasa dos veces cada zona (limpieza x2). Se aplica a cualquier modo, también al fregar.",
+                "mopOnly_one": "{{routes}} solo se aplica al fregar.",
+                "mopOnly_other": "{{routes}} solo se aplican al fregar.",
+                "oneTime_one": "{{routes}} solo se aplica una vez.",
+                "oneTime_other": "{{routes}} solo se aplican una vez.",
+                "quick": "Rápida",
+                "normal": "Normal (1 pasada)",
+                "intensive": "Intensiva (2 pasadas)",
+                "deep": "Profunda"
+            },
+            "mopDryingTime": {
+                "title": "Tiempo de secado de la mopa",
+                "description": "Elige cuánto tiempo se secan las mopas con aire caliente después de una limpieza.",
+                "coldDescription": "«En frío» apaga la resistencia y lo compensa con un secado mucho más largo.",
+                "hours_one": "{{count}} hora",
+                "hours_other": "{{count}} horas",
+                "quiet": "Silencioso",
+                "cold": "En frío"
+            },
+            "autoEmptyDuration": {
+                "title": "Duración del vaciado automático",
+                "description": "Configura cuánto dura el ciclo de vaciado automático.",
+                "auto": "Automática",
+                "short": "Corta",
+                "medium": "Media",
+                "long": "Larga"
+            },
+            "systemOptions": {
+                "title": "Ajustes del sistema",
+                "voicePacks": "Paquetes de voz",
+                "doNotDisturb": "No molestar",
+                "speaker": "Altavoz"
+            },
+            "quirks": {
+                "title": "Ajustes específicos del modelo",
+                "description": "Configura ajustes propios del firmware"
+            }
+        }
+    },
+    "provisioning": {
+        "signalUnknown": "{{signal}} dBm",
+        "unknown": "desconocida",
+        "moreResults": "Ver más resultados",
+        "noNetworks": "No se han encontrado redes wifi o la búsqueda en segundo plano sigue en marcha",
+        "scanning": "Buscando…",
+        "pressToScan": "Pulsa para buscar redes wifi",
+        "noRobotInformation": "No hay información del robot",
+        "mota": "Mota",
+        "manufacturer": "Fabricante",
+        "model": "Modelo",
+        "intro": "Conecta el robot a tu red wifi para empezar a usar Mota",
+        "ssid": "SSID (nombre de la red wifi)",
+        "psk": "Contraseña (PSK)",
+        "togglePasswordVisibility": "Mostrar u ocultar la contraseña",
+        "apply": "Aplicar",
+        "applyingTitle": "Aplicando la configuración wifi",
+        "applyingText": "Si has escrito bien los datos de la wifi, el robot debería conectarse ahora a tu red.<br/>Ya puedes cerrar esta página."
+    },
+    "statistics": {
+        "noAchievement": "Todavía no hay ningún logro",
+        "achievementOverview": "Resumen de logros",
+        "notYetAchieved": "Aún no conseguido",
+        "achievedAt": "Conseguido al llegar a",
+        "loadError": "Error al cargar las estadísticas",
+        "notSupported": "Este robot no admite estadísticas totales.",
+        "achievements": {
+            "area": {
+                "saarland": {
+                    "title": "Saarland",
+                    "description": "Ei jo."
+                },
+                "sourceMap": {
+                    "title": "Mapa de Source",
+                    "description": "Has limpiado más que la superficie jugable máxima de un mapa completo de Source Engine (Half-Life 2)"
+                },
+                "leipzigerMesse": {
+                    "title": "Leipziger Messe",
+                    "description": "Has limpiado más que todo el recinto del CCCongress: Leipziger Messe"
+                },
+                "goldSrcMap": {
+                    "title": "Mapa de GoldSrc",
+                    "description": "Has limpiado más que la superficie jugable máxima de un mapa completo de GoldSrc (Half-Life 1)"
+                },
+                "cchAgain": {
+                    "title": "CCH (otra vez)",
+                    "description": "Has limpiado más que todo el recinto del CCCongress: Congress Center Hamburg (desde 2022)"
+                },
+                "cch": {
+                    "title": "CCH",
+                    "description": "Has limpiado más que todo el recinto del CCCongress: Congress Center Hamburg (hasta 2021)"
+                },
+                "bcc": {
+                    "title": "bcc",
+                    "description": "Has limpiado más que todo el recinto del CCCongress: bcc Berlin Congress Center"
+                },
+                "sports": {
+                    "title": "Deportes",
+                    "description": "Has limpiado más que una pista de voleibol entera"
+                },
+                "breathe": {
+                    "title": "Respira",
+                    "description": "Has limpiado más que la superficie aproximada de un pulmón humano"
+                },
+                "metric": {
+                    "title": "Métrico",
+                    "description": "Has limpiado más que la superficie de una hoja A0 entera"
+                }
+            },
+            "time": {
+                "protonDecay": {
+                    "title": "Protones",
+                    "description": "Puede que el 50 % de toda la materia del universo ya se haya desintegrado en energía"
+                },
+                "subscription": {
+                    "title": "Suscripción",
+                    "description": "Un mes entero limpiando sin parar"
+                },
+                "week": {
+                    "title": "Una semana",
+                    "description": "Más de una semana entera limpiando sin parar"
+                },
+                "desolation": {
+                    "title": "Desolación",
+                    "description": "Más que lo que tardó la misión Apolo 11 desde el despegue hasta que el ser humano pisó la Luna"
+                },
+                "day": {
+                    "title": "Un día",
+                    "description": "Más de un día entero limpiando sin parar"
+                },
+                "hour": {
+                    "title": "Una hora",
+                    "description": "Más de una hora entera limpiando sin parar"
+                }
+            },
+            "count": {
+                "mole": {
+                    "title": "1 mol",
+                    "description": "La unidad básica del SI para la «cantidad de sustancia»"
+                },
+                "leet": {
+                    "title": "1337",
+                    "description": "r0b0t 4sp1r4d0r h4x0r"
+                },
+                "kibi": {
+                    "title": "2^10",
+                    "description": "El verdadero tamaño de 1k"
+                },
+                "kilo": {
+                    "title": "1k",
+                    "description": "1000 limpiezas"
+                },
+                "block": {
+                    "title": "1 bloque",
+                    "description": "No olvides alinear las particiones"
+                },
+                "dailyDriver": {
+                    "title": "De diario",
+                    "description": "Un año de limpiezas diarias"
+                },
+                "byte": {
+                    "title": "1 byte",
+                    "description": "El número de limpiezas ya no cabe en un solo byte"
+                },
+                "y2k38": {
+                    "title": "Listo para 2038",
+                    "description": "Bits de sobra para sobrevivir a la próxima extinción"
+                },
+                "babySteps": {
+                    "title": "Primeros pasos",
+                    "description": "Tu robot ha hecho sus primeras 10 limpiezas"
+                }
+            }
+        },
+        "totals": {
+            "area": "Superficie total",
+            "time": "Tiempo total",
+            "count": "Limpiezas totales"
+        },
+        "achievementsTitles": {
+            "area": "Logros de superficie",
+            "time": "Logros de tiempo",
+            "count": "Logros de limpiezas"
+        },
+        "types": {
+            "area": "Superficie",
+            "time": "Tiempo",
+            "count": "Limpiezas"
+        }
+    },
+    "manualControl": {
+        "enable": "Activar el control manual",
+        "loadError": "Error al cargar el control manual",
+        "notSupported": "Este robot no admite el control manual.",
+        "modes": {
+            "joystick": "Joystick",
+            "dpad": "Cruceta",
+            "keyboard": "Teclado"
+        },
+        "easterEgg": "He encontrado un huevo de Pascua y solo me han dado esta triste notificación."
+    },
+    "units": {
+        "daysShort": "d",
+        "hoursShort": "h",
+        "minutesShort": "min",
+        "secondsShort": "s",
+        "bytes_one": "{{value}} byte",
+        "bytes_other": "{{value}} bytes"
+    },
+    "time": {
+        "inTheFuture": "En el futuro",
+        "justNow": "Ahora mismo",
+        "minutesAgo_one": "Hace {{count}} minuto",
+        "minutesAgo_other": "Hace {{count}} minutos",
+        "hoursAgo_one": "Hace {{count}} hora",
+        "hoursAgo_other": "Hace {{count}} horas"
+    },
+    "consumables": {
+        "types": {
+            "brush": "Cepillo",
+            "filter": "Filtro",
+            "cleaning": "Limpieza",
+            "mop": "Mopa",
+            "detergent": "Detergente",
+            "bin": "Depósito"
+        },
+        "subTypes": {
+            "main": "principal",
+            "secondary": "secundario",
+            "side_right": "derecho",
+            "side_left": "izquierdo",
+            "dock": "de la base",
+            "sensor": "de los sensores",
+            "wheel": "de las ruedas"
+        },
+        "names": {
+            "pattern": "{{type}} {{subType}}",
+            "unknown": "Consumible desconocido: {{type}}, {{subType}}",
+            "brush_main": "Cepillo principal",
+            "brush_secondary": "Cepillo secundario",
+            "brush_side_right": "Cepillo lateral derecho",
+            "brush_side_left": "Cepillo lateral izquierdo",
+            "filter_main": "Filtro principal",
+            "filter_secondary": "Filtro secundario",
+            "filter_dock": "Filtro de la base",
+            "cleaning_sensor": "Limpieza de sensores",
+            "cleaning_wheel": "Limpieza de las ruedas",
+            "cleaning_dock": "Limpieza de la base",
+            "mop_main": "Mopa principal",
+            "mop_secondary": "Mopa secundaria",
+            "mop_side_right": "Mopa derecha",
+            "mop_side_left": "Mopa izquierda",
+            "mop_dock": "Mopa de la base",
+            "detergent_main": "Detergente",
+            "detergent_dock": "Detergente de la base",
+            "bin_main": "Depósito principal",
+            "bin_dock": "Bolsa de la base"
+        }
+    },
+    "presets": {
+        "off": "Apagado",
+        "min": "Mínimo",
+        "low": "Bajo",
+        "medium": "Medio",
+        "high": "Alto",
+        "max": "Máximo",
+        "turbo": "Turbo",
+        "custom": "Personalizado",
+        "vacuum_and_mop": "Aspirar y fregar",
+        "vacuum_then_mop": "Aspirar y después fregar",
+        "vacuum": "Aspirar",
+        "mop": "Fregar",
+        "fanSpeed": {
+            "off": "Apagada",
+            "min": "Mínima",
+            "low": "Baja",
+            "medium": "Media",
+            "high": "Alta",
+            "max": "Máxima",
+            "custom": "Personalizada"
+        }
+    },
+    "systemInformation": {
+        "noRuntimeInformation": "No hay información de ejecución",
+        "uptimeMota": "Tiempo en marcha de Mota",
+        "reincarnation": "Reinicio automático",
+        "possible": "Posible",
+        "impossible": "Imposible",
+        "generation": "Generación",
+        "node": "Node",
+        "environment": "Entorno",
+        "nodeInformation": "Información de Node",
+        "dependency": "Dependencia",
+        "version": "Versión",
+        "key": "Clave",
+        "value": "Valor",
+        "runtimeInformation": "Información de ejecución",
+        "noMotaInformation": "No hay información de Mota",
+        "release": "Versión",
+        "commit": "Commit",
+        "embedded": "Integrado en el robot",
+        "yes": "sí",
+        "no": "no",
+        "systemId": "ID del sistema",
+        "noRobotInformation": "No hay información del robot",
+        "manufacturer": "Fabricante",
+        "model": "Modelo",
+        "implementation": "Implementación",
+        "firmwareVersion": "Versión del firmware",
+        "noHostInformation": "No hay información del sistema anfitrión",
+        "hostname": "Nombre del equipo",
+        "arch": "Arquitectura",
+        "uptime": "Tiempo en marcha",
+        "memory": "Memoria del sistema (RAM)",
+        "memorySystem": "Sistema",
+        "memoryMota": "Mota",
+        "memoryMotaMax": "Mota (máx.)",
+        "memoryFree": "Libre",
+        "cpuUsage": "Uso de CPU",
+        "cpuIdle": "inactiva",
+        "robot": "Robot",
+        "mota": "Mota",
+        "hostInformation": "Información del sistema anfitrión"
+    },
+    "timers": {
+        "weekdays": {
+            "monday": "Lunes",
+            "tuesday": "Martes",
+            "wednesday": "Miércoles",
+            "thursday": "Jueves",
+            "friday": "Viernes",
+            "saturday": "Sábado",
+            "sunday": "Domingo"
+        },
+        "weekdaysShort": {
+            "monday": "LUN",
+            "tuesday": "MAR",
+            "wednesday": "MIÉ",
+            "thursday": "JUE",
+            "friday": "VIE",
+            "saturday": "SÁB",
+            "sunday": "DOM"
+        },
+        "actions": {
+            "fullCleanup": "Limpieza completa",
+            "segmentCleanup": "Limpieza por habitaciones"
+        },
+        "utc": "UTC",
+        "preActionCount_one": "{{count}} acción previa",
+        "preActionCount_other": "{{count}} acciones previas",
+        "defaultLabel": "Programa",
+        "quotedLabel": "«{{label}}»",
+        "thisTimer": "este programa",
+        "execNow": "Ejecutar ahora",
+        "deleteTitle": "¿Eliminar el programa?",
+        "deleteQuestion": "¿Seguro que quieres eliminar {{timer}}?",
+        "execTitle": "¿Ejecutar el programa?",
+        "execQuestion": "¿Seguro que quieres ejecutar {{timer}} ahora mismo?",
+        "addTitle": "Añadir programa",
+        "editTitle": "Editar programa",
+        "sections": {
+            "general": "General",
+            "schedule": "Horario",
+            "preActions": "Acciones previas",
+            "action": "Acción"
+        },
+        "enabled": "Activado",
+        "customLabel": "Nombre personalizado",
+        "selectTime": "Elige la hora ({{timezone}})",
+        "utcTime": "UTC: {{time}}",
+        "action": "Acción",
+        "loadError": "Error al cargar la programación",
+        "none": "Todavía no tienes ningún programa configurado en Mota.",
+        "add": "Añadir un programa nuevo",
+        "actionDoesNotExist": "La acción configurada no existe. Elige otra acción.",
+        "unnamedSegment": "Habitación sin nombre: {{id}}",
+        "removeSegment": "Quitar",
+        "addSegment": "Añadir",
+        "segmentationLoadError": "Error al cargar {{capability}}",
+        "iterationCount_one": "{{count}} pasada",
+        "iterationCount_other": "{{count}} pasadas",
+        "iterations": "Pasadas",
+        "customOrder": "Usar un orden personalizado",
+        "availableSegments": "Habitaciones disponibles",
+        "selectedSegments": "Habitaciones seleccionadas",
+        "preset": "Valor",
+        "preActions": {
+            "fanSpeed": "Potencia de aspiración",
+            "waterUsage": "Nivel de agua",
+            "operationMode": "Modo"
+        }
+    },
+    "updater": {
+        "title": "Actualizaciones",
+        "loadError": "Error al cargar el estado del actualizador",
+        "busy": "El actualizador está ocupado",
+        "downloading": "El actualizador está descargando la versión",
+        "changelogFor": "Novedades de Mota {{version}}",
+        "idle": "Estás usando Mota {{version}}.<br/>Puede que haya versiones más nuevas de Mota.",
+        "downloaded": "Se ha descargado {{version}} correctamente",
+        "disabled": "El actualizador está desactivado en la configuración de Mota.",
+        "upToDate": "Ya tienes la última versión de Mota ({{version}})",
+        "applyWarning": "Ten en cuenta que cualquier actualización puede requerir resolver problemas después.<br/>Lee con atención las novedades para conocer los posibles cambios incompatibles.",
+        "check": "Buscar actualizaciones",
+        "download": "Descargar la actualización",
+        "downloadConfirmTitle": "¿Descargar la actualización?",
+        "downloadConfirmQuestion": "¿Quieres descargar la actualización de Mota que se muestra?",
+        "downloadConfirmWarning": "Lee entero el registro de cambios, porque puede incluir cambios incompatibles y otra información importante.",
+        "apply": "Aplicar la actualización",
+        "applyConfirmTitle": "¿Aplicar la actualización?",
+        "applyConfirmText": "¿Quieres aplicar la actualización descargada? Puede que el robot se reinicie durante el proceso."
+    },
+    "welcome": {
+        "title": "Bienvenido a Mota",
+        "firstTime": "Parece que es la primera vez que usas Mota en este robot.",
+        "firstStep": "Lo primero suele ser dejar que el robot cree un mapa nuevo de tu casa. Según el firmware, el mapa te permitirá limpiar habitaciones concretas, añadir paredes virtuales y mucho más.",
+        "variations": "El proceso de creación del mapa varía un poco según el modelo. Por ejemplo, algunos robots necesitan que actives antes el mapa persistente y otros ofrecen una pasada de mapeo específica.",
+        "checklistIntro": "Para el primer mapeo, asegúrate de que:",
+        "checklist": {
+            "docked": "el robot está en la base",
+            "doors": "todas las puertas necesarias están abiertas",
+            "cables": "no hay cables sueltos por el suelo",
+            "blocked": "las zonas a las que no quieres que vaya están bloqueadas"
+        },
+        "checklistOutro": "Hecho esto, esto es lo que necesitas para que el robot cree un mapa nuevo:",
+        "donate": "Mota se basa en Valetudo. Mientras ves al robot dar vueltas, quizá quieras <donateLink>plantearte hacer una donación a Valetudo</donateLink>. Si prefieres decidirlo más tarde, el enlace de donación también está, discretamente, al final del menú lateral.",
+        "enjoy": "Y ahora, ¡disfruta de tu robot sin nube! :)",
+        "hide": "Ocultar",
+        "doNotShowAgain": "No volver a mostrar",
+        "fullCleanup": {
+            "title": "Limpieza completa",
+            "description": "Crear un mapa nuevo",
+            "button": "Empezar",
+            "confirmTitle": "¿Iniciar una limpieza completa?",
+            "confirmBody": "El robot tiene que volver solo a la base para guardar el mapa nuevo. No interfieras en la limpieza o no se guardará."
+        }
+    },
+    "help": {
+        "about": "Mota es una interfaz local y libre para controlar el robot sin nube. Es un fork de\n<a href=\"https://github.com/Hypfer/Valetudo\" rel=\"noopener\" target=\"_blank\">Valetudo</a> y no existiría sin él.\n\n### Créditos de Valetudo\n\nValetudo lo crea, gestiona y mantiene\n<a href=\"https://hypfer.de\" rel=\"noopener\" target=\"_blank\">Sören Beye</a>, con contribuciones ocasionales de\n<a href=\"https://github.com/Hypfer/Valetudo/graphs/contributors\" rel=\"noopener\" target=\"_blank\">esta gente estupenda</a>.\nValetudo no existiría sin el trabajo fundamental de <a href=\"https://dontvacuum.me/\" rel=\"noopener\" target=\"_blank\">Dennis Giese</a>,\ncuyas ideas, trabajo y experiencia crearon las condiciones para que naciera.\n\nAl principio, la idea era incluir aquí una lista de todas las bibliotecas y herramientas libres usadas para crear Valetudo,\npero enseguida quedó claro que no era viable: una lista exhaustiva con todas las dependencias transitivas\nincluye miles de proyectos.\n\nTodos vamos a hombros de gigantes. (<a href=\"https://xkcd.com/2347/\" rel=\"noopener\" target=\"_blank\">XKCD 2347</a>)\n\n### Licencia\n\nValetudo, y por tanto Mota, se distribuye con <a href=\"https://github.com/Hypfer/Valetudo/blob/master/LICENSE\" rel=\"noopener\" target=\"_blank\">la licencia Apache-2.0</a>.\nEn palabras de su autor, te ahorra el aburrido muro de texto que no vas a leer de todas formas, porque, sinceramente, la licencia no importa tanto.\nTodas las licencias libres relevantes se reducen básicamente a «sin garantía ni responsabilidad» y «no actúes de mala fe», con distintas formas de intentar hacer cumplir lo segundo.\n\nPor desgracia, la realidad ha demostrado que hacerlo a menudo no es viable.\nHay gente que ignora por completo la licencia o que intenta, con picardía, encontrar alguna forma de esquivarla que sea legalmente\naceptable, pero claramente incorrecta.\n\nAsí que bien podría pegar aquí diez páginas de lorem ipsum.\n\nSimplemente, sé buena persona, por favor. ¡Gracias! :)\n",
+        "consumables": "## Mantenimiento y consumibles\n\nLos consumibles son piezas del robot que necesitan limpieza, sustitución u otro mantenimiento cada cierto tiempo.\n\nHay dos variantes, que en el fondo son lo mismo:\n- horas de uso restantes\n- porcentaje restante\n\nEn algún momento se agotarán, y tendrás que hacer el mantenimiento y restablecerlos en Mota.\nAsí vuelven a las horas de uso previstas por el fabricante o al 100 %.\n\nNo hacer el mantenimiento de los consumibles puede empeorar el rendimiento.<br/>\nAun así, se recomienda revisar a mano la pieza en cuestión: _puede_ que aguante más de lo que recomienda el fabricante.\n\n\n### Tipos de consumibles\n\nHay varios tipos de consumibles que requieren un trato distinto.\n\n#### Cepillos\n\nHay cepillos de distintos tipos, como el principal o los laterales.\nCon el tiempo se desgastan y hay que cambiarlos.\n\nPara que rindan bien, también suele hacer falta quitarles pelos enredados o cosas parecidas, así que conviene vigilarlos.\n\n#### Filtros\n\nLos robots aspiradores suelen tener algún tipo de filtro que hay que limpiar cada cierto tiempo y cambiar cuando se desgasta.\n\n#### Sensores\n\nEl robot tiene varios sensores, como los de desnivel o de distancia a la pared, que usa para navegar y que pueden taparse con suciedad, restos, telarañas o similares.\nNormalmente se limpian con un paño suave. Ten cuidado de no rayarlos, porque son imprescindibles para que el robot funcione.\n\n#### Ruedas\n\nIgual que con los sensores, conviene revisar las ruedas de vez en cuando y quitarles la suciedad y los restos.\n\n#### Mopas\n\nAunque no siempre haga falta cambiar las mopas, se recomienda mucho lavarlas bien de vez en cuando.\n",
+        "doNotDisturb": "## No molestar\n\nAlgunos firmwares permiten definir un periodo de «No molestar» durante el que se desactivan ciertas funciones del robot.\nLo que cambia exactamente depende del fabricante, el modelo y la versión del firmware.\n\nPor ejemplo, puede que el robot no continúe una tarea a medias que se interrumpió porque tenía que\ncargar la batería.\nComo volver a cargar hasta el 100 % puede llevar unas horas, podría ocurrir que el robot intentara seguir limpiando\na las 3 de la madrugada, algo que normalmente no se quiere.\n\nOtra cosa a la que puede afectar este ajuste es el vaciado automático en la base, porque suele ser bastante ruidoso.\n\n\n**Ten en cuenta que las horas de «No molestar» se evalúan y se guardan en UTC. Solo se muestran en la zona horaria\nde tu navegador para tu comodidad.**\n",
+        "general": "Esta es solo la sección de ayuda general, para las respuestas que no encajaban en otro sitio.\nBusca los botones con un signo de interrogación para ver ayuda más específica.\n\n### ¿Qué son esos triángulos del mapa?\n\nSon las etiquetas de las habitaciones.\nSi el robot considera activa una habitación (es decir, que forma parte de su tarea actual), el triángulo\napunta hacia abajo. Si no, apunta hacia arriba.\n\nSi haces zoom sobre la etiqueta de una habitación, verás su ID y su superficie en m².\n\n\n### ¿Cómo abro los controles de la página de inicio en el móvil?\n\nToca la barra de la parte inferior de la pantalla.\n\n### ¿Cómo obtengo las coordenadas o los parámetros de habitaciones, zonas o destinos para lanzarlos por MQTT o REST?\n\nConfigura o selecciona las habitaciones, zonas o destinos como siempre y mantén pulsado el botón que iniciaría la acción.\nSe abrirá un cuadro de diálogo con todo lo que necesitas.\n\n### ¿Qué pasa con el asistente de IA?\n\nEl «asistente de IA» es una broma sobre la broma que es nuestro sector, con una implementación en JavaScript de ELIZA.\nCreado en 1966 por Joseph Weizenbaum, ELIZA fue uno de los primeros chatbots y es famoso por ser uno de los primeros programas que hizo creer a la gente que superaba el test de Turing.\n\nMuy oportunamente, el propio Weizenbaum también tenía su opinión sobre este sector.<br/>\nSegún la Wikipedia:<br/>\n> Creía que el ordenador, en su nivel más básico, es una fuerza fundamentalmente conservadora y que, a pesar de ser una innovación tecnológica, acabaría frenando el progreso social.\n> Weizenbaum se basó en su experiencia trabajando con Bank of America para justificar su razonamiento: el ordenador permitió a los bancos gestionar un número cada vez mayor de cheques en circulación que, de otro modo, les habría obligado a cambios drásticos en su organización, como la descentralización.\n> Así, aunque el ordenador hizo el sector más eficiente, impidió una reforma de fondo del sistema.\n>\n> A Weizenbaum también le preocupaban los efectos negativos que tendrían los ordenadores en lo militar, y llamó al ordenador «un hijo del ejército».\n\nPuedes leer más sobre ELIZA aquí: <a href=\"https://es.wikipedia.org/wiki/ELIZA\" rel=\"noopener\" target=\"_blank\">https://es.wikipedia.org/wiki/ELIZA</a>\n",
+        "mapAnnotations": "## Anotaciones del mapa\n\nLas anotaciones del mapa son el concepto genérico para todo lo que sea «hay algo en el mapa que el robot tiene que tener en cuenta y que quizá no detecte bien por sí solo».\nPor ejemplo, según lo que admita el firmware, puede ser un umbral franqueable, una cortina, una rampa o algo parecido.\n\nQue estas cosas estén en el mapa hace que el firmware se comporte de otra forma en el lugar donde se encuentran.\nPuede que siga un camino concreto, que se fíe menos de su sistema para esquivar obstáculos o cualquier cosa por el estilo.\n\nEn concreto:\n\n#### Umbrales\n\nLos umbrales le indican al firmware que el obstáculo que ve es en realidad algo que puede cruzar si se esfuerza un poco más.\nSin la anotación, puede que no se dé cuenta de que puede hacerlo.\n\n#### Rampas\n\nLas rampas le indican al firmware que hay un camino específico que funciona para llegar a una zona concreta.\nSin la anotación, puede que no sepa que existe.\n\n#### Cortinas\n\nLas cortinas le indican al firmware que lo que tiene delante en realidad no es un obstáculo y que puede atravesarlo sin más.\nSin la anotación, no se da cuenta de ello.\n",
+        "mapManagement": "## Gestión del mapa\n\nEn esta página puedes hacer tareas relacionadas con el mapa. Lo que se puede hacer exactamente depende del modelo de robot y\nde su firmware.<br/>Si no ves algo en esta página, lo más probable es que tu robot no lo admita.\n\nAlgunos robots necesitan que actives a mano el mapa persistente antes de poder hacer casi nada con el mapa.\nOtros ni siquiera permiten desactivarlo, porque ¿para qué ibas a querer hacerlo?\n\nTambién hay robots antiguos que no tienen mapas persistentes.\n\nAlgunos robots necesitan una limpieza completa, incluida la vuelta a la base por sí solos, para guardar un mapa nuevo.\nOtros permiten opcionalmente un mapeo rápido mediante una pasada de mapeo, o incluso la exigen antes de poder usarse.\n\n### Terminología\n\nTen en cuenta que todos estos conceptos necesitan que el firmware del robot los admita.\nPuede que no todo esté disponible en todos los robots.\n\n#### Habitaciones\n\nUna habitación es una división del mapa decidida por el firmware del robot.\nLas habitaciones te permiten limpiar solo una o varias zonas predefinidas. La mayoría de los firmwares también permiten ponerles nombre.\n\nAunque las llamemos habitaciones, no tienen por qué corresponder a habitaciones reales.\nPor ejemplo, puede haber una que sea solo la zona alrededor de la mesa del comedor.\n\nEn la mayoría de los firmwares, el robot usa los datos de las habitaciones para optimizar su navegación y seguir el camino más eficiente.\n\n#### Zonas\n\nLas zonas son simplemente rectángulos que puedes dibujar en el mapa para mandar allí al robot.\nSegún el firmware, el robot puede aceptar una sola zona o varias.\n",
+        "mapUtilities": "## Utilidades del mapa\n\nEn esta sección encontrarás herramientas útiles construidas a partir de los datos del mapa que proporciona el robot.\n",
+        "quirks": "## Ajustes específicos del modelo\n\nMota, como Valetudo, en el que se basa, aspira a ser una abstracción genérica. Es decir, intenta unificar los comandos y conceptos de cada fabricante\nen otros genéricos, para que no tengas que preocuparte de qué marca de robot compras: debería funcionar\nigual en todos.\n\nSin embargo, a veces hay cosas que solo hace un fabricante o incluso un único modelo.\nAñadirlas al núcleo no tendría sentido, porque la interfaz genérica acabaría convirtiéndose enseguida en\nuna interfaz específica de un robot concreto, y eso iría en contra del objetivo principal de no depender del fabricante.\n\nAun así, limitar las funciones al mínimo común denominador tampoco es siempre lo ideal.\nPara eso están estos ajustes.\n\n**Un ajuste específico es un parámetro propio de un fabricante, un robot o un firmware que (¿todavía?) no encaja en el modelo genérico.**\n\nLa disponibilidad de estos ajustes puede cambiar en cualquier momento por distintos motivos.\nSi hay ajustes parecidos en varios fabricantes, es probable que en algún momento se conviertan en una función real\ncon sus propios puntos de acceso REST, etc.\n\nPiensa en ellos como una especie de zona de pruebas práctica.\nNormalmente son parámetros que cambias una vez y seguramente no vuelves a tocar.\n\nNo intentes automatizar cambios en estos ajustes, porque no hay ninguna garantía ni de estabilidad\nni de disponibilidad. Solo existen para esta interfaz.\n",
+        "robotCoverageMap": "## Mapa de cobertura\n\nEsta vista del mapa en vivo dibuja el recorrido del robot con un trazo mucho más grueso, para que puedas ver fácilmente las zonas a las que no ha llegado.\n",
+        "segmentEdit": "## Gestión de habitaciones\n\nUna habitación es una división del mapa decidida por el firmware del robot.\nLas habitaciones te permiten limpiar solo una o varias zonas predefinidas. La mayoría de los firmwares también permiten ponerles nombre.\n\nAunque las llamemos habitaciones, no tienen por qué corresponder a habitaciones reales.\nPor ejemplo, puede haber una que sea solo la zona alrededor de la mesa del comedor.\n\nEn la mayoría de los firmwares, el robot usa los datos de las habitaciones para optimizar su navegación y seguir el camino más eficiente.\n\n\nPuedes seleccionar una habitación tocándola. Según el firmware, después podrás dividirla en dos o ponerle un nombre.\nSi seleccionas otra habitación, también puedes unir las dos en una más grande, si el firmware lo permite.\n\n\nLos colores de las habitaciones los decide sobre la marcha el dibujado del mapa y no significan nada. Solo son distintos para que puedas\ndiferenciarlas. De vez en cuando, una habitación también puede cambiar de color porque haya cambiado alguno de sus píxeles.\n\n### Problemas y preguntas frecuentes\n\n#### No veo ninguna habitación\n\nSolo puedes editar habitaciones si las hay. Si solo ves un mapa azul, es que no hay habitaciones.\n\nAsegúrate de haber hecho una limpieza completa en la que el robot vuelva solo a la base sin ninguna interrupción.\nNormalmente es lo que necesita el robot para dividir el mapa en habitaciones.\n\nAdemás, algunos firmwares necesitan que actives a mano el guardado de mapas persistentes antes de empezar esa limpieza completa.\n\n#### No consigo dividir una habitación\n\nA veces hay que mover un poco la línea de corte hasta que funcione.\nNo hace falta colocarla con cuidado justo entre los píxeles de la pared; de hecho, eso suele impedir\nque la división salga bien. Prueba a arrastrarla a lo largo de todo el ancho o alto de la habitación, en lugar de solo una parte.\n\nEn algunas distribuciones también puede que tengas que dividir una habitación varias veces y luego volver a unir algunas partes para conseguir\nel resultado que buscas.\n\n#### ¿Puedo eliminar una habitación?\n\nNo.\n",
+        "timers": "## Programación\n\nLa programación te permite ejecutar una tarea a una hora determinada (UTC).<br/>\nSi la hora del sistema no es verosímil (por ejemplo, porque nunca se ha sincronizado), no se ejecutará ningún programa.\n\nTen en cuenta que los programas se evalúan y se guardan en UTC. Solo se muestran en la zona horaria de tu navegador.<br/>\nEsto significa que no siguen el cambio de horario de verano, así que tendrás que ajustarlos a mano si hace falta.\n",
+        "updater": "## Actualizaciones\n\nEl actualizador de Mota es una función de comodidad que pretende hacerte la vida un poco más fácil.\n\nComo está pensado respetando la privacidad, tienes que pulsar un botón a mano para que busque versiones nuevas de Mota.\nSin comprobación diaria de actualizaciones no hay conexiones diarias a ningún servidor externo.\n\nPor defecto consulta la API de GitHub, así que los desarrolladores no pueden recopilar ningún dato sobre ti.\n\n**Nota: el actualizador siempre intenta actualizar a la siguiente versión en orden cronológico. Si vas varias versiones por detrás,\ntendrás que actualizar varias veces seguidas.**\n\nComo es solo una función de comodidad, puede haber situaciones en las que no funcione. En esos casos\ntendrás que actualizar a mano, lo que normalmente implica acceder al robot por SSH.\n\nA veces, un cambio de configuración puede permitirte usar el actualizador. En otros casos, puede que tu modelo de robot no\npueda usarlo en absoluto porque no tiene suficiente almacenamiento. No es un fallo: es lo que hay.\n\nTambién conviene saber que el actualizador no actualiza el firmware del robot. Solo actualiza el binario de Mota.\n",
+        "virtualRestrictionEdit": "## Restricciones virtuales\n\nLas restricciones virtuales son cosas como paredes virtuales, zonas prohibidas o zonas sin fregado, que impiden que el robot pase por un sitio\nsiempre o solo en ciertas condiciones (por ejemplo, cuando lleva puesto un accesorio concreto, como la mopa).\n\nPuedes usarlas para proteger tus muebles delicados del robot, o a tu delicado robot de los muebles.\n\nNo todos los firmwares admiten todos los tipos. Además, normalmente el firmware limita cuántas restricciones virtuales\npuedes tener.\n\n\nTen en cuenta que, aunque funcionan muy bien casi siempre, a veces los robots se pierden y empiezan a moverse\nsin saber nada de las restricciones virtuales que habías configurado.\nAsegúrate de que no sean lo único que evita un desastre.\n\n\nMientras editas no verás actualizaciones del mapa a menos que pulses «Actualizar».\nPor eso, no olvides pulsar «Guardar» antes de actualizar o de salir de esta página para que se apliquen los cambios.\n",
+        "voicepack": "## Paquetes de voz\n\nLos paquetes de voz personalizados son algo más complicados, porque el formato exacto cambia según el robot.\n\nComo al autor de Valetudo no le interesan mucho, esta función está un poco a medio pulir.\nPara él, estos aparatos son ante todo herramientas que simplemente deben funcionar, y hacerlo de forma fiable.\nPor eso le basta con que hablen en inglés, que para una herramienta es perfectamente válido.\n\nSi aun así quieres instalar uno personalizado, necesitarás un paquete de voz en el formato que exija tu\nrobot, alojado en algún servidor HTTP. Ten en cuenta que el firmware del robot suele bloquear la CDN oficial, así que\nusar la URL oficial probablemente no funcione.\n\nSegún el modelo, también necesitarás un hash del archivo del paquete de voz.\nEl tipo de hash depende del firmware.\n\nAdemás, tendrás que indicar un código de idioma. Ese valor apenas importa, salvo que uses un código reservado.\n«EN», «CN», etc. suelen ser códigos reservados para los paquetes de voz que trae el firmware.\n\nNormalmente se puede volver al paquete de voz original indicando uno de esos códigos integrados durante la instalación.\n"
+    }
+}

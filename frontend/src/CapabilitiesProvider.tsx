@@ -3,6 +3,7 @@ import {SnackbarKey, useSnackbar} from "notistack";
 import React from "react";
 import {Capability, useCapabilitiesQuery} from "./api";
 import ValetudoSplash from "./components/ValetudoSplash";
+import {useTranslation} from "react-i18next";
 
 const Context = React.createContext<Capability[]>([]);
 
@@ -16,6 +17,7 @@ const CapabilitiesProvider = (props: {
         data: capabilities,
         refetch: refetchCapabilities
     } = useCapabilitiesQuery();
+    const {t} = useTranslation();
     const {enqueueSnackbar, closeSnackbar} = useSnackbar();
     const snackbarKey = React.useRef<SnackbarKey>(undefined);
 
@@ -37,14 +39,14 @@ const CapabilitiesProvider = (props: {
                 <Button
                     onClick={() => {
                         refetchCapabilities({throwOnError: true}).then(() => {
-                            return enqueueSnackbar("Successfully loaded capabilities!", {
+                            return enqueueSnackbar(t("capabilities.loaded"), {
                                 variant: "success",
                             });
                         }
                         );
                     }}
                 >
-                Retry
+                    {t("common.retry")}
                 </Button>
             );
         };
@@ -53,12 +55,12 @@ const CapabilitiesProvider = (props: {
             closeSnackbar(snackbarKey.current);
         }
 
-        snackbarKey.current = enqueueSnackbar("Error while loading capabilities", {
+        snackbarKey.current = enqueueSnackbar(t("capabilities.loadError"), {
             variant: "error",
             action: SnackbarAction,
             persist: true,
         });
-    }, [closeSnackbar, enqueueSnackbar, capabilitiesLoadError, refetchCapabilities]);
+    }, [closeSnackbar, enqueueSnackbar, capabilitiesLoadError, refetchCapabilities, t]);
 
     return (
         <Context.Provider value={capabilities ?? []}>

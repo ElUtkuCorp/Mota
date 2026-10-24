@@ -4,8 +4,8 @@ import {
     useRobotStatusQuery
 } from "../api";
 import RobotCoverageMap from "./RobotCoverageMap";
-import {RobotCoverageMapHelp} from "./res/RobotCoverageMapHelp";
 import React from "react";
+import {useTranslation} from "react-i18next";
 
 
 const Container = styled(Box)({
@@ -18,6 +18,7 @@ const Container = styled(Box)({
 });
 
 const RobotCoverageMapPage = (): React.ReactElement => {
+    const {t} = useTranslation();
     const {
         data: mapData,
         isPending: mapIsPending,
@@ -34,12 +35,12 @@ const RobotCoverageMapPage = (): React.ReactElement => {
     if (mapLoadError) {
         return (
             <Container>
-                <Typography color="error">Error loading map data</Typography>
+                <Typography color="error">{t("map.loadError")}</Typography>
                 <Box m={1}/>
                 <Button color="primary" variant="contained" onClick={() => {
                     return refetchMap();
                 }}>
-                    Retry
+                    {t("common.retry")}
                 </Button>
             </Container>
         );
@@ -56,7 +57,7 @@ const RobotCoverageMapPage = (): React.ReactElement => {
     if (!mapData) {
         return (
             <Container>
-                <Typography align="center">No map data</Typography>;
+                <Typography align="center">{t("map.noMapData")}</Typography>
             </Container>
         );
     }
@@ -64,7 +65,7 @@ const RobotCoverageMapPage = (): React.ReactElement => {
     if (!robotStatus) {
         return (
             <Container>
-                <Typography align="center">No robot status</Typography>;
+                <Typography align="center">{t("map.noRobotStatus")}</Typography>
             </Container>
         );
     }
@@ -72,7 +73,7 @@ const RobotCoverageMapPage = (): React.ReactElement => {
     return <RobotCoverageMap
         rawMap={mapData}
         paletteMode={theme.palette.mode}
-        helpText={RobotCoverageMapHelp}
+        helpText={t("help.robotCoverageMap")}
     />;
 };
 
