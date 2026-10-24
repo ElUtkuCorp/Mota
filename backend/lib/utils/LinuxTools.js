@@ -108,26 +108,28 @@ class LinuxTools {
     }
 
     /**
-     * 
+     * Mota: UTC en ambos lados. Antes se formateaba con la hora local del proceso y `date -s` la
+     * interpretaba como hora local del sistema, desplazando el reloj si ambas zonas no coincidían.
+     *
      * @param {Date} date
      */
     static SET_TIME(date) {
         let dateString = "";
 
-        dateString += date.getFullYear().toString();
+        dateString += date.getUTCFullYear().toString();
         dateString += "-";
-        dateString += (date.getMonth() + 1).toString().padStart(2, "0");
+        dateString += (date.getUTCMonth() + 1).toString().padStart(2, "0");
         dateString += "-";
-        dateString += date.getDate().toString().padStart(2, "0");
+        dateString += date.getUTCDate().toString().padStart(2, "0");
         dateString += " ";
-        dateString += date.getHours().toString().padStart(2, "0");
+        dateString += date.getUTCHours().toString().padStart(2, "0");
         dateString += ":";
-        dateString += date.getMinutes().toString().padStart(2, "0");
+        dateString += date.getUTCMinutes().toString().padStart(2, "0");
         dateString += ":";
-        dateString += date.getSeconds().toString().padStart(2, "0");
+        dateString += date.getUTCSeconds().toString().padStart(2, "0");
 
 
-        execSync("date -s \""+dateString+"\"");
+        execSync("date -u -s \""+dateString+"\"");
     }
 }
 

@@ -305,6 +305,11 @@
         "properties": {
           "enabled": {
             "type": "boolean"
+          },
+          "hostname": {
+            "type": "string",
+            "description": "Mota: mDNS hostname without .local (e.g. conga). Defaults to valetudo-<systemid>",
+            "pattern": "^$|^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$"
           }
         }
       },

@@ -155,7 +155,8 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
                 robot: this,
                 presets: Object.values(DeviceFanSpeed.VALUE)
                     .filter((k) => {
-                        return typeof k === "string";
+                        // Mota: el firmware de la 3090 ignora "off" (comprobado: sigue en "low")
+                        return typeof k === "string" && k !== DeviceFanSpeed.VALUE.OFF;
                     })
                     .map((k) => {
                         return new SelectionPreset({ name: String(k), value: k });
@@ -328,7 +329,15 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         }
 
         this.state.upsertFirstMatchingAttribute(this.getBatteryState(robot));
-        this.state.upsertFirstMatchingAttribute(this.getStatusState(robot));
+        this.state.upsertFirstMatchingAttribute(newStatus);
+
+        // Mota: al llegar a la base, recolocar el robot sobre ella en el mapa
+        if (
+            oldStatus?.value !== StatusStateAttribute.VALUE.DOCKED &&
+            newStatus.value === StatusStateAttribute.VALUE.DOCKED
+        ) {
+            this.onUpdateRobotPosition(robot);
+        }
         this.state.upsertFirstMatchingAttribute(this.getIntensityState(robot));
         this.state.upsertFirstMatchingAttribute(this.getWaterUsageState(robot));
 
@@ -378,14 +387,19 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             return;
         }
 
+        // Mota: en la base el firmware deja de enviar la posición y el mapa mostraba la última
+        // conocida. Si está en la base y sabemos dónde está, el robot se dibuja sobre ella.
+        const status = this.state.getFirstMatchingAttributeByConstructor(StatusStateAttribute);
+        const pose = status?.value === StatusStateAttribute.VALUE.DOCKED && map.charger ? map.charger : map.robot;
+
         const offset = map.size.y;
-        const { x, y } = map.toPixel(map.robot.toCoordinates());
+        const { x, y } = map.toPixel(pose.toCoordinates());
 
         return new PointMapEntity({
             type: PointMapEntity.TYPE.ROBOT_POSITION,
             points: [x, offset - y],
             metaData: {
-                angle: map.robot.degrees,
+                angle: pose.degrees,
             },
         });
     }

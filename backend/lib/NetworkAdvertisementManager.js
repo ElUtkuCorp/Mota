@@ -59,6 +59,8 @@ class NetworkAdvertisementManager {
     setUp() {
         const networkAdvertisementConfig = this.config.get("networkAdvertisement");
 
+        Tools.SET_ZEROCONF_HOSTNAME_OVERRIDE(networkAdvertisementConfig.hostname);
+
         if (this.config.get("embedded") === true) {
             if (networkAdvertisementConfig.enabled === true) {
                 this.setUpSSDP();

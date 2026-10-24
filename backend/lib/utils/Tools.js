@@ -174,7 +174,18 @@ class Tools {
     }
 
     static GET_ZEROCONF_HOSTNAME() {
-        return "valetudo-" + Tools.GET_HUMAN_READABLE_SYSTEM_ID().toLowerCase() + ".local";
+        const hostname = Tools.ZEROCONF_HOSTNAME_OVERRIDE ?? ("valetudo-" + Tools.GET_HUMAN_READABLE_SYSTEM_ID().toLowerCase());
+
+        return hostname + ".local";
+    }
+
+    /**
+     * Mota: nombre mDNS configurable (networkAdvertisement.hostname), p. ej. "conga" → conga.local
+     *
+     * @param {string|undefined} hostname
+     */
+    static SET_ZEROCONF_HOSTNAME_OVERRIDE(hostname) {
+        Tools.ZEROCONF_HOSTNAME_OVERRIDE = typeof hostname === "string" && hostname.length > 0 ? hostname.toLowerCase() : undefined;
     }
 
     static IS_UPX_COMPRESSED(pathOnDisk) {
@@ -257,6 +268,9 @@ class Tools {
         });
     }
 }
+
+/** @type {string|undefined} */
+Tools.ZEROCONF_HOSTNAME_OVERRIDE = undefined;
 
 const VALETUDO_NAMESPACE = "be5f1ffc-c150-4785-9ebb-08fcfe90c933";
 

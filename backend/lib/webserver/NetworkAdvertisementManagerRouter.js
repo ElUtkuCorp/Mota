@@ -27,7 +27,14 @@ class NetworkAdvertisementManagerRouter {
         this.router.put("/config", this.validator, (req, res) => {
             if (typeof req.body.enabled === "boolean") {
                 const conf = this.config.get("networkAdvertisement");
-                this.config.set("networkAdvertisement", Object.assign({}, conf, {enabled: req.body.enabled}));
+                const update = {enabled: req.body.enabled};
+
+                // Mota: nombre mDNS configurable; una cadena vacía vuelve al nombre por defecto
+                if (typeof req.body.hostname === "string") {
+                    update.hostname = req.body.hostname.length > 0 ? req.body.hostname : undefined;
+                }
+
+                this.config.set("networkAdvertisement", Object.assign({}, conf, update));
 
                 res.sendStatus(200);
             } else {
