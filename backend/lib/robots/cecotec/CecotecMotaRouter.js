@@ -52,6 +52,28 @@ class CecotecMotaRouter {
             }
         });
 
+        this.router.get("/mirrors", (req, res) => {
+            res.json(this.robot.getMirrorZones());
+        });
+
+        this.router.put("/mirrors", express.json(), (req, res) => {
+            const zones = req.body;
+            const isValid = Array.isArray(zones) && zones.length <= 20 && zones.every(z => {
+                return ["x0", "y0", "x1", "y1"].every(k => {
+                    return typeof z?.[k] === "number" && Number.isFinite(z[k]);
+                });
+            });
+
+            if (!isValid) {
+                res.sendStatus(400);
+
+                return;
+            }
+
+            this.robot.setMirrorZones(zones);
+            res.sendStatus(200);
+        });
+
         this.router.get("/diagnostics", (req, res) => {
             res.json(CecotecMotaRouter.COLLECT_DIAGNOSTICS(this.robot));
         });

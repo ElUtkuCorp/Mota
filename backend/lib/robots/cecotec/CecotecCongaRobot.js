@@ -642,7 +642,59 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             }
         }
 
+        // Mota: lo que hay dentro de las zonas de espejo es un reflejo, no casa
+        const mirrorZones = this.getMirrorZones();
+        if (mirrorZones.length > 0) {
+            const outside = (pixels) => {
+                const result = [];
+
+                for (let i = 0; i < pixels.length; i += 2) {
+                    const px = pixels[i];
+                    const py = pixels[i + 1];
+
+                    if (!mirrorZones.some(z => {
+                        return px >= z.x0 && px <= z.x1 && py >= z.y0 && py <= z.y1;
+                    })) {
+                        result.push(px, py);
+                    }
+                }
+
+                return result;
+            };
+
+            return { floor: outside(floor), walls: outside(walls) };
+        }
+
         return { floor: floor, walls: walls };
+    }
+
+    /**
+     * Mota: zonas de espejo (rectángulos en celdas del mapa de Mota)
+     *
+     * @returns {Array<{x0: number, y0: number, x1: number, y1: number}>}
+     */
+    getMirrorZones() {
+        return this.config?.get("robot").implementationSpecificConfig?.motaMirrorZones ?? [];
+    }
+
+    /**
+     * @param {Array<{x0: number, y0: number, x1: number, y1: number}>} zones
+     */
+    setMirrorZones(zones) {
+        const robotConfig = this.config.get("robot");
+        const implementationSpecificConfig = Object.assign({}, robotConfig.implementationSpecificConfig, {
+            motaMirrorZones: zones.map(z => {
+                return {
+                    x0: Math.round(Math.min(z.x0, z.x1)),
+                    y0: Math.round(Math.min(z.y0, z.y1)),
+                    x1: Math.round(Math.max(z.x0, z.x1)),
+                    y1: Math.round(Math.max(z.y0, z.y1)),
+                };
+            })
+        });
+
+        this.config.set("robot", Object.assign({}, robotConfig, {implementationSpecificConfig: implementationSpecificConfig}));
+        this.refreshMap();
     }
 
     /**
