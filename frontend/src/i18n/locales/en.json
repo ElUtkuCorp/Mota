@@ -256,6 +256,13 @@
         },
         "presets": {
             "loadError": "Error loading {{capability}}"
+        },
+        "cleaningModifiers": {
+            "title": "Cleaning options",
+            "double": "Double cleaning",
+            "doubleHelp": "Covers every area twice. Unchecked means a single pass. Applies to every mode.",
+            "carpet": "Carpet mode",
+            "carpetHelp": "Increases suction on carpets."
         }
     },
     "map": {

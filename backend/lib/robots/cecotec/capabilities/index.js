@@ -18,7 +18,6 @@ module.exports = {
     CecotecPersistentMapControlCapability: require("./CecotecPersistentMapControlCapability"),
     CecotecSpeakerTestCapability: require("./CecotecSpeakerTestCapability"),
     CecotecSpeakerVolumeControlCapability: require("./CecotecSpeakerVolumeControlCapability"),
-    CecotecWaterUsageControlCapability: require("./CecotecWaterUsageControlCapability"),
     CecotecWifiConfigurationCapability: require("./CecotecWifiConfigurationCapability"),
     CecotecZoneCleaningCapability: require("./CecotecZoneCleaningCapability"),
 };

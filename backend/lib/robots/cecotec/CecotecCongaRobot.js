@@ -16,7 +16,6 @@ const {
 const {
     CloudServer,
     DeviceFanSpeed,
-    DeviceWaterLevel,
     DeviceState,
 } = require("@agnoc/core");
 const {
@@ -123,7 +122,8 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         this.emitStateAttributesUpdated = throttle(
             this.emitStateAttributesUpdated.bind(this)
         );
-        this.emitMapUpdated = throttle(this.emitMapUpdated.bind(this));
+        // Mota: el robot envía la posición cada 0,5–3 s; con 1 s de margen se perdían actualizaciones
+        this.emitMapUpdated = throttle(this.emitMapUpdated.bind(this), 300);
 
         const quirkFactory = new CecotecQuirkFactory({
             robot: this
@@ -245,14 +245,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
                 robot: this,
             })
         );
-        this.registerCapability(
-            new capabilities.CecotecWaterUsageControlCapability({
-                robot: this,
-                presets: Object.values(DeviceWaterLevel.VALUE).map((k) => {
-                    return new SelectionPreset({ name: String(k), value: k });
-                }),
-            })
-        );
+        // Mota: sin control de nivel de agua; la 3090 no sabe si hay depósito ni cuánta agua tiene
         if (this.config.get("embedded") === true) {
             // Mota: historial de limpiezas junto a la configuración (UDISK en la 3090)
             this.cleanHistory = new CecotecCleanHistory({
@@ -366,8 +359,11 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         ) {
             this.onUpdateRobotPosition(robot);
         }
-        this.state.upsertFirstMatchingAttribute(this.getIntensityState(robot));
-        this.state.upsertFirstMatchingAttribute(this.getWaterUsageState(robot));
+        // Mota: antes del primer estado completo agnoc no conoce la potencia y se publicaba "off",
+        // que no es un valor válido en la 3090 (y MQTT lo rechazaba)
+        if (robot.device.fanSpeed && robot.device.fanSpeed.value !== DeviceFanSpeed.VALUE.OFF) {
+            this.state.upsertFirstMatchingAttribute(this.getIntensityState(robot));
+        }
 
         this.state.upsertFirstMatchingAttribute(this.getOperationModeState(robot));
 
@@ -758,10 +754,22 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
     /**
      * @param {import("@agnoc/core").Robot} robot
      */
+    /**
+     * Mota: al arrancar la espiral el firmware borra su mapa (DEVICE_MAP_CLEAR + DEVICE_MAP_RESET_DATA)
+     * y trabaja con uno temporal en otro sistema de coordenadas. Mientras dure se mantiene en pantalla
+     * el último mapa completo en lugar de sustituirlo por el temporal.
+     *
+     * @param {import("@agnoc/core").Robot} robot
+     * @returns {boolean}
+     */
+    isSpiralMapFrozen(robot) {
+        return robot.device.mode?.value === DeviceMode.VALUE.SPIRAL && this.state.map !== undefined && this.state.map.layers.length > 0;
+    }
+
     onUpdateMap(robot) {
         const { map } = robot.device;
 
-        if (!map) {
+        if (!map || this.isSpiralMapFrozen(robot)) {
             return;
         }
 
@@ -799,6 +807,10 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
     onUpdateChargerPosition(robot) {
         const { map } = robot.device;
 
+        if (this.isSpiralMapFrozen(robot)) {
+            return;
+        }
+
         if (!map || !this.state.map) {
             return;
         }
@@ -820,6 +832,10 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
      */
     onUpdateRobotPosition(robot) {
         const { map } = robot.device;
+
+        if (this.isSpiralMapFrozen(robot)) {
+            return;
+        }
 
         if (!map || !this.state.map) {
             return;
@@ -926,21 +942,6 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             // TODO: this should have a mapper.
             value: fanSpeed ?
                 fanSpeed.value :
-                PresetSelectionStateAttribute.INTENSITY.OFF,
-        });
-    }
-
-    /**
-     * @param {import("@agnoc/core").Robot} robot
-     */
-    getWaterUsageState(robot) {
-        const { waterLevel } = robot.device;
-
-        return new PresetSelectionStateAttribute({
-            type: PresetSelectionStateAttribute.TYPE.WATER_GRADE,
-            // TODO: this should have a mapper.
-            value: waterLevel ?
-                waterLevel.value :
                 PresetSelectionStateAttribute.INTENSITY.OFF,
         });
     }

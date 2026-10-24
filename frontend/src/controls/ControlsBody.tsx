@@ -10,7 +10,8 @@ import RobotStatus from "./RobotStatus";
 import Dock from "./Dock";
 import CurrentStatistics from "./CurrentStatistics";
 import Attachments from "./Attachments";
-import {FanSpeedMediumIcon, WaterGradeLowIcon} from "../components/CustomIcons";
+import CleaningModifiers from "./CleaningModifiers";
+import {FanSpeedMediumIcon} from "../components/CustomIcons";
 import React from "react";
 import {useTranslation} from "react-i18next";
 
@@ -20,7 +21,6 @@ const ControlsBody = (): React.ReactElement => {
     const [
         basicControls,
         fanSpeed,
-        waterControl,
         operationMode,
         triggerEmptySupported,
         mopDockCleanTriggerSupported,
@@ -29,7 +29,6 @@ const ControlsBody = (): React.ReactElement => {
     ] = useCapabilitiesSupported(
         Capability.BasicControl,
         Capability.FanSpeedControl,
-        Capability.WaterUsageControl,
         Capability.OperationModeControl,
         Capability.AutoEmptyDockManualTrigger,
         Capability.MopDockCleanManualTrigger,
@@ -60,6 +59,9 @@ const ControlsBody = (): React.ReactElement => {
                 />
             )}
 
+            {/* Mota: alfombra y x2 acompañan a cualquier modo de limpieza */}
+            <CleaningModifiers/>
+
             {fanSpeed && (
                 <PresetSelectionControl
                     capability={Capability.FanSpeedControl}
@@ -69,13 +71,6 @@ const ControlsBody = (): React.ReactElement => {
                             fontSize="small"
                         />
                     }
-                />
-            )}
-            {waterControl && (
-                <PresetSelectionControl
-                    capability={Capability.WaterUsageControl}
-                    label={t("controls.waterUsage")}
-                    icon={<WaterGradeLowIcon fontSize="small" />}
                 />
             )}
 

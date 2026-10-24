@@ -256,6 +256,13 @@
         },
         "presets": {
             "loadError": "Error al cargar {{capability}}"
+        },
+        "cleaningModifiers": {
+            "title": "Opciones de limpieza",
+            "double": "Limpieza x2",
+            "doubleHelp": "Pasa dos veces por cada zona. Sin marcar, una sola pasada. Vale para cualquier modo.",
+            "carpet": "Modo alfombra",
+            "carpetHelp": "Aumenta la succión al detectar alfombras."
         }
     },
     "map": {

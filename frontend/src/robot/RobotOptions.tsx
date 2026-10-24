@@ -6,7 +6,6 @@ import {
     AutoEmptyDockAutoEmptyInterval,
     Capability,
     CarpetSensorMode,
-    CleanRoute,
     MopDockMopDryingDuration,
     MopDockMopWashTemperature,
     useAutoEmptyDockAutoEmptyDurationControlPropertiesQuery,
@@ -16,15 +15,10 @@ import {
     useAutoEmptyDockAutoEmptyIntervalPropertiesQuery,
     useAutoEmptyDockAutoEmptyIntervalQuery,
     useCameraLightControlMutation,
-    useCameraLightControlQuery,
-    useCarpetModeStateMutation,
-    useCarpetModeStateQuery,
+    useCameraLightControlQuery,
     useCarpetSensorModeMutation,
     useCarpetSensorModePropertiesQuery,
-    useCarpetSensorModeQuery,
-    useCleanRouteControlPropertiesQuery,
-    useCleanRouteMutation,
-    useCleanRouteQuery,
+    useCarpetSensorModeQuery,
     useCollisionAvoidantNavigationControlMutation,
     useCollisionAvoidantNavigationControlQuery,
     useFloorMaterialDirectionAwareNavigationControlMutation,
@@ -65,14 +59,12 @@ import {
     DeviceThermostat as MopDockMopWashTemperatureControlIcon,
     Explore as FloorMaterialDirectionAwareNavigationControlIcon,
     FlashlightOn as CameraLightControlIcon,
-    KeyboardDoubleArrowUp as CarpetModeIcon,
     Lock as KeyLockIcon,
     MiscellaneousServices as SystemIcon,
     NotListedLocation as LocateIcon,
     Pets as PetObstacleAvoidanceControlIcon,
     Photo as ObstacleImagesIcon,
     RoundaboutRight as CollisionAvoidantNavigationControlIcon,
-    Route as CleanRouteControlIcon,
     SatelliteAlt as PerceptionIcon,
     Schema as BehaviourIcon,
     Settings as GeneralIcon,
@@ -139,33 +131,6 @@ const KeyLockCapabilitySwitchListMenuItem = () => {
             primaryLabel={t("options.robot.keyLock.title")}
             secondaryLabel={t("options.robot.keyLock.description")}
             icon={<KeyLockIcon/>}
-        />
-    );
-};
-
-const CarpetModeControlCapabilitySwitchListMenuItem = () => {
-    const {t} = useTranslation();
-    const {
-        data: data,
-        isFetching: isFetching,
-        isError: isError,
-    } = useCarpetModeStateQuery();
-
-    const {mutate: mutate, isPending: isChanging} = useCarpetModeStateMutation();
-    const loading = isFetching || isChanging;
-    const disabled = loading || isChanging || isError;
-
-    return (
-        <ToggleSwitchListMenuItem
-            value={data?.enabled ?? false}
-            setValue={(value) => {
-                mutate(value);
-            }}
-            disabled={disabled}
-            loadError={isError}
-            primaryLabel={t("options.robot.carpetMode.title")}
-            secondaryLabel={t("options.robot.carpetMode.description")}
-            icon={<CarpetModeIcon/>}
         />
     );
 };
@@ -713,120 +678,6 @@ const FloorMaterialDirectionAwareNavigationControlCapabilitySwitchListMenuItem =
     );
 };
 
-const CleanRouteControlCapabilitySelectListMenuItem = () => {
-    const {t} = useTranslation();
-    const SORT_ORDER = {
-        "quick": 1,
-        "normal": 2,
-        "intensive": 3,
-        "deep": 4
-    };
-
-    const {
-        data: cleanRouteControlProperties,
-        isPending: cleanRouteControlPropertiesPending,
-        isError: cleanRouteControlPropertiesError
-    } = useCleanRouteControlPropertiesQuery();
-
-    const options: Array<SelectListMenuItemOption> = (
-        cleanRouteControlProperties?.supportedRoutes ?? []
-    ).sort((a, b) => {
-        const aMapped = SORT_ORDER[a] ?? 10;
-        const bMapped = SORT_ORDER[b] ?? 10;
-
-        if (aMapped < bMapped) {
-            return -1;
-        } else if (bMapped < aMapped) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }).map((val: CleanRoute) => {
-        let label;
-
-        switch (val) {
-            case "quick":
-                label = t("options.robot.cleanRoute.quick");
-                break;
-            case "normal":
-                label = t("options.robot.cleanRoute.normal");
-                break;
-            case "intensive":
-                label = t("options.robot.cleanRoute.intensive");
-                break;
-            case "deep":
-                label = t("options.robot.cleanRoute.deep");
-                break;
-        }
-
-        return {
-            value: val,
-            label: label
-        };
-    });
-
-    const description = React.useMemo(() => {
-        let desc = t("options.robot.cleanRoute.description");
-
-        if (cleanRouteControlProperties) {
-            if (cleanRouteControlProperties.mopOnly.length > 0) {
-                const labels = cleanRouteControlProperties.mopOnly.map(route => {
-                    const label = options.find(o => o.value === route)?.label ?? t("common.unknown");
-
-                    return t("options.robot.quoted", {value: label});
-                });
-
-                desc += " " + t("options.robot.cleanRoute.mopOnly", {count: labels.length, routes: labels.join(", ")});
-            }
-
-            if (cleanRouteControlProperties.oneTime.length > 0) {
-                const labels = cleanRouteControlProperties.oneTime.map(route => {
-                    const label = options.find(o => o.value === route)?.label ?? t("common.unknown");
-
-                    return t("options.robot.quoted", {value: label});
-                });
-
-                desc += " " + t("options.robot.cleanRoute.oneTime", {count: labels.length, routes: labels.join(", ")});
-            }
-        }
-
-        return desc;
-    }, [cleanRouteControlProperties, options, t]);
-
-
-    const {
-        data: data,
-        isPending: isPending,
-        isFetching: isFetching,
-        isError: isError,
-    } = useCleanRouteQuery();
-
-    const {mutate: mutate, isPending: isChanging} = useCleanRouteMutation();
-    const loading = isFetching || isChanging;
-    const disabled = loading || isChanging || isError;
-
-    const currentValue = options.find(mode => {
-        return mode.value === data;
-    }) ?? {value: "", label: ""};
-
-
-    return (
-        <SelectListMenuItem
-            options={options}
-            currentValue={currentValue}
-            setValue={(e) => {
-                mutate(e.value as CleanRoute);
-            }}
-            disabled={disabled}
-            loadingOptions={cleanRouteControlPropertiesPending || isPending}
-            loadError={cleanRouteControlPropertiesError}
-            primaryLabel={t("options.robot.cleanRoute.title")}
-            secondaryLabel={description}
-            icon={<CleanRouteControlIcon/>}
-        />
-    );
-};
-
 const MopDockMopDryingTimeControlCapabilitySelectListMenuItem = () => {
     const {t} = useTranslation();
     const SORT_ORDER = {
@@ -1117,9 +968,7 @@ const RobotOptions = (): React.ReactElement => {
             />);
         }
 
-        if (cleanRouteControlSupported) {
-            items.push(<CleanRouteControlCapabilitySelectListMenuItem key="cleanRouteControl"/>);
-        }
+        // Mota: la limpieza x2 (ruta) y el modo alfombra están en la pantalla principal, junto al modo
 
         if (
             collisionAvoidantNavigationControlCapabilitySupported ||
@@ -1129,11 +978,6 @@ const RobotOptions = (): React.ReactElement => {
             items.push(<SpacerListMenuItem key={"spacer-navigation"} halfHeight={true}/>);
         }
 
-        if (carpetModeControlCapabilitySupported) {
-            items.push(
-                <CarpetModeControlCapabilitySwitchListMenuItem key={"carpetModeControl"}/>
-            );
-        }
         if (carpetSensorModeControlCapabilitySupported) {
             items.push(
                 <CarpetSensorModeControlCapabilitySelectListMenuItem key={"carpetSensorModeControl"}/>
