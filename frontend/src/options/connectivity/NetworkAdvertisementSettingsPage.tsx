@@ -43,6 +43,7 @@ const NetworkAdvertisementSettings = (): React.ReactElement => {
     } = useNetworkAdvertisementConfigurationMutation();
 
     const [enabled, setEnabled] = React.useState(false);
+    const [hostname, setHostname] = React.useState("");
 
     const [configurationModified, setConfigurationModified] = React.useState<boolean>(false);
 
@@ -50,6 +51,7 @@ const NetworkAdvertisementSettings = (): React.ReactElement => {
     React.useEffect(() => {
         if (storedConfiguration) {
             setEnabled(storedConfiguration.enabled);
+            setHostname(storedConfiguration.hostname ?? "");
         }
     }, [storedConfiguration]);
 
@@ -79,6 +81,22 @@ const NetworkAdvertisementSettings = (): React.ReactElement => {
                 label={t("options.networkAdvertisement.enabled")}
                 sx={{mb: 1, marginTop: "1rem", userSelect: "none"}}
             />
+            <Grid2 container spacing={1} sx={{mb: 1, mt: "1rem"}} direction="row">
+                <Grid2 style={{flexGrow: 1}}>
+                    {/* Mota: nombre mDNS configurable, p. ej. "conga" → conga.local */}
+                    <TextField
+                        style={{width: "100%"}}
+                        label={t("options.networkAdvertisement.hostname")}
+                        helperText={t("options.networkAdvertisement.hostnameHelp")}
+                        value={hostname}
+                        variant="standard"
+                        onChange={e => {
+                            setHostname(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 63));
+                            setConfigurationModified(true);
+                        }}
+                    />
+                </Grid2>
+            </Grid2>
             <Grid2 container spacing={1} sx={{mb: 1, mt: "1rem"}} direction="row">
                 <Grid2 style={{flexGrow: 1}}>
                     <TextField
@@ -116,7 +134,8 @@ const NetworkAdvertisementSettings = (): React.ReactElement => {
                         disabled={!configurationModified}
                         onClick={() => {
                             updateConfiguration({
-                                enabled: enabled
+                                enabled: enabled,
+                                hostname: hostname.replace(/^-+|-+$/g, "")
                             });
                             setConfigurationModified(false);
                         }}

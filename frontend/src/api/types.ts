@@ -346,6 +346,7 @@ export interface HTTPBasicAuthConfiguration {
 
 export interface NetworkAdvertisementConfiguration {
     enabled: boolean;
+    hostname?: string;
 }
 
 export interface NetworkAdvertisementProperties {

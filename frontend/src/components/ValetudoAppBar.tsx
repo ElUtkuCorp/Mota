@@ -31,11 +31,9 @@ import {
     SettingsRemote as SettingsRemoteIcon,
     Videocam as CameraIcon,
     GitHub as GithubIcon,
-    MenuBook as DocsIcon,
     Wysiwyg as SystemInformationIcon,
     Info as AboutIcon,
     Help as HelpIcon,
-    SmartToy as AiIcon,
     SvgIconComponent
 } from "@mui/icons-material";
 import {Link, useLocation} from "react-router-dom";
@@ -301,13 +299,6 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     },
     {
         kind: "MenuEntry",
-        route: "/valetudo/ai",
-        title: "nav.aiAssistant",
-        menuIcon: AiIcon,
-        menuText: "nav.aiAssistant"
-    },
-    {
-        kind: "MenuEntry",
         route: "/valetudo/help",
         title: "nav.generalHelp",
         menuIcon: HelpIcon,
@@ -524,15 +515,15 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                     <Divider/>
                     <ListItemButton
                         component="a"
-                        href="https://valetudo.cloud"
+                        href="https://github.com/ElUtkuCorp/Mota"
                         target="_blank"
                         rel="noopener"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <ListItemIcon>
-                            <DocsIcon/>
+                            <GithubIcon/>
                         </ListItemIcon>
-                        <ListItemText primary={t("nav.docs")}/>
+                        <ListItemText primary={t("nav.motaRepository")}/>
                     </ListItemButton>
                     <ListItemButton
                         component="a"

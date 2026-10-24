@@ -1,15 +1,4 @@
 {
-    "ai": {
-        "title": "Asistente de IA",
-        "noWords": "Parece que me he quedado sin palabras.",
-        "error": "Lo siento, me temo que no puedo hacer eso.",
-        "initializing": "Iniciando…",
-        "thinking": "Pensando…",
-        "sessionEnded": "Sesión terminada. ¿Empezamos otra?",
-        "placeholder": "Cuéntame tus problemas (ELIZA solo habla inglés)…",
-        "send": "Enviar",
-        "restart": "Empezar de nuevo"
-    },
     "log": {
         "loadError": "Error al cargar el registro",
         "filter": "Filtrar…",
@@ -217,7 +206,10 @@
             "batteryLoadError": "Error al cargar el estado de la batería",
             "noBatteries": "No se han encontrado baterías",
             "battery": "Batería: {{level}} %",
-            "batteryNumbered": "Batería {{number}}: {{level}} %"
+            "batteryNumbered": "Batería {{number}}: {{level}} %",
+            "wifiSignal": "Wifi {{ssid}}: {{signal}} dBm",
+            "wifiConnected": "Conectado a {{ssid}}",
+            "wifiDisconnected": "Sin conexión wifi"
         },
         "basic": {
             "loadError": "Error al cargar los controles básicos",
@@ -369,7 +361,6 @@
         "log": "Registro",
         "updater": "Actualizaciones",
         "systemInformation": "Información del sistema",
-        "aiAssistant": "Asistente de IA",
         "generalHelp": "Ayuda general",
         "about": "Acerca de Mota",
         "darkMode": "Modo oscuro",
@@ -377,7 +368,8 @@
         "swaggerUi": "API (Swagger UI)",
         "docs": "Documentación de Valetudo",
         "upstreamRepository": "Valetudo en GitHub (Hypfer/Valetudo)",
-        "donate": "Donar a Valetudo"
+        "donate": "Donar a Valetudo",
+        "motaRepository": "Repositorio de Mota"
     },
     "options": {
         "common": {
@@ -421,7 +413,9 @@
             "loadError": "Error al cargar la configuración del anuncio en la red",
             "enabled": "Anuncio en la red activado",
             "zeroconfHostname": "Nombre de equipo Zeroconf",
-            "info": "Para que las aplicaciones complementarias lo detecten rápidamente, Mota anuncia su presencia en tu red local mediante mDNS/Bonjour y SSDP/UPnP. No se recomienda desactivarlo, porque esas aplicaciones dejarán de funcionar.<br/><br/>Un problema habitual de estas tecnologías de «funciona sin más» es que son dificilísimas de depurar en cuanto dejan de funcionar. Usan difusión multicast, que por defecto no atraviesa los límites de la subred. Además, es una función de red lo bastante rara como para que a veces la estropeen actualizaciones de controladores wifi o del sistema operativo, una mala configuración o, simplemente, hardware defectuoso.<br/>Aun así, son opcionales: para hablar con Mota solo necesitas saber la IP del robot. Puedes consultarla en la página de configuración de tu router y, por ejemplo, guardarla como marcador en el navegador."
+            "info": "Para que las aplicaciones complementarias lo detecten rápidamente, Mota anuncia su presencia en tu red local mediante mDNS/Bonjour y SSDP/UPnP. No se recomienda desactivarlo, porque esas aplicaciones dejarán de funcionar.<br/><br/>Un problema habitual de estas tecnologías de «funciona sin más» es que son dificilísimas de depurar en cuanto dejan de funcionar. Usan difusión multicast, que por defecto no atraviesa los límites de la subred. Además, es una función de red lo bastante rara como para que a veces la estropeen actualizaciones de controladores wifi o del sistema operativo, una mala configuración o, simplemente, hardware defectuoso.<br/>Aun así, son opcionales: para hablar con Mota solo necesitas saber la IP del robot. Puedes consultarla en la página de configuración de tu router y, por ejemplo, guardarla como marcador en el navegador.",
+            "hostname": "Nombre en la red",
+            "hostnameHelp": "Nombre con el que se anuncia el robot (p. ej. «conga» para http://conga.local). Déjalo vacío para usar el nombre por defecto."
         },
         "map": {
             "robotManagedTitle": "Funciones del mapa del robot",

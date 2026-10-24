@@ -1,15 +1,4 @@
 {
-    "ai": {
-        "title": "AI Assistant",
-        "noWords": "I seem to be at a loss for words.",
-        "error": "I'm sorry, I'm afraid I can't do that.",
-        "initializing": "Initializing...",
-        "thinking": "Thinking...",
-        "sessionEnded": "Session ended. Start a new one?",
-        "placeholder": "Tell me about your problems...",
-        "send": "Send",
-        "restart": "Start over"
-    },
     "log": {
         "loadError": "Error loading log",
         "filter": "Filter…",
@@ -217,7 +206,10 @@
             "batteryLoadError": "Error loading battery state",
             "noBatteries": "No batteries found",
             "battery": "Battery: {{level}}%",
-            "batteryNumbered": "Battery {{number}}: {{level}}%"
+            "batteryNumbered": "Battery {{number}}: {{level}}%",
+            "wifiSignal": "Wi-Fi {{ssid}}: {{signal}} dBm",
+            "wifiConnected": "Connected to {{ssid}}",
+            "wifiDisconnected": "Wi-Fi not connected"
         },
         "basic": {
             "loadError": "Error loading basic controls",
@@ -369,7 +361,6 @@
         "log": "Log",
         "updater": "Updater",
         "systemInformation": "System Information",
-        "aiAssistant": "AI Assistant",
         "generalHelp": "General Help",
         "about": "About Mota",
         "darkMode": "Dark mode",
@@ -377,7 +368,8 @@
         "swaggerUi": "Swagger UI",
         "docs": "Valetudo docs",
         "upstreamRepository": "Hypfer/Valetudo",
-        "donate": "Donate to Valetudo"
+        "donate": "Donate to Valetudo",
+        "motaRepository": "Mota repository"
     },
     "options": {
         "common": {
@@ -421,7 +413,9 @@
             "loadError": "Error loading Network Advertisement configuration",
             "enabled": "Network Advertisement enabled",
             "zeroconfHostname": "Zeroconf Hostname",
-            "info": "To allow quick autodiscovery by the companion apps, Mota advertises its presence on your local network using mDNS/Bonjour and SSDP/UPnP. It is not recommended to disable this feature, as it will break those companion apps.<br/><br/>One common pitfall of these \"it just works\" technologies is that they're incredibly hard to debug the moment they don't anymore. They're using Multicast broadcasts, which, by-default, cannot traverse subnet boundaries. It is also a networking feature obscure enough to still sometimes be broken by bad Wi-Fi driver or OS updates, misconfiguration or just broken hardware in general.<br/>They are, however, optional, as you just need to know the IP of the robot to talk with Mota. You can get that from your router's webinterface and then e.g., create a browser bookmark for it."
+            "info": "To allow quick autodiscovery by the companion apps, Mota advertises its presence on your local network using mDNS/Bonjour and SSDP/UPnP. It is not recommended to disable this feature, as it will break those companion apps.<br/><br/>One common pitfall of these \"it just works\" technologies is that they're incredibly hard to debug the moment they don't anymore. They're using Multicast broadcasts, which, by-default, cannot traverse subnet boundaries. It is also a networking feature obscure enough to still sometimes be broken by bad Wi-Fi driver or OS updates, misconfiguration or just broken hardware in general.<br/>They are, however, optional, as you just need to know the IP of the robot to talk with Mota. You can get that from your router's webinterface and then e.g., create a browser bookmark for it.",
+            "hostname": "Network name",
+            "hostnameHelp": "Name the robot announces itself as (e.g. \"conga\" for http://conga.local). Leave empty for the default name."
         },
         "map": {
             "robotManagedTitle": "Robot-managed Map Features",

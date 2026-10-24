@@ -867,10 +867,17 @@ export const useNetworkAdvertisementConfigurationQuery = () => {
 };
 
 export const useNetworkAdvertisementConfigurationMutation = () => {
+    const queryClient = useQueryClient();
+
     return useValetudoFetchingMutation({
         queryKey: [QueryKey.NetworkAdvertisementConfiguration],
         mutationFn: (networkAdvertisementConfiguration: NetworkAdvertisementConfiguration) => {
-            return sendNetworkAdvertisementConfiguration(networkAdvertisementConfiguration).then(fetchNetworkAdvertisementConfiguration);
+            return sendNetworkAdvertisementConfiguration(networkAdvertisementConfiguration).then(async (result) => {
+                // Mota: el nombre .local puede haber cambiado
+                await queryClient.invalidateQueries({queryKey: [QueryKey.NetworkAdvertisementProperties]});
+
+                return result;
+            }).then(fetchNetworkAdvertisementConfiguration);
         },
         onError: useOnSettingsChangeError("api.settings.networkAdvertisement")
     });
@@ -1231,6 +1238,17 @@ export const useWifiStatusQuery = () => {
         queryFn: fetchWifiStatus,
 
         staleTime: Infinity
+    });
+};
+
+// Mota: la pantalla principal muestra la señal wifi y la refresca periódicamente
+export const useWifiSignalQuery = (enabled: boolean) => {
+    return useQuery( {
+        queryKey: [QueryKey.WifiStatus, "signal"],
+        queryFn: fetchWifiStatus,
+        enabled: enabled,
+
+        refetchInterval: 30_000
     });
 };
 

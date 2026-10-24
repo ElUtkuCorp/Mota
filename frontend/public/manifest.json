@@ -1,6 +1,10 @@
 {
+  "id": "/",
   "short_name": "Mota",
   "name": "Mota",
+  "description": "Control local del robot aspirador, sin nube",
+  "lang": "es",
+  "dir": "ltr",
   "icons": [
     {
       "src": "favicon.ico",
@@ -19,7 +23,12 @@
     }
   ],
   "start_url": ".",
+  "scope": ".",
   "display": "standalone",
+  "orientation": "any",
   "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "background_color": "#ffffff",
+  "categories": [
+    "utilities"
+  ]
 }
