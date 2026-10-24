@@ -4,6 +4,7 @@ import Duststream from "./Duststream";
 import Consumables from "./Consumables";
 import ManualControl from "./ManualControl";
 import TotalStatistics from "./TotalStatistics";
+import History from "./History";
 import React from "react";
 import {Capability, useDuststreamingConfigurationQuery} from "../api";
 import {useCapabilitiesSupported} from "../CapabilitiesProvider";
@@ -21,6 +22,7 @@ const RobotRouter = (): React.ReactElement => {
             <Route path={"consumables"} element={<Consumables/>}/>
             <Route path={"manual_control"} element={<ManualControl/>}/>
             <Route path={"total_statistics"} element={<TotalStatistics/>}/>
+            <Route path={"history"} element={<History/>}/>
 
             <Route path="*" element={<Navigate to="/" />} />
         </Routes>

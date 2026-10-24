@@ -34,11 +34,12 @@ import {
     Wysiwyg as SystemInformationIcon,
     Info as AboutIcon,
     Help as HelpIcon,
+    History as HistoryIcon,
     SvgIconComponent
 } from "@mui/icons-material";
 import {Link, useLocation} from "react-router-dom";
 import ValetudoEvents from "./ValetudoEvents";
-import {Capability, useDuststreamingConfigurationQuery} from "../api";
+import {Capability, useDuststreamingConfigurationQuery, useMotaCleanHistoryQuery} from "../api";
 import {useCapabilitiesSupported} from "../CapabilitiesProvider";
 import {
     RobotMonochromeIcon,
@@ -59,6 +60,8 @@ interface MenuEntry {
         capabilities: Capability[];
         type: "allof" | "anyof"
     };
+    // Mota: solo se muestra si responde la API propia (/api/v2/mota/)
+    requiresMotaApi?: boolean;
 }
 
 interface MenuSubEntry {
@@ -71,6 +74,8 @@ interface MenuSubEntry {
 interface MenuSubheader {
     kind: "Subheader";
     title: string;
+    // Mota: se muestra también (sin mirar las capacidades) si responde la API propia
+    showIfMotaApi?: boolean;
     requiredCapabilities?: {
         capabilities: Capability[];
         type: "allof" | "anyof"
@@ -91,6 +96,7 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     {
         kind: "Subheader",
         title: "nav.robot",
+        showIfMotaApi: true,
         requiredCapabilities: {
             capabilities: [
                 Capability.ConsumableMonitoring,
@@ -134,6 +140,14 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
             capabilities: [Capability.TotalStatistics],
             type: "allof"
         }
+    },
+    {
+        kind: "MenuEntry",
+        route: "/robot/history",
+        title: "nav.history",
+        menuIcon: HistoryIcon,
+        menuText: "nav.history",
+        requiresMotaApi: true
     },
     {
         kind: "MenuEntry",
@@ -331,6 +345,10 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
     });
     const duststreamingEnabled = duststreamingConfiguration?.enabled === true;
 
+    // Mota: el historial no tiene capacidad propia; la entrada se muestra si la consulta responde
+    const {data: motaCleanHistory} = useMotaCleanHistoryQuery();
+    const motaApiAvailable = motaCleanHistory !== undefined;
+
     //@ts-ignore
     const currentMenuEntry = menuTree.find(element => element.route === currentLocation) ?? menuTree[0];
 
@@ -381,7 +399,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                     }).map((value, idx) => {
                         switch (value.kind) {
                             case "Subheader":
-                                if (value.requiredCapabilities) {
+                                if (value.requiredCapabilities && !(value.showIfMotaApi && motaApiAvailable)) {
                                     switch (value.requiredCapabilities.type) {
                                         case "allof": {
                                             if (!value.requiredCapabilities.capabilities.every(capability => {
@@ -423,6 +441,10 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                             case "MenuEntry": {
                                 // This breaks with the menu generation logic and should likely be refactored if it ever gains siblings
                                 if (value.route === "/robot/camera" && !duststreamingEnabled) {
+                                    return null;
+                                }
+
+                                if (value.requiresMotaApi && !motaApiAvailable) {
                                     return null;
                                 }
 
@@ -554,7 +576,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                 </List>
             </Box>
         );
-    }, [currentLocation, paletteMode, setPaletteMode, robotCapabilities, duststreamingEnabled, t]);
+    }, [currentLocation, paletteMode, setPaletteMode, robotCapabilities, duststreamingEnabled, motaApiAvailable, t]);
 
     const toolbarContent = React.useMemo(() => {
         switch (currentMenuEntry.kind) {

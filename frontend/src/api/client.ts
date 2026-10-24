@@ -35,6 +35,9 @@ import {
     MapSegmentMaterialControlRequestParameters,
     MapSegmentRenameRequestParameters,
     MopDockMopDryingDuration,
+    MotaCleanHistoryEntry,
+    MotaCleanHistoryTotals,
+    MotaDiagnostics,
     MopDockMopDryingTimeControlProperties,
     MopDockMopDryingTimePayload,
     MopDockMopWashTemperature,
@@ -1418,6 +1421,36 @@ export const fetchAutoEmptyDockAutoEmptyDurationControlProperties = async (): Pr
         .get<AutoEmptyDockAutoEmptyDurationControlProperties>(
             `/robot/capabilities/${Capability.AutoEmptyDockAutoEmptyDurationControl}/properties`
         )
+        .then(({data}) => {
+            return data;
+        });
+};
+
+// Mota: API propia en /api/v2/mota/
+
+export const fetchMotaCleanHistory = async (): Promise<Array<MotaCleanHistoryEntry>> => {
+    return valetudoAPI
+        .get<Array<MotaCleanHistoryEntry>>("/mota/history")
+        .then(({data}) => {
+            return data;
+        });
+};
+
+export const fetchMotaCleanHistoryTotals = async (): Promise<MotaCleanHistoryTotals> => {
+    return valetudoAPI
+        .get<MotaCleanHistoryTotals>("/mota/history/totals")
+        .then(({data}) => {
+            return data;
+        });
+};
+
+export const getMotaCleanHistoryMapUrl = (cleanId: number): string => {
+    return `${valetudoAPIBaseURL}/mota/history/${encodeURIComponent(String(cleanId))}/map.png`;
+};
+
+export const fetchMotaDiagnostics = async (): Promise<MotaDiagnostics> => {
+    return valetudoAPI
+        .get<MotaDiagnostics>("/mota/diagnostics")
         .then(({data}) => {
             return data;
         });

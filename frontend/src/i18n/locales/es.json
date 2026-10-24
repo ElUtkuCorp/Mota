@@ -342,6 +342,7 @@
         "consumables": "Mantenimiento",
         "manualControl": "Control manual",
         "statistics": "Estadísticas",
+        "history": "Historial",
         "camera": "Cámara",
         "options": "Ajustes",
         "mapOptions": "Ajustes del mapa",
@@ -1138,5 +1139,93 @@
         "updater": "## Actualizaciones\n\nEl actualizador de Mota es una función de comodidad que pretende hacerte la vida un poco más fácil.\n\nComo está pensado respetando la privacidad, tienes que pulsar un botón a mano para que busque versiones nuevas de Mota.\nSin comprobación diaria de actualizaciones no hay conexiones diarias a ningún servidor externo.\n\nPor defecto consulta la API de GitHub, así que los desarrolladores no pueden recopilar ningún dato sobre ti.\n\n**Nota: el actualizador siempre intenta actualizar a la siguiente versión en orden cronológico. Si vas varias versiones por detrás,\ntendrás que actualizar varias veces seguidas.**\n\nComo es solo una función de comodidad, puede haber situaciones en las que no funcione. En esos casos\ntendrás que actualizar a mano, lo que normalmente implica acceder al robot por SSH.\n\nA veces, un cambio de configuración puede permitirte usar el actualizador. En otros casos, puede que tu modelo de robot no\npueda usarlo en absoluto porque no tiene suficiente almacenamiento. No es un fallo: es lo que hay.\n\nTambién conviene saber que el actualizador no actualiza el firmware del robot. Solo actualiza el binario de Mota.\n",
         "virtualRestrictionEdit": "## Restricciones virtuales\n\nLas restricciones virtuales son cosas como paredes virtuales, zonas prohibidas o zonas sin fregado, que impiden que el robot pase por un sitio\nsiempre o solo en ciertas condiciones (por ejemplo, cuando lleva puesto un accesorio concreto, como la mopa).\n\nPuedes usarlas para proteger tus muebles delicados del robot, o a tu delicado robot de los muebles.\n\nNo todos los firmwares admiten todos los tipos. Además, normalmente el firmware limita cuántas restricciones virtuales\npuedes tener.\n\n\nTen en cuenta que, aunque funcionan muy bien casi siempre, a veces los robots se pierden y empiezan a moverse\nsin saber nada de las restricciones virtuales que habías configurado.\nAsegúrate de que no sean lo único que evita un desastre.\n\n\nMientras editas no verás actualizaciones del mapa a menos que pulses «Actualizar».\nPor eso, no olvides pulsar «Guardar» antes de actualizar o de salir de esta página para que se apliquen los cambios.\n",
         "voicepack": "## Paquetes de voz\n\nLos paquetes de voz personalizados son algo más complicados, porque el formato exacto cambia según el robot.\n\nComo al autor de Valetudo no le interesan mucho, esta función está un poco a medio pulir.\nPara él, estos aparatos son ante todo herramientas que simplemente deben funcionar, y hacerlo de forma fiable.\nPor eso le basta con que hablen en inglés, que para una herramienta es perfectamente válido.\n\nSi aun así quieres instalar uno personalizado, necesitarás un paquete de voz en el formato que exija tu\nrobot, alojado en algún servidor HTTP. Ten en cuenta que el firmware del robot suele bloquear la CDN oficial, así que\nusar la URL oficial probablemente no funcione.\n\nSegún el modelo, también necesitarás un hash del archivo del paquete de voz.\nEl tipo de hash depende del firmware.\n\nAdemás, tendrás que indicar un código de idioma. Ese valor apenas importa, salvo que uses un código reservado.\n«EN», «CN», etc. suelen ser códigos reservados para los paquetes de voz que trae el firmware.\n\nNormalmente se puede volver al paquete de voz original indicando uno de esos códigos integrados durante la instalación.\n"
+    },
+    "history": {
+        "listTitle": "Limpiezas",
+        "totals": {
+            "count": "Limpiezas",
+            "time": "Tiempo total",
+            "area": "Superficie total"
+        },
+        "empty": "Todavía no hay limpiezas registradas. Aparecerán aquí cuando el robot termine la primera.",
+        "loadError": "No se ha podido cargar el historial de limpiezas.",
+        "notAvailable": "—",
+        "cleanNumber": "Limpieza n.º {{id}}",
+        "duration": "Duración",
+        "area": "Superficie",
+        "durationHoursMinutes": "{{hours}} h {{minutes}} min",
+        "durationMinutes": "{{minutes}} min",
+        "durationSeconds": "{{seconds}} s",
+        "areaSquareMeters": "{{value}} m²",
+        "noMap": "Sin mapa",
+        "mapLoadError": "No se ha podido cargar el mapa",
+        "mapAlt": "Mapa de la limpieza: {{title}}",
+        "openMap": "Ver el mapa a tamaño completo",
+        "dialogSummary": "Duración: {{duration}} · Superficie: {{area}}"
+    },
+    "diagnostics": {
+        "title": "Diagnóstico de Mota",
+        "notAvailable": "—",
+        "updatedAt": "Actualizado a las {{time}}. Se refresca cada 15 segundos.",
+        "units": {
+            "dbm": "{{value}} dBm",
+            "percent": "{{value}} %",
+            "mbps": "{{value}} Mb/s",
+            "ghz": "{{value}} GHz",
+            "celsius": "{{value}} °C"
+        },
+        "wifi": {
+            "title": "Wifi",
+            "ssid": "Red (SSID)",
+            "signal": "Señal",
+            "quality": "Calidad del enlace",
+            "bitRate": "Velocidad",
+            "txPower": "Potencia de emisión",
+            "frequency": "Frecuencia"
+        },
+        "robot": {
+            "title": "Robot",
+            "connection": "Conexión",
+            "connected": "Conectado",
+            "disconnected": "Desconectado",
+            "battery": "Batería",
+            "state": "Estado",
+            "mode": "Modo",
+            "error": "Error",
+            "noError": "Ninguno",
+            "modes": {
+                "none": "Normal",
+                "spot": "Punto",
+                "zone": "Zona",
+                "mop": "Fregado",
+                "edge": "Bordes",
+                "spiral": "Espiral"
+            }
+        },
+        "system": {
+            "title": "Sistema",
+            "uptime": "Tiempo en marcha",
+            "load": "Carga media (1, 5 y 15 min)",
+            "socTemperature": "Temperatura del procesador",
+            "timezone": "Zona horaria del sistema"
+        },
+        "storage": {
+            "title": "Almacenamiento",
+            "udisk": "Espacio en UDISK",
+            "overlay": "Espacio en overlay",
+            "vendorLog": "Registro del fabricante",
+            "freeOfTotal": "{{free}} libres de {{total}}",
+            "used": "Ocupado",
+            "free": "Libre"
+        },
+        "firewall": {
+            "title": "Cortafuegos",
+            "status": "Estado",
+            "active": "Activo",
+            "inactive": "Inactivo",
+            "blockedPackets": "Paquetes bloqueados",
+            "recentBlocks": "Últimos destinos bloqueados",
+            "noRecentBlocks": "No hay bloqueos recientes"
+        }
     }
 }

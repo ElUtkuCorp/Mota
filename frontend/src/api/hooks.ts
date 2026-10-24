@@ -153,6 +153,9 @@ import {
     fetchAutoEmptyDockAutoEmptyDurationControlProperties,
     fetchMapAnnotationsProperties,
     sendMapAnnotationsUpdate,
+    fetchMotaCleanHistory,
+    fetchMotaCleanHistoryTotals,
+    fetchMotaDiagnostics,
 } from "./client";
 import {
     PresetSelectionState,
@@ -277,6 +280,9 @@ enum QueryKey {
     AutoEmptyDockAutoEmptyDurationControl = "auto_empty_dock_auto_empty_duration_control",
     AutoEmptyDockAutoEmptyDurationControlProperties = "auto_empty_dock_auto_empty_duration_control_properties",
     MapAnnotationsProperties = "map_annotations_properties",
+    MotaCleanHistory = "mota_clean_history",
+    MotaCleanHistoryTotals = "mota_clean_history_totals",
+    MotaDiagnostics = "mota_diagnostics",
 }
 
 // "capability" is either a capability name or an i18n key
@@ -1918,5 +1924,40 @@ export const useMapAnnotationsMutation = (
             await queryClient.invalidateQueries({ queryKey: [QueryKey.Map] });
             await options?.onSuccess?.(data, ...args);
         },
+    });
+};
+
+// Mota: API propia en /api/v2/mota/
+
+export const useMotaCleanHistoryQuery = (options?: { refetchInterval?: number | false }) => {
+    return useQuery({
+        queryKey: [QueryKey.MotaCleanHistory],
+        queryFn: fetchMotaCleanHistory,
+
+        staleTime: 30_000,
+        refetchInterval: options?.refetchInterval ?? false,
+        retry: 1
+    });
+};
+
+export const useMotaCleanHistoryTotalsQuery = () => {
+    return useQuery({
+        queryKey: [QueryKey.MotaCleanHistoryTotals],
+        queryFn: fetchMotaCleanHistoryTotals,
+
+        staleTime: 30_000,
+        refetchInterval: 60_000,
+        retry: 1
+    });
+};
+
+export const useMotaDiagnosticsQuery = () => {
+    return useQuery({
+        queryKey: [QueryKey.MotaDiagnostics],
+        queryFn: fetchMotaDiagnostics,
+
+        staleTime: 15_000,
+        refetchInterval: 15_000,
+        retry: 1
     });
 };

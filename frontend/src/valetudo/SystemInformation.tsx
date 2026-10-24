@@ -36,6 +36,7 @@ import {useIsMobileView} from "../hooks";
 import ReloadableCard from "../components/ReloadableCard";
 import PaperContainer from "../components/PaperContainer";
 import TextInformationGrid from "../components/TextInformationGrid";
+import MotaDiagnostics from "./MotaDiagnostics";
 import {useValetudoColorsInverse} from "../hooks/useValetudoColors";
 import {useTranslation} from "react-i18next";
 import {formatNumber} from "../i18n";
@@ -494,6 +495,7 @@ const SystemInformation = (): React.ReactElement => {
                 >
                     <SystemRuntimeInfo/>
                 </Grid2>
+                <MotaDiagnostics/>
             </Grid2>
         </PaperContainer>
     );

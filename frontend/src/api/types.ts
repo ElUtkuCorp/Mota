@@ -695,3 +695,71 @@ export interface AutoEmptyDockAutoEmptyDurationPayload {
 export interface AutoEmptyDockAutoEmptyDurationControlProperties {
     supportedDurations: Array<AutoEmptyDockAutoEmptyDuration>,
 }
+
+// Mota: API propia en /api/v2/mota/ (sin esquema OpenAPI)
+
+export interface MotaCleanHistoryEntry {
+    cleanId: number;
+    startTime?: string;
+    endTime?: string;
+    durationSeconds?: number;
+    /** cm² */
+    area?: number;
+    hasMap: boolean;
+    rawTask: Record<string, unknown>;
+}
+
+export interface MotaCleanHistoryTotals {
+    count: number;
+    timeSeconds: number;
+    areaCm2: number;
+}
+
+// Mismo formato que LinuxTools.GET_DISK_SPACE_INFO en el backend (bytes)
+export interface MotaDiskSpaceInfo {
+    total: number;
+    free: number;
+}
+
+export interface MotaDiagnostics {
+    timestamp: string;
+    system: {
+        uptimeSeconds: number | null;
+        load: Array<number> | null;
+        memory: {
+            total: number;
+            free: number;
+        } | null;
+        socTemperatureCelsius: number | null;
+        timezone: string | null;
+    } | null;
+    storage: {
+        udisk: MotaDiskSpaceInfo | null;
+        overlay: MotaDiskSpaceInfo | null;
+        vendorLogBytes: number | null;
+    } | null;
+    wifi: {
+        ssid: string | null;
+        frequencyGhz: number | null;
+        bitRateMbps: number | null;
+        txPowerDbm: number | null;
+        signalDbm: number | null;
+        linkQuality: number | null;
+    } | null;
+    firewall: {
+        active: boolean | null;
+        blockedPackets: number | null;
+        recentBlocks: Array<{
+            destination: string | null;
+            protocol: string | null;
+            port: number | null;
+        }> | null;
+    } | null;
+    robot: {
+        connected: boolean | null;
+        battery: number | null;
+        state: string | null;
+        mode: string | null;
+        error: string | null;
+    } | null;
+}

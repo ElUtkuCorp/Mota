@@ -342,6 +342,7 @@
         "consumables": "Consumables",
         "manualControl": "Manual control",
         "statistics": "Statistics",
+        "history": "History",
         "camera": "Camera",
         "options": "Options",
         "mapOptions": "Map Options",
@@ -1138,5 +1139,93 @@
         "updater": "## Updater\n\nThe Mota updater is a convenience feature aiming to make life with Mota a bit easier.\n\nAs it is built with privacy in mind, you will have to manually click a button to make it search for newer versions of Mota.\nNo daily update check means no daily pings to some external server.\n\nBy default, it's polling the GitHub API, meaning that the developers are not able to collect any data about you.\n\n**Note: The updater will always try to update you to the next chronological release. If you're multiple releases behind,\nyou will have to update multiple times in a row.**\n\nAs the updater is just a convenience feature, there might be situations in which it doesn't work. In those situations,\nyou will have to do a manual update, which usually involves SSH access to the robot.\n\nSometimes, a configuration change might enable you to use the updater. In other instances, your model of robot might not\nbe able to use the updater at all as there's not enough storage built in. This is not a bug. That's just how it is.\n\nIt is also worth noting that the updater won't update the robots firmware. It only updates the Mota binary.\n",
         "virtualRestrictionEdit": "## Virtual Restriction Management\n\nVirtual restrictions are things such as virtual walls, no go areas or no mop areas, that either stop your robot\nfrom driving somewhere all the time or just conditionally (e.g. when there's a specific attachment such as the mop attached to it).\n\nYou can use virtual restrictions to protect your fragile furniture from your robot or your fragile robot from your furniture.\n\nNot all firmwares support all of those. Also, usually, there's a firmware-determined limit on how many virtual\nrestrictions you can have.\n\n\nKeep in mind that while these work great most of the time, robots may sometimes forget where they are and then start\ndriving around not knowing anything about any of the previously configured virtual restrictions.\nMake sure that they're not the only thing preventing a disaster.\n\n\nNote that you won't see any map updates while editing unless you press refresh.\nTherefore, don't forget to click save before refreshing and/or leaving this page to commit your changes.\n",
         "voicepack": "## Voice packs\n\nCustom voice packs are a bit more complicated as the exact format differs depending on your choice of robot.\n\nAs I personally don't really care about them, this feature is a bit rough around the edges.\nFor me, these things are first and foremost tools that should simply work and do so reliably.\nThus, I'm fine with it just talking english as that's perfectly serviceable for a tool.\n\nIf you want to install a custom one anyways, you will need a voicepack in the correct format as required by your\nrobot hosted on some http server. Note that the official CDN is often blocked in the robots firmware meaning that just\nusing the official URL likely won't work.\n\nDepending on the model of robot, you will also need a hash of that voice pack file.\nThe type of hash differs depending on the firmware.\n\nFurthermore, you'll also need to specify a language code. That value largely doesn't matter much unless you use a reserved code.\n\"EN\", \"CN\" etc are often codes reserved for the inbuilt voice packs of the firmware.\n\nUsually it's possible to revert to the initially installed voice pack by specifying one of those inbuilt voicepack codes during the install.\n"
+    },
+    "history": {
+        "listTitle": "Cleanups",
+        "totals": {
+            "count": "Cleanups",
+            "time": "Total time",
+            "area": "Total area"
+        },
+        "empty": "No cleanups recorded yet. They will show up here once the robot finishes its first one.",
+        "loadError": "Unable to load the cleanup history.",
+        "notAvailable": "—",
+        "cleanNumber": "Cleanup #{{id}}",
+        "duration": "Duration",
+        "area": "Area",
+        "durationHoursMinutes": "{{hours}} h {{minutes}} min",
+        "durationMinutes": "{{minutes}} min",
+        "durationSeconds": "{{seconds}} s",
+        "areaSquareMeters": "{{value}} m²",
+        "noMap": "No map",
+        "mapLoadError": "Unable to load the map",
+        "mapAlt": "Cleanup map: {{title}}",
+        "openMap": "View the map at full size",
+        "dialogSummary": "Duration: {{duration}} · Area: {{area}}"
+    },
+    "diagnostics": {
+        "title": "Mota diagnostics",
+        "notAvailable": "—",
+        "updatedAt": "Updated at {{time}}. Refreshes every 15 seconds.",
+        "units": {
+            "dbm": "{{value}} dBm",
+            "percent": "{{value}} %",
+            "mbps": "{{value}} Mb/s",
+            "ghz": "{{value}} GHz",
+            "celsius": "{{value}} °C"
+        },
+        "wifi": {
+            "title": "Wi-Fi",
+            "ssid": "Network (SSID)",
+            "signal": "Signal",
+            "quality": "Link quality",
+            "bitRate": "Bit rate",
+            "txPower": "Transmit power",
+            "frequency": "Frequency"
+        },
+        "robot": {
+            "title": "Robot",
+            "connection": "Connection",
+            "connected": "Connected",
+            "disconnected": "Disconnected",
+            "battery": "Battery",
+            "state": "State",
+            "mode": "Mode",
+            "error": "Error",
+            "noError": "None",
+            "modes": {
+                "none": "Normal",
+                "spot": "Spot",
+                "zone": "Zone",
+                "mop": "Mopping",
+                "edge": "Edges",
+                "spiral": "Spiral"
+            }
+        },
+        "system": {
+            "title": "System",
+            "uptime": "Uptime",
+            "load": "Load average (1, 5 and 15 min)",
+            "socTemperature": "Processor temperature",
+            "timezone": "System time zone"
+        },
+        "storage": {
+            "title": "Storage",
+            "udisk": "UDISK space",
+            "overlay": "Overlay space",
+            "vendorLog": "Manufacturer log",
+            "freeOfTotal": "{{free}} free of {{total}}",
+            "used": "Used",
+            "free": "Free"
+        },
+        "firewall": {
+            "title": "Firewall",
+            "status": "Status",
+            "active": "Active",
+            "inactive": "Inactive",
+            "blockedPackets": "Blocked packets",
+            "recentBlocks": "Recently blocked destinations",
+            "noRecentBlocks": "No recent blocks"
+        }
     }
 }
