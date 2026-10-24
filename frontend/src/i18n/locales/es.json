@@ -25,7 +25,9 @@
             "customizations": "personalización de Mota",
             "events": "eventos de Mota",
             "welcomeDialog": "la pantalla de bienvenida",
-            "updaterCommand": "actualizaciones"
+            "updaterCommand": "actualizaciones",
+            "mirrors": "las zonas de espejo",
+            "resegment": "la división en habitaciones"
         },
         "errors": {
             "setSegmentMaterial": "No se ha podido cambiar el tipo de suelo de la habitación",
@@ -118,7 +120,11 @@
             "runtimeErrorReason": "Motivo: {{reason}}",
             "unknownType": "Tipo de evento desconocido: {{type}}",
             "dustBinFull": "El depósito de polvo está lleno. Vacíalo, por favor.",
-            "mopAttached": "La mopa sigue puesta en el robot."
+            "mopAttached": "La mopa sigue puesta en el robot.",
+            "motaMapChanged": "El mapa ha cambiado: se parece un {{similarity}} % al de referencia (mínimo {{threshold}} %). ¿Aceptar el mapa nuevo como referencia?",
+            "motaMapChangedCells": "Celdas de suelo: {{referenceCells}} en el mapa de referencia y {{currentCells}} en el actual.",
+            "motaMapChangedAccept": "Aceptar",
+            "motaMapChangedKeep": "Conservar el anterior"
         }
     },
     "robot": {
@@ -318,7 +324,12 @@
             "split": "Dividir {{name}}",
             "cuttingLine": "Línea de corte",
             "requiresDocked": "Para editar habitaciones, el robot tiene que estar en la base",
-            "selectToEdit": "Selecciona una habitación para empezar a editar"
+            "selectToEdit": "Selecciona una habitación para empezar a editar",
+            "resegment": {
+                "button": "Volver a dividir el mapa en habitaciones",
+                "confirmTitle": "¿Volver a dividir el mapa en habitaciones?",
+                "confirmBody": "Mota volverá a dividir el mapa en habitaciones de forma automática. Se perderán la división actual y los nombres de las habitaciones.\n\n¿Quieres continuar?"
+            }
         },
         "restrictions": {
             "virtualWallCount": "Pared virtual ({{count}})",
@@ -331,6 +342,13 @@
             "curtainCount": "Cortina ({{count}})",
             "rampCount": "Rampa ({{count}})",
             "requiresDocked": "Para editar las anotaciones del mapa, el robot tiene que estar en la base"
+        },
+        "mirrors": {
+            "addCount": "Zona de espejo ({{count}}/{{max}})",
+            "requiresDocked": "Para editar las zonas de espejo, el robot tiene que estar en la base",
+            "explanation": "Marca el área fantasma que el LiDAR ve detrás de un espejo a ras de suelo. Esa área se oculta del mapa y, al guardar, cada zona nueva se añade también como zona prohibida para que el robot no intente entrar en el reflejo.",
+            "limitReached": "Has llegado al máximo de {{max}} zonas de espejo.",
+            "loadError": "No se han podido cargar las zonas de espejo. Esta función solo está disponible en robots con Mota."
         }
     },
     "app": {
@@ -377,7 +395,8 @@
         "docs": "Documentación de Valetudo",
         "upstreamRepository": "Valetudo en GitHub (Hypfer/Valetudo)",
         "donate": "Donar a Valetudo",
-        "motaRepository": "Repositorio de Mota"
+        "motaRepository": "Repositorio de Mota",
+        "mirrorManagement": "Espejos"
     },
     "options": {
         "common": {
@@ -475,6 +494,10 @@
             "spectator": {
                 "title": "Mapa de espectador",
                 "description": "Míralo limpiar"
+            },
+            "mirrors": {
+                "title": "Espejos",
+                "description": "Marcar el reflejo que el LiDAR ve detrás de los espejos a ras de suelo"
             }
         },
         "mota": {
@@ -1138,7 +1161,8 @@
         "timers": "## Programación\n\nLa programación te permite ejecutar una tarea a una hora determinada (UTC).<br/>\nSi la hora del sistema no es verosímil (por ejemplo, porque nunca se ha sincronizado), no se ejecutará ningún programa.\n\nTen en cuenta que los programas se evalúan y se guardan en UTC. Solo se muestran en la zona horaria de tu navegador.<br/>\nEsto significa que no siguen el cambio de horario de verano, así que tendrás que ajustarlos a mano si hace falta.\n",
         "updater": "## Actualizaciones\n\nEl actualizador de Mota es una función de comodidad que pretende hacerte la vida un poco más fácil.\n\nComo está pensado respetando la privacidad, tienes que pulsar un botón a mano para que busque versiones nuevas de Mota.\nSin comprobación diaria de actualizaciones no hay conexiones diarias a ningún servidor externo.\n\nPor defecto consulta la API de GitHub, así que los desarrolladores no pueden recopilar ningún dato sobre ti.\n\n**Nota: el actualizador siempre intenta actualizar a la siguiente versión en orden cronológico. Si vas varias versiones por detrás,\ntendrás que actualizar varias veces seguidas.**\n\nComo es solo una función de comodidad, puede haber situaciones en las que no funcione. En esos casos\ntendrás que actualizar a mano, lo que normalmente implica acceder al robot por SSH.\n\nA veces, un cambio de configuración puede permitirte usar el actualizador. En otros casos, puede que tu modelo de robot no\npueda usarlo en absoluto porque no tiene suficiente almacenamiento. No es un fallo: es lo que hay.\n\nTambién conviene saber que el actualizador no actualiza el firmware del robot. Solo actualiza el binario de Mota.\n",
         "virtualRestrictionEdit": "## Restricciones virtuales\n\nLas restricciones virtuales son cosas como paredes virtuales, zonas prohibidas o zonas sin fregado, que impiden que el robot pase por un sitio\nsiempre o solo en ciertas condiciones (por ejemplo, cuando lleva puesto un accesorio concreto, como la mopa).\n\nPuedes usarlas para proteger tus muebles delicados del robot, o a tu delicado robot de los muebles.\n\nNo todos los firmwares admiten todos los tipos. Además, normalmente el firmware limita cuántas restricciones virtuales\npuedes tener.\n\n\nTen en cuenta que, aunque funcionan muy bien casi siempre, a veces los robots se pierden y empiezan a moverse\nsin saber nada de las restricciones virtuales que habías configurado.\nAsegúrate de que no sean lo único que evita un desastre.\n\n\nMientras editas no verás actualizaciones del mapa a menos que pulses «Actualizar».\nPor eso, no olvides pulsar «Guardar» antes de actualizar o de salir de esta página para que se apliquen los cambios.\n",
-        "voicepack": "## Paquetes de voz\n\nLos paquetes de voz personalizados son algo más complicados, porque el formato exacto cambia según el robot.\n\nComo al autor de Valetudo no le interesan mucho, esta función está un poco a medio pulir.\nPara él, estos aparatos son ante todo herramientas que simplemente deben funcionar, y hacerlo de forma fiable.\nPor eso le basta con que hablen en inglés, que para una herramienta es perfectamente válido.\n\nSi aun así quieres instalar uno personalizado, necesitarás un paquete de voz en el formato que exija tu\nrobot, alojado en algún servidor HTTP. Ten en cuenta que el firmware del robot suele bloquear la CDN oficial, así que\nusar la URL oficial probablemente no funcione.\n\nSegún el modelo, también necesitarás un hash del archivo del paquete de voz.\nEl tipo de hash depende del firmware.\n\nAdemás, tendrás que indicar un código de idioma. Ese valor apenas importa, salvo que uses un código reservado.\n«EN», «CN», etc. suelen ser códigos reservados para los paquetes de voz que trae el firmware.\n\nNormalmente se puede volver al paquete de voz original indicando uno de esos códigos integrados durante la instalación.\n"
+        "voicepack": "## Paquetes de voz\n\nLos paquetes de voz personalizados son algo más complicados, porque el formato exacto cambia según el robot.\n\nComo al autor de Valetudo no le interesan mucho, esta función está un poco a medio pulir.\nPara él, estos aparatos son ante todo herramientas que simplemente deben funcionar, y hacerlo de forma fiable.\nPor eso le basta con que hablen en inglés, que para una herramienta es perfectamente válido.\n\nSi aun así quieres instalar uno personalizado, necesitarás un paquete de voz en el formato que exija tu\nrobot, alojado en algún servidor HTTP. Ten en cuenta que el firmware del robot suele bloquear la CDN oficial, así que\nusar la URL oficial probablemente no funcione.\n\nSegún el modelo, también necesitarás un hash del archivo del paquete de voz.\nEl tipo de hash depende del firmware.\n\nAdemás, tendrás que indicar un código de idioma. Ese valor apenas importa, salvo que uses un código reservado.\n«EN», «CN», etc. suelen ser códigos reservados para los paquetes de voz que trae el firmware.\n\nNormalmente se puede volver al paquete de voz original indicando uno de esos códigos integrados durante la instalación.\n",
+        "mirrorEdit": "## Espejos\n\nUn espejo a ras de suelo engaña al LiDAR: el robot \"ve\" a través de él una habitación que no existe y la añade al mapa.\n\nAquí puedes marcar ese área fantasma con zonas de espejo. Lo que quede dentro de una zona de espejo se oculta del mapa\n(y no cuenta para dividirlo en habitaciones).\n\nAl guardar, cada zona de espejo nueva se añade también como zona prohibida en el mismo rectángulo, para que el robot no intente\nentrar en el reflejo. Las restricciones que ya existían no se tocan; si quitas una zona de espejo, su zona prohibida se\nconserva y puedes borrarla en \"Restricciones virtuales\".\n\nPuede haber como máximo 20 zonas de espejo. Recuerda guardar antes de salir de esta página."
     },
     "history": {
         "listTitle": "Limpiezas",

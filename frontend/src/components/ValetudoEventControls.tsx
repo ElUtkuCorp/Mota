@@ -145,7 +145,63 @@ const PendingMapChangeEventControl: FunctionComponent<ValetudoEventRenderProps> 
         );
     };
 
-const CreateDismissableEventControl = (messageKey: string) : FunctionComponent<ValetudoEventRenderProps> => {
+// Mota: aviso del guardián del mapa (el mapa nuevo se parece poco al de referencia)
+const MotaMapChangedEventControl: FunctionComponent<ValetudoEventRenderProps> =
+    ({event, interact}) => {
+        const {t} = useTranslation();
+        const color = event.processed ? "textSecondary" : "textPrimary";
+        const textStyle = event.processed ? {textDecoration: "line-through"} : {};
+        const metaData = event.metaData ?? {};
+
+        return (
+            <EventRow>
+                <Stack>
+                    <EventTimestamp timestamp={event.timestamp}/>
+                    <Typography color={color} style={textStyle} sx={{mr: 1}}>
+                        {t("components.events.motaMapChanged", {
+                            similarity: metaData.similarity ?? "?",
+                            threshold: metaData.threshold ?? "?"
+                        })}
+                    </Typography>
+                    {
+                        metaData.referenceCells !== undefined && metaData.currentCells !== undefined &&
+                        <Typography variant="caption" color="textSecondary" style={textStyle}>
+                            {t("components.events.motaMapChangedCells", {
+                                referenceCells: metaData.referenceCells,
+                                currentCells: metaData.currentCells
+                            })}
+                        </Typography>
+                    }
+                </Stack>
+                <ButtonGroup size="small" variant="contained" color="success">
+                    <Button
+                        disabled={event.processed}
+                        onClick={() => {
+                            interact({
+                                interaction: "yes"
+                            });
+                        }}
+                        color="success"
+                    >
+                        {t("components.events.motaMapChangedAccept")}
+                    </Button>
+                    <Button
+                        disabled={event.processed}
+                        onClick={() => {
+                            interact({
+                                interaction: "no"
+                            });
+                        }}
+                        color="warning"
+                    >
+                        {t("components.events.motaMapChangedKeep")}
+                    </Button>
+                </ButtonGroup>
+            </EventRow>
+        );
+    };
+
+const CreateDismissableEventControl =(messageKey: string) : FunctionComponent<ValetudoEventRenderProps> => {
     return function DismissableEventControl({event, interact}) {
         const {t} = useTranslation();
         const color = event.processed ? "textSecondary" : "textPrimary";
@@ -289,6 +345,7 @@ export const eventControls: Record<string, React.ComponentType<ValetudoEventRend
     ConsumableDepletedValetudoEvent: ConsumableDepletedEventControl,
     ErrorStateValetudoEvent: ErrorEventControl,
     PendingMapChangeValetudoEvent: PendingMapChangeEventControl,
+    MotaMapChangedValetudoEvent: MotaMapChangedEventControl,
     DustBinFullValetudoEvent: CreateDismissableEventControl("components.events.dustBinFull"),
     MopAttachmentReminderValetudoEvent: CreateDismissableEventControl("components.events.mopAttached"),
     MissingResourceValetudoEvent: MissingResourceEventControl,

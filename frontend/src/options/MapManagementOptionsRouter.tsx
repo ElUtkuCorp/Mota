@@ -72,6 +72,16 @@ const OptionsRouter = (): React.ReactElement => {
                 />
             }
 
+            {/* Mota: sin la API propia, la página muestra el error de carga */}
+            <Route
+                path={"mirrors"}
+                element={
+                    <EditMapPage
+                        mode={"mirrors"}
+                    />
+                }
+            />
+
             <Route path={"robot_coverage"} element={<RobotCoverageMapPage/>}/>
 
             <Route path={"spectator"} element={duststreamingPossible ? <SpectatorMapPage/> : <Navigate to="/" />}/>

@@ -199,6 +199,12 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     },
     {
         kind: "MenuSubEntry",
+        route: "/options/map_management/mirrors",
+        title: "nav.mirrorManagement",
+        parentRoute: "/options/map_management"
+    },
+    {
+        kind: "MenuSubEntry",
         route: "/options/map_management/annotations",
         title: "nav.mapAnnotations",
         parentRoute: "/options/map_management"

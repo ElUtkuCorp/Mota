@@ -1,5 +1,5 @@
 import BaseMap, {MapContainer, MapProps, MapState} from "./BaseMap";
-import {Capability, RawMapEntityType, RawMapLayerMaterial, StatusState} from "../api";
+import {Capability, MotaMirrorZone, RawMapEntityType, RawMapLayerMaterial, StatusState} from "../api";
 import {ActionsContainer} from "./Styled";
 import SegmentLabelMapStructure from "./structures/map_structures/SegmentLabelMapStructure";
 import SegmentActions from "./actions/edit_map_actions/SegmentActions";
@@ -18,8 +18,11 @@ import MapAnnotationActions from "./actions/edit_map_actions/MapAnnotationAction
 import CurtainClientStructure from "./structures/client_structures/CurtainClientStructure";
 import RampClientStructure from "./structures/client_structures/RampClientStructure";
 import i18n from "../i18n";
+import MirrorZoneClientStructure from "./structures/client_structures/MirrorZoneClientStructure";
+import MirrorActions, {mirrorZoneToClientStructure} from "./actions/edit_map_actions/MirrorActions";
+import ResegmentAction from "./actions/edit_map_actions/ResegmentAction";
 
-export type mode = "segments" | "virtual_restrictions" | "annotations";
+export type mode = "segments" | "virtual_restrictions" | "annotations" | "mirrors";
 
 interface EditMapProps extends MapProps {
     supportedCapabilities: {
@@ -33,6 +36,10 @@ interface EditMapProps extends MapProps {
     }
     mode: mode,
     helpText: string,
+    // Mota: zonas de espejo guardadas (solo en el modo "mirrors")
+    mirrorZones?: Array<MotaMirrorZone>,
+    // Mota: el robot tiene la API propia de Mota (/api/v2/mota/)
+    motaApiAvailable?: boolean,
     robotStatus: StatusState,
     enqueueSnackbar: ProviderContext["enqueueSnackbar"]
 }
@@ -49,6 +56,8 @@ interface EditMapState extends MapState {
     thresholds: Array<ThresholdClientStructure>,
     curtains: Array<CurtainClientStructure>,
     ramps: Array<RampClientStructure>,
+
+    mirrorZones: Array<MirrorZoneClientStructure>,
 
     helpDialogOpen: boolean
 }
@@ -78,11 +87,14 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
             curtains: [],
             ramps: [],
 
+            mirrorZones: [],
+
             helpDialogOpen: false
         };
 
         this.updateVirtualRestrictionClientStructures(props.mode !== "virtual_restrictions");
         this.updateMapAnnotationsClientStructures(props.mode !== "annotations");
+        this.updateMirrorZoneClientStructures(props.mode === "mirrors" ? (props.mirrorZones ?? []) : undefined);
     }
 
     protected async updateDrawableComponents(): Promise<void> {
@@ -100,7 +112,7 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
 
         this.updateStructures(this.props.mode);
 
-        if (this.props.mode === "virtual_restrictions") {
+        if (this.props.mode === "virtual_restrictions" || this.props.mode === "mirrors") {
             const pathsImage = await PathDrawer.drawPaths( {
                 pathMapEntities: this.props.rawMap.entities.filter(e => {
                     return e.type === RawMapEntityType.Path;
@@ -131,13 +143,16 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
                     case RawMapEntityType.ChargerLocation:
                     case RawMapEntityType.Carpet:
                         return true;
+                    // Mota: en el editor de espejos se ven (sin poder editarlas) las zonas prohibidas
+                    case RawMapEntityType.NoGoArea:
+                        return mode === "mirrors";
                     default:
                         return false;
                 }
             })
         });
 
-        if (mode === "virtual_restrictions") {
+        if (mode === "virtual_restrictions" || mode === "mirrors") {
             // remove all segment labels
             this.structureManager.getMapStructures().forEach(s => {
                 if (s.type === SegmentLabelMapStructure.TYPE) {
@@ -205,6 +220,12 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
                     return true;
                 }
             }) as Array<RampClientStructure>,
+
+            mirrorZones: this.structureManager.getClientStructures().filter(s => {
+                if (s.type === MirrorZoneClientStructure.TYPE) {
+                    return true;
+                }
+            }) as Array<MirrorZoneClientStructure>,
         });
     }
 
@@ -328,6 +349,19 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
                 }
             });
         }
+    }
+
+    // Mota: quita las zonas de espejo del editor y, si se pasan, crea las indicadas
+    private updateMirrorZoneClientStructures(zones: Array<MotaMirrorZone> | undefined) : void {
+        this.structureManager.getClientStructures().forEach(s => {
+            if (s.type === MirrorZoneClientStructure.TYPE) {
+                this.structureManager.removeClientStructure(s);
+            }
+        });
+
+        (zones ?? []).forEach(zone => {
+            this.structureManager.addClientStructure(mirrorZoneToClientStructure(zone, false));
+        });
     }
 
     private clearSegmentStructures() : void {
@@ -479,6 +513,19 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
                         />
                     }
                     {
+                        this.props.motaApiAvailable === true &&
+                        this.props.mode === "segments" &&
+                        this.state.selectedSegmentIds.length === 0 &&
+                        this.state.cuttingLine === undefined &&
+
+                        <ResegmentAction
+                            robotStatus={this.props.robotStatus}
+                            onDone={() => {
+                                this.clearSegmentStructures();
+                            }}
+                        />
+                    }
+                    {
                         (
                             this.props.supportedCapabilities[Capability.CombinedVirtualRestrictions]
                         ) &&
@@ -600,6 +647,54 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
                                 this.props.enqueueSnackbar(i18n.t("map.savedSuccessfully"), {
                                     preventDuplicate: true,
                                     key: "virtual_restrictions_saved",
+                                    variant: "info",
+                                    autoHideDuration: 1000,
+                                });
+                            }}
+                        />
+                    }
+                    {
+                        this.props.mode === "mirrors" &&
+
+                        <MirrorActions
+                            robotStatus={this.props.robotStatus}
+                            mirrorZones={this.state.mirrorZones}
+                            restrictedZonesSupported={this.props.supportedCapabilities[Capability.CombinedVirtualRestrictions]}
+
+                            convertPixelCoordinatesToCMSpace={(coordinates => {
+                                return this.structureManager.convertPixelCoordinatesToCMSpace(coordinates);
+                            })}
+
+                            onAddMirrorZone={() => {
+                                const currentCenter = this.getCurrentViewportCenterCoordinatesInPixelSpace();
+
+                                this.structureManager.addClientStructure(mirrorZoneToClientStructure({
+                                    x0: Math.round(currentCenter.x - 15),
+                                    y0: Math.round(currentCenter.y - 15),
+                                    x1: Math.round(currentCenter.x + 15) - 1,
+                                    y1: Math.round(currentCenter.y + 15) - 1
+                                }, true));
+
+                                this.updateState();
+
+                                this.draw();
+                            }}
+                            onRefresh={(zones) => {
+                                this.updateMirrorZoneClientStructures(zones);
+
+                                this.updateState();
+                                this.draw();
+                            }}
+                            onClear={() => {
+                                this.updateMirrorZoneClientStructures(undefined);
+
+                                this.updateState();
+                                this.draw();
+                            }}
+                            onSave={() => {
+                                this.props.enqueueSnackbar(i18n.t("map.savedSuccessfully"), {
+                                    preventDuplicate: true,
+                                    key: "mirror_zones_saved",
                                     variant: "info",
                                     autoHideDuration: 1000,
                                 });

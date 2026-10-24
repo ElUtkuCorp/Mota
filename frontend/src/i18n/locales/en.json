@@ -25,7 +25,9 @@
             "customizations": "Mota Customizations",
             "events": "Mota Events",
             "welcomeDialog": "Welcome Dialog",
-            "updaterCommand": "Updater"
+            "updaterCommand": "Updater",
+            "mirrors": "the mirror zones",
+            "resegment": "the room division"
         },
         "errors": {
             "setSegmentMaterial": "Could not set segment material",
@@ -118,7 +120,11 @@
             "runtimeErrorReason": "Reason: {{reason}}",
             "unknownType": "Unknown event type: {{type}}",
             "dustBinFull": "The dust bin is full. Please empty it.",
-            "mopAttached": "The mop is still attached to the robot."
+            "mopAttached": "The mop is still attached to the robot.",
+            "motaMapChanged": "The map has changed: it is {{similarity}} % similar to the reference map (minimum {{threshold}} %). Accept the new map as the reference?",
+            "motaMapChangedCells": "Floor cells: {{referenceCells}} in the reference map and {{currentCells}} in the current one.",
+            "motaMapChangedAccept": "Accept",
+            "motaMapChangedKeep": "Keep the previous one"
         }
     },
     "robot": {
@@ -318,7 +324,12 @@
             "split": "Split {{name}}",
             "cuttingLine": "Cutting Line",
             "requiresDocked": "Editing segments requires the robot to be docked",
-            "selectToEdit": "Please select a segment to start editing"
+            "selectToEdit": "Please select a segment to start editing",
+            "resegment": {
+                "button": "Split the map into rooms again",
+                "confirmTitle": "Split the map into rooms again?",
+                "confirmBody": "Mota will split the map into rooms automatically again. The current division and the room names will be lost.\n\nDo you want to continue?"
+            }
         },
         "restrictions": {
             "virtualWallCount": "Wall ({{count}})",
@@ -331,6 +342,13 @@
             "curtainCount": "Curtain ({{count}})",
             "rampCount": "Ramp ({{count}})",
             "requiresDocked": "Editing map annotations requires the robot to be docked"
+        },
+        "mirrors": {
+            "addCount": "Mirror zone ({{count}}/{{max}})",
+            "requiresDocked": "Editing mirror zones requires the robot to be docked",
+            "explanation": "Mark the ghost area the LiDAR sees behind a floor-level mirror. That area is hidden from the map and, when saving, every new zone is also added as a no-go area so the robot does not try to drive into the reflection.",
+            "limitReached": "You have reached the maximum of {{max}} mirror zones.",
+            "loadError": "The mirror zones could not be loaded. This feature is only available on robots running Mota."
         }
     },
     "app": {
@@ -377,7 +395,8 @@
         "docs": "Valetudo docs",
         "upstreamRepository": "Hypfer/Valetudo",
         "donate": "Donate to Valetudo",
-        "motaRepository": "Mota repository"
+        "motaRepository": "Mota repository",
+        "mirrorManagement": "Mirrors"
     },
     "options": {
         "common": {
@@ -475,6 +494,10 @@
             "spectator": {
                 "title": "Spectator Map",
                 "description": "Watch it clean"
+            },
+            "mirrors": {
+                "title": "Mirrors",
+                "description": "Mark the reflection the LiDAR sees behind floor-level mirrors"
             }
         },
         "mota": {
@@ -1138,7 +1161,8 @@
         "timers": "## Timers\n\nTimers allow you to execute a task at a specified time (UTC).<br/>\nIf the system time isn't plausible (e.g. like when it has never been synced), no timers will be executed.\n\nPlease note that timers are evaluated and stored as UTC. They are only displayed in your current browser timezone.<br/>\nThis means that they will not follow any DST rules and thus will have to be updated manually if so required.\n",
         "updater": "## Updater\n\nThe Mota updater is a convenience feature aiming to make life with Mota a bit easier.\n\nAs it is built with privacy in mind, you will have to manually click a button to make it search for newer versions of Mota.\nNo daily update check means no daily pings to some external server.\n\nBy default, it's polling the GitHub API, meaning that the developers are not able to collect any data about you.\n\n**Note: The updater will always try to update you to the next chronological release. If you're multiple releases behind,\nyou will have to update multiple times in a row.**\n\nAs the updater is just a convenience feature, there might be situations in which it doesn't work. In those situations,\nyou will have to do a manual update, which usually involves SSH access to the robot.\n\nSometimes, a configuration change might enable you to use the updater. In other instances, your model of robot might not\nbe able to use the updater at all as there's not enough storage built in. This is not a bug. That's just how it is.\n\nIt is also worth noting that the updater won't update the robots firmware. It only updates the Mota binary.\n",
         "virtualRestrictionEdit": "## Virtual Restriction Management\n\nVirtual restrictions are things such as virtual walls, no go areas or no mop areas, that either stop your robot\nfrom driving somewhere all the time or just conditionally (e.g. when there's a specific attachment such as the mop attached to it).\n\nYou can use virtual restrictions to protect your fragile furniture from your robot or your fragile robot from your furniture.\n\nNot all firmwares support all of those. Also, usually, there's a firmware-determined limit on how many virtual\nrestrictions you can have.\n\n\nKeep in mind that while these work great most of the time, robots may sometimes forget where they are and then start\ndriving around not knowing anything about any of the previously configured virtual restrictions.\nMake sure that they're not the only thing preventing a disaster.\n\n\nNote that you won't see any map updates while editing unless you press refresh.\nTherefore, don't forget to click save before refreshing and/or leaving this page to commit your changes.\n",
-        "voicepack": "## Voice packs\n\nCustom voice packs are a bit more complicated as the exact format differs depending on your choice of robot.\n\nAs I personally don't really care about them, this feature is a bit rough around the edges.\nFor me, these things are first and foremost tools that should simply work and do so reliably.\nThus, I'm fine with it just talking english as that's perfectly serviceable for a tool.\n\nIf you want to install a custom one anyways, you will need a voicepack in the correct format as required by your\nrobot hosted on some http server. Note that the official CDN is often blocked in the robots firmware meaning that just\nusing the official URL likely won't work.\n\nDepending on the model of robot, you will also need a hash of that voice pack file.\nThe type of hash differs depending on the firmware.\n\nFurthermore, you'll also need to specify a language code. That value largely doesn't matter much unless you use a reserved code.\n\"EN\", \"CN\" etc are often codes reserved for the inbuilt voice packs of the firmware.\n\nUsually it's possible to revert to the initially installed voice pack by specifying one of those inbuilt voicepack codes during the install.\n"
+        "voicepack": "## Voice packs\n\nCustom voice packs are a bit more complicated as the exact format differs depending on your choice of robot.\n\nAs I personally don't really care about them, this feature is a bit rough around the edges.\nFor me, these things are first and foremost tools that should simply work and do so reliably.\nThus, I'm fine with it just talking english as that's perfectly serviceable for a tool.\n\nIf you want to install a custom one anyways, you will need a voicepack in the correct format as required by your\nrobot hosted on some http server. Note that the official CDN is often blocked in the robots firmware meaning that just\nusing the official URL likely won't work.\n\nDepending on the model of robot, you will also need a hash of that voice pack file.\nThe type of hash differs depending on the firmware.\n\nFurthermore, you'll also need to specify a language code. That value largely doesn't matter much unless you use a reserved code.\n\"EN\", \"CN\" etc are often codes reserved for the inbuilt voice packs of the firmware.\n\nUsually it's possible to revert to the initially installed voice pack by specifying one of those inbuilt voicepack codes during the install.\n",
+        "mirrorEdit": "## Mirrors\n\nA floor-level mirror fools the LiDAR: through it, the robot \"sees\" a room that does not exist and adds it to the map.\n\nHere you can mark that ghost area with mirror zones. Everything inside a mirror zone is hidden from the map\n(and is ignored when splitting it into rooms).\n\nWhen saving, every new mirror zone is also added as a no-go area with the same rectangle, so the robot does not try\nto drive into the reflection. Existing restrictions are left untouched; if you remove a mirror zone, its no-go area\nis kept and you can delete it in \"Virtual Restrictions\".\n\nThere can be at most 20 mirror zones. Remember to save before leaving this page."
     },
     "history": {
         "listTitle": "Cleanups",

@@ -392,6 +392,8 @@ export interface ValetudoEvent {
     previousVersion?: string;
     newVersion?: string;
     generation?: number;
+    // Mota: datos adicionales del evento (p. ej. MotaMapChangedValetudoEvent)
+    metaData?: Partial<MotaMapChangedEventMetaData>;
 }
 
 export interface ValetudoEventInteraction {
@@ -762,4 +764,30 @@ export interface MotaDiagnostics {
         mode: string | null;
         error: string | null;
     } | null;
+}
+
+// Mota: evento del guardián del mapa (MotaMapChangedValetudoEvent, id "mota_map_changed")
+export interface MotaMapChangedEventMetaData {
+    /** % de parecido con el mapa de referencia */
+    similarity: number;
+    /** % mínimo de parecido */
+    threshold: number;
+    referenceCells: number;
+    currentCells: number;
+}
+
+// Mota: zona de espejo (rectángulo en píxeles de las capas del mapa, extremos incluidos)
+export interface MotaMirrorZone {
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+}
+
+export const MOTA_MAX_MIRROR_ZONES = 20;
+
+export interface MotaMirrorsSaveRequest {
+    zones: Array<MotaMirrorZone>;
+    // Zonas prohibidas que hay que añadir a las restricciones actuales (una por zona de espejo nueva)
+    newRestrictedZones: Array<ValetudoRestrictedZone>;
 }

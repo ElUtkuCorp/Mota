@@ -38,6 +38,7 @@ import {
     MotaCleanHistoryEntry,
     MotaCleanHistoryTotals,
     MotaDiagnostics,
+    MotaMirrorZone,
     MopDockMopDryingTimeControlProperties,
     MopDockMopDryingTimePayload,
     MopDockMopWashTemperature,
@@ -973,6 +974,17 @@ export const fetchCombinedVirtualRestrictionsProperties = async (): Promise<Comb
         });
 };
 
+// Mota: restricciones actuales (para añadir zonas prohibidas sin tocar las que ya existen)
+export const fetchCombinedVirtualRestrictions = async (): Promise<CombinedVirtualRestrictionsUpdateRequestParameters> => {
+    return valetudoAPI
+        .get<CombinedVirtualRestrictionsUpdateRequestParameters>(
+            `/robot/capabilities/${Capability.CombinedVirtualRestrictions}`
+        )
+        .then(({data}) => {
+            return data;
+        });
+};
+
 export const sendCombinedVirtualRestrictionsUpdate = async (
     parameters: CombinedVirtualRestrictionsUpdateRequestParameters
 ): Promise<void> => {
@@ -1454,4 +1466,20 @@ export const fetchMotaDiagnostics = async (): Promise<MotaDiagnostics> => {
         .then(({data}) => {
             return data;
         });
+};
+
+export const fetchMotaMirrors = async (): Promise<Array<MotaMirrorZone>> => {
+    return valetudoAPI
+        .get<Array<MotaMirrorZone>>("/mota/mirrors")
+        .then(({data}) => {
+            return data;
+        });
+};
+
+export const sendMotaMirrors = async (zones: Array<MotaMirrorZone>): Promise<void> => {
+    await valetudoAPI.put("/mota/mirrors", zones);
+};
+
+export const sendMotaResegment = async (): Promise<void> => {
+    await valetudoAPI.post("/mota/rooms/resegment");
 };

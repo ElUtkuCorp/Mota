@@ -3,6 +3,7 @@ import {
     Capability,
     useDuststreamingConfigurationQuery,
     useMapResetMutation,
+    useMotaMirrorsQuery,
     usePersistentMapMutation,
     usePersistentMapQuery,
     useRobotMapQuery,
@@ -18,6 +19,7 @@ import {
     Download as ValetudoMapDownloadIcon,
     EditNote as MapAnnotationsIcon,
     Videocam as SpectatorIcon,
+    Flip as MirrorsIcon,
 } from "@mui/icons-material";
 import React from "react";
 import ConfirmationDialog from "../components/ConfirmationDialog";
@@ -196,6 +198,10 @@ const MapManagement = (): React.ReactElement => {
     });
     const duststreamingEnabled = duststreamingConfiguration?.enabled === true;
 
+    // Mota: las zonas de espejo solo existen si responde la API propia
+    const {data: mirrorZones} = useMotaMirrorsQuery();
+    const mirrorsAvailable = mirrorZones !== undefined;
+
     const robotManagedListItems = React.useMemo(() => {
         const items = [];
 
@@ -224,7 +230,7 @@ const MapManagement = (): React.ReactElement => {
 
             if (
                 mapSegmentEditCapabilitySupported || mapSegmentRenameCapabilitySupported ||
-                combinedVirtualRestrictionsCapabilitySupported
+                combinedVirtualRestrictionsCapabilitySupported || mirrorsAvailable
             ) {
                 items.push(<SpacerListMenuItem key={"spacer1"}/>);
             }
@@ -255,6 +261,18 @@ const MapManagement = (): React.ReactElement => {
             );
         }
 
+        if (mirrorsAvailable) {
+            items.push(
+                <LinkListMenuItem
+                    key="mirrorManagement"
+                    url="/options/map_management/mirrors"
+                    primaryLabel={t("options.map.mirrors.title")}
+                    secondaryLabel={t("options.map.mirrors.description")}
+                    icon={<MirrorsIcon/>}
+                />
+            );
+        }
+
         if (mapAnnotationsCapabilitySupported) {
             items.push(
                 <LinkListMenuItem
@@ -277,6 +295,7 @@ const MapManagement = (): React.ReactElement => {
         mapAnnotationsCapabilitySupported,
         mapSegmentEditCapabilitySupported,
         mapSegmentRenameCapabilitySupported,
+        mirrorsAvailable,
         t
     ]);
 

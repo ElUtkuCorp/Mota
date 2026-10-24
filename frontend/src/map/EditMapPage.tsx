@@ -1,6 +1,7 @@
 import {Box, Button, CircularProgress, styled, Typography, useTheme} from "@mui/material";
 import {
     Capability,
+    useMotaMirrorsQuery,
     useRobotMapQuery,
     useRobotStatusQuery
 } from "../api";
@@ -53,6 +54,15 @@ const EditMapPage = (props: {
         Capability.MapAnnotations
     );
 
+    // Mota: zonas de espejo (y, de paso, si el robot tiene la API propia de Mota)
+    const {
+        data: mirrorZones,
+        isPending: mirrorZonesPending,
+        isError: mirrorZonesLoadError,
+        refetch: refetchMirrorZones
+    } = useMotaMirrorsQuery();
+    const motaApiAvailable = mirrorZones !== undefined;
+
     const theme = useTheme();
     const {enqueueSnackbar} = useSnackbar();
 
@@ -64,6 +74,22 @@ const EditMapPage = (props: {
         helpText = t("help.virtualRestrictionEdit");
     } else if (props.mode === "annotations") {
         helpText = t("help.mapAnnotations");
+    } else if (props.mode === "mirrors") {
+        helpText = t("help.mirrorEdit");
+    }
+
+    if (props.mode === "mirrors" && mirrorZonesLoadError) {
+        return (
+            <Container>
+                <Typography color="error">{t("map.mirrors.loadError")}</Typography>
+                <Box m={1}/>
+                <Button color="primary" variant="contained" onClick={() => {
+                    return refetchMirrorZones();
+                }}>
+                    {t("common.retry")}
+                </Button>
+            </Container>
+        );
     }
 
     if (mapLoadError) {
@@ -80,7 +106,11 @@ const EditMapPage = (props: {
         );
     }
 
-    if ((!mapData && mapIsPending) || (!robotStatus && robotStatusPending)) {
+    if (
+        (!mapData && mapIsPending) ||
+        (!robotStatus && robotStatusPending) ||
+        (props.mode === "mirrors" && !mirrorZones && mirrorZonesPending)
+    ) {
         return (
             <Container>
                 <CircularProgress/>
@@ -110,6 +140,8 @@ const EditMapPage = (props: {
         mode={props.mode}
         helpText={helpText}
         robotStatus={robotStatus}
+        mirrorZones={mirrorZones}
+        motaApiAvailable={motaApiAvailable}
         enqueueSnackbar={enqueueSnackbar}
 
         supportedCapabilities={{

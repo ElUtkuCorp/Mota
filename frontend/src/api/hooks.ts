@@ -156,6 +156,10 @@ import {
     fetchMotaCleanHistory,
     fetchMotaCleanHistoryTotals,
     fetchMotaDiagnostics,
+    fetchMotaMirrors,
+    sendMotaMirrors,
+    sendMotaResegment,
+    fetchCombinedVirtualRestrictions,
 } from "./client";
 import {
     PresetSelectionState,
@@ -172,6 +176,10 @@ import {
     CarpetSensorMode,
     CleanRoute,
     CombinedVirtualRestrictionsUpdateRequestParameters,
+    MotaMirrorsSaveRequest,
+    MotaMirrorZone,
+    ValetudoRestrictedZone,
+    ValetudoRestrictedZoneType,
     ConsumableId,
     DoNotDisturbConfiguration,
     HighResolutionManualControlInteraction,
@@ -283,6 +291,7 @@ enum QueryKey {
     MotaCleanHistory = "mota_clean_history",
     MotaCleanHistoryTotals = "mota_clean_history_totals",
     MotaDiagnostics = "mota_diagnostics",
+    MotaMirrors = "mota_mirrors",
 }
 
 // "capability" is either a capability name or an i18n key
@@ -1959,5 +1968,104 @@ export const useMotaDiagnosticsQuery = () => {
         staleTime: 15_000,
         refetchInterval: 15_000,
         retry: 1
+    });
+};
+
+// Mota: zonas de espejo
+
+export const useMotaMirrorsQuery = () => {
+    return useQuery({
+        queryKey: [QueryKey.MotaMirrors],
+        queryFn: fetchMotaMirrors,
+
+        staleTime: 30_000,
+        retry: 1
+    });
+};
+
+const getRestrictedZoneBounds = (zone: ValetudoRestrictedZone): string => {
+    const xs = [zone.points.pA.x, zone.points.pB.x, zone.points.pC.x, zone.points.pD.x];
+    const ys = [zone.points.pA.y, zone.points.pB.y, zone.points.pC.y, zone.points.pD.y];
+
+    return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)].map(Math.round).join(",");
+};
+
+// Guarda las zonas de espejo y, para las nuevas, añade una zona prohibida en el mismo rectángulo
+// a las restricciones actuales. Las restricciones que ya existían no se tocan.
+export const useMotaMirrorsMutation = (
+    options?: UseMutationOptions<Array<MotaMirrorZone>, unknown, MotaMirrorsSaveRequest>
+) => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (request: MotaMirrorsSaveRequest) => {
+            await sendMotaMirrors(request.zones);
+
+            if (request.newRestrictedZones.length > 0) {
+                const current = await fetchCombinedVirtualRestrictions();
+                const existingBounds = new Set(current.restrictedZones.filter(zone => {
+                    return zone.type === ValetudoRestrictedZoneType.Regular;
+                }).map(getRestrictedZoneBounds));
+                const zonesToAdd = request.newRestrictedZones.filter(zone => {
+                    return !existingBounds.has(getRestrictedZoneBounds(zone));
+                });
+
+                if (zonesToAdd.length > 0) {
+                    await sendCombinedVirtualRestrictionsUpdate({
+                        virtualWalls: current.virtualWalls.map(wall => {
+                            return {
+                                points: {
+                                    pA: {x: wall.points.pA.x, y: wall.points.pA.y},
+                                    pB: {x: wall.points.pB.x, y: wall.points.pB.y}
+                                }
+                            };
+                        }),
+                        restrictedZones: [
+                            ...current.restrictedZones.map(zone => {
+                                return {
+                                    type: zone.type,
+                                    points: {
+                                        pA: {x: zone.points.pA.x, y: zone.points.pA.y},
+                                        pB: {x: zone.points.pB.x, y: zone.points.pB.y},
+                                        pC: {x: zone.points.pC.x, y: zone.points.pC.y},
+                                        pD: {x: zone.points.pD.x, y: zone.points.pD.y}
+                                    }
+                                };
+                            }),
+                            ...zonesToAdd
+                        ]
+                    });
+                }
+            }
+
+            return fetchMotaMirrors();
+        },
+        onError: useOnCommandError("api.settings.mirrors"),
+        ...options,
+        onSuccess: async (data, ...args) => {
+            queryClient.setQueryData<Array<MotaMirrorZone>>([QueryKey.MotaMirrors], data, {
+                updatedAt: Date.now(),
+            });
+            await queryClient.invalidateQueries({queryKey: [QueryKey.Map]});
+            await options?.onSuccess?.(data, ...args);
+        },
+    });
+};
+
+// Mota: repetir la división automática en habitaciones
+
+export const useMotaResegmentMutation = (
+    options?: UseMutationOptions<void, unknown, void>
+) => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: sendMotaResegment,
+        onError: useOnCommandError("api.settings.resegment"),
+        ...options,
+        onSuccess: async (data, ...args) => {
+            await queryClient.invalidateQueries({queryKey: [QueryKey.Map]});
+            await options?.onSuccess?.(data, ...args);
+        },
     });
 };
