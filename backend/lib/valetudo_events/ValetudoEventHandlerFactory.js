@@ -26,6 +26,11 @@ class ValetudoEventHandlerFactory {
                 robot: this.robot,
                 event: event
             });
+        } else if (event instanceof events.MotaMapChangedValetudoEvent) {
+            return new handlers.MotaMapChangedValetudoEventHandler({
+                robot: this.robot,
+                event: event
+            });
         } else if (event instanceof events.PendingMapChangeValetudoEvent) {
             return new handlers.PendingMapChangeValetudoEventHandler({
                 robot: this.robot,

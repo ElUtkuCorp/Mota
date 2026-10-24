@@ -65,6 +65,24 @@ class CecotecQuirkFactory {
                         this.robot.batteryGuard.setSettings({resumeAt: value === "off" ? 0 : Number(value)});
                     }
                 });
+            case CecotecQuirkFactory.KNOWN_QUIRKS.MAP_GUARD_THRESHOLD:
+                return new Quirk({
+                    id: id,
+                    title: "Avisar si el mapa cambia (similitud mínima)",
+                    description: "Al terminar cada limpieza, Mota compara el mapa con el de referencia. Si se parece menos que este porcentaje, avisa para que aceptes el mapa nuevo o lo descartes. La primera limpieza guarda la referencia.",
+                    options: ["off", "95", "90", "80", "70"],
+                    getter: async () => {
+                        const threshold = this.robot.mapGuard?.getThreshold() ?? 0;
+
+                        return threshold > 0 ? String(threshold) : "off";
+                    },
+                    setter: async (value) => {
+                        if (!this.robot.mapGuard) {
+                            throw new Error("Map guard not available");
+                        }
+                        this.robot.mapGuard.setThreshold(value === "off" ? 0 : Number(value));
+                    }
+                });
             default:
                 throw new Error(`There's no quirk with id ${id}`);
         }
@@ -89,6 +107,7 @@ CecotecQuirkFactory.KNOWN_QUIRKS = {
     RESUME_AFTER_CHARGE: "35d25e85-64fe-4ea2-9943-b6b2adb3dd16",
     RETURN_AT_BATTERY: "1746911f-2ba3-4d01-966d-f4dc658ad71f",
     RESUME_AT_BATTERY: "59c7a63b-da61-477e-80dc-bb8cf4fd744a",
+    MAP_GUARD_THRESHOLD: "c3be861c-1e24-41b9-ad8a-c7f65a7f1ac7",
 };
 
 module.exports = CecotecQuirkFactory;

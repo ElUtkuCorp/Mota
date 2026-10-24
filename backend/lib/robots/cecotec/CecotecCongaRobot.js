@@ -1,6 +1,7 @@
 const capabilities = require("./capabilities");
 const CecotecBatteryGuard = require("./CecotecBatteryGuard");
 const CecotecCleanHistory = require("./CecotecCleanHistory");
+const CecotecMapGuard = require("./CecotecMapGuard");
 const CecotecMotaRouter = require("./CecotecMotaRouter");
 const CecotecQuirkFactory = require("./CecotecQuirkFactory");
 const fs = require("fs");
@@ -138,7 +139,8 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             quirks: [
                 quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.RESUME_AFTER_CHARGE),
                 quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.RETURN_AT_BATTERY),
-                quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.RESUME_AT_BATTERY)
+                quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.RESUME_AT_BATTERY),
+                quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.MAP_GUARD_THRESHOLD)
             ]
         }));
         this.registerCapability(
@@ -257,6 +259,10 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             // Mota: historial de limpiezas junto a la configuración (UDISK en la 3090)
             this.cleanHistory = new CecotecCleanHistory({
                 directory: path.join(path.dirname(this.config.location), "historial")
+            });
+            this.mapGuard = new CecotecMapGuard({
+                robot: this,
+                referencePath: path.join(path.dirname(this.config.location), "mapa-referencia.json")
             });
             this.registerCapability(
                 new capabilities.CecotecTotalStatisticsCapability({
@@ -385,6 +391,19 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         robot.on("cleanReport", (report) => {
             this.cleanHistory?.store(report, this.lastCleanStatistics);
             this.lastCleanStatistics = undefined;
+
+            // Mota: la espiral trabaja con un mapa temporal; no se compara con la referencia
+            const { map, mode } = robot.device;
+            if (this.mapGuard && map && mode?.value !== DeviceMode.VALUE.SPIRAL) {
+                const { floor } = this.getMapPixels(map);
+                const indices = [];
+
+                for (let i = 0; i < floor.length; i += 2) {
+                    indices.push(floor[i + 1] * map.size.x + floor[i]);
+                }
+
+                this.mapGuard.check({ width: map.size.x, floor: indices });
+            }
         });
     }
 
