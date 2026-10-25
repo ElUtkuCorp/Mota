@@ -1,6 +1,10 @@
 import {RawMapData} from "../api";
 import {PaletteMode} from "@mui/material";
-import {PROCESS_LAYERS} from "./MapLayerManagerUtils";
+import {GET_WALL_COLOR, PROCESS_LAYERS} from "./MapLayerManagerUtils";
+import {BUILD_WALL_PATH} from "./utils/MapWallPathBuilder";
+
+// Grosor de las paredes en píxeles del mapa (un píxel de pared mide 1)
+const WALL_WIDTH = 1.25;
 
 export class MapLayerManager {
     private readonly canvas: HTMLCanvasElement;
@@ -22,6 +26,11 @@ export class MapLayerManager {
         idMapping: {[key: string]: string}
     };
     private selectedSegmentIds: string[];
+
+    // Mota: paredes como trazado vectorial (se reconstruye solo cuando cambia el mapa)
+    private wallPath: Path2D | undefined;
+    private wallPathNonce: string | undefined;
+    private wallColor = "rgb(51, 51, 51)";
 
     constructor() {
         this.width = 1;
@@ -105,13 +114,20 @@ export class MapLayerManager {
             }
             this.ctx.clearRect(0, 0, this.width, this.height);
 
+            if (this.wallPathNonce !== data.metaData.nonce) {
+                this.wallPath = BUILD_WALL_PATH(data.layers);
+                this.wallPathNonce = data.metaData.nonce;
+            }
+            this.wallColor = GET_WALL_COLOR(paletteMode, this.selectedSegmentIds.length > 0);
+
             if (data.layers.length > 0) {
                 if (this.mapLayerManagerWorkerAvailable) {
                     this.mapLayerManagerWorker.postMessage( {
                         mapLayers: data.metaData.nonce !== this.mapLayerManagerWorkerLastNonce ? data.layers : undefined,
                         pixelSize: data.pixelSize,
                         paletteMode: paletteMode,
-                        selectedSegmentIds: this.selectedSegmentIds
+                        selectedSegmentIds: this.selectedSegmentIds,
+                        skipWalls: true
                     });
 
                     this.mapLayerManagerWorkerLastNonce = data.metaData.nonce;
@@ -130,7 +146,8 @@ export class MapLayerManager {
                         data.layers,
                         data.pixelSize,
                         paletteMode,
-                        this.selectedSegmentIds
+                        this.selectedSegmentIds,
+                        {skipWalls: true}
                     );
 
                     this.segmentLookupInfo = {
@@ -190,5 +207,27 @@ export class MapLayerManager {
 
     getCanvas(): HTMLCanvasElement {
         return this.canvas;
+    }
+
+    /**
+     * Mota: dibuja las paredes como trazos redondeados. El contexto tiene que estar en el espacio de píxeles del mapa
+     * (la misma transformación con la que se dibuja getCanvas()).
+     *
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {number} scaleFactor - escala actual (píxeles de pantalla por píxel del mapa)
+     * @param {number} minScreenWidth - grosor mínimo en píxeles de pantalla para que se vean al alejar el mapa
+     */
+    drawWalls(ctx: CanvasRenderingContext2D, scaleFactor: number, minScreenWidth: number): void {
+        if (this.wallPath === undefined) {
+            return;
+        }
+
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = this.wallColor;
+        ctx.lineWidth = Math.max(WALL_WIDTH, minScreenWidth / Math.max(scaleFactor, 0.0001));
+        ctx.stroke(this.wallPath);
+        ctx.restore();
     }
 }

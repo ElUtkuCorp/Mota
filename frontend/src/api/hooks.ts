@@ -159,6 +159,8 @@ import {
     fetchMotaMirrors,
     sendMotaMirrors,
     sendMotaResegment,
+    fetchMotaRooms,
+    sendMotaRoomColor,
     fetchCombinedVirtualRestrictions,
 } from "./client";
 import {
@@ -178,6 +180,7 @@ import {
     CombinedVirtualRestrictionsUpdateRequestParameters,
     MotaMirrorsSaveRequest,
     MotaMirrorZone,
+    MotaRoomColorRequest,
     ValetudoRestrictedZone,
     ValetudoRestrictedZoneType,
     ConsumableId,
@@ -292,6 +295,7 @@ enum QueryKey {
     MotaCleanHistoryTotals = "mota_clean_history_totals",
     MotaDiagnostics = "mota_diagnostics",
     MotaMirrors = "mota_mirrors",
+    MotaRooms = "mota_rooms",
 }
 
 // "capability" is either a capability name or an i18n key
@@ -2046,6 +2050,37 @@ export const useMotaMirrorsMutation = (
             queryClient.setQueryData<Array<MotaMirrorZone>>([QueryKey.MotaMirrors], data, {
                 updatedAt: Date.now(),
             });
+            await queryClient.invalidateQueries({queryKey: [QueryKey.Map]});
+            await options?.onSuccess?.(data, ...args);
+        },
+    });
+};
+
+// Mota: habitaciones virtuales y su color
+
+export const useMotaRoomsQuery = () => {
+    return useQuery({
+        queryKey: [QueryKey.MotaRooms],
+        queryFn: fetchMotaRooms,
+
+        staleTime: 30_000,
+        retry: 1
+    });
+};
+
+export const useMotaRoomColorMutation = (
+    options?: UseMutationOptions<void, unknown, MotaRoomColorRequest>
+) => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (request: MotaRoomColorRequest) => {
+            return sendMotaRoomColor(request.id, request.color);
+        },
+        onError: useOnCommandError("api.settings.roomColor"),
+        ...options,
+        onSuccess: async (data, ...args) => {
+            await queryClient.invalidateQueries({queryKey: [QueryKey.MotaRooms]});
             await queryClient.invalidateQueries({queryKey: [QueryKey.Map]});
             await options?.onSuccess?.(data, ...args);
         },

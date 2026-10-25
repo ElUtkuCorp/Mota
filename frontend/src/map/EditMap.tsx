@@ -1,5 +1,5 @@
 import BaseMap, {MapContainer, MapProps, MapState} from "./BaseMap";
-import {Capability, MotaMirrorZone, RawMapEntityType, RawMapLayerMaterial, StatusState} from "../api";
+import {Capability, MotaMirrorZone, RawMapEntityType, RawMapLayerMaterial, RawMapLayerType, StatusState} from "../api";
 import {ActionsContainer} from "./Styled";
 import SegmentLabelMapStructure from "./structures/map_structures/SegmentLabelMapStructure";
 import SegmentActions from "./actions/edit_map_actions/SegmentActions";
@@ -47,6 +47,8 @@ interface EditMapProps extends MapProps {
 interface EditMapState extends MapState {
     segmentNames: Record<string, string>,
     segmentMaterials: Record<string, RawMapLayerMaterial>,
+    // Mota: color elegido por el usuario para cada habitación ("#rrggbb")
+    segmentColors: Record<string, string | undefined>,
     cuttingLine: CuttingLineClientStructure | undefined,
 
     virtualWalls: Array<VirtualWallClientStructure>,
@@ -77,6 +79,7 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
 
             segmentNames: {},
             segmentMaterials: {},
+            segmentColors: {},
             cuttingLine: undefined,
 
             virtualWalls: [],
@@ -178,9 +181,17 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
         });
 
 
+        const segmentColors = {} as Record<string, string | undefined>;
+        this.props.rawMap.layers.forEach(l => {
+            if (l.type === RawMapLayerType.Segment && l.metaData.segmentId !== undefined && typeof l.metaData.color === "string") {
+                segmentColors[l.metaData.segmentId] = l.metaData.color;
+            }
+        });
+
         this.setState({
             segmentNames: segmentNames,
             segmentMaterials: segmentMaterials,
+            segmentColors: segmentColors,
             cuttingLine: this.structureManager.getClientStructures().find(s => {
                 if (s.type === CuttingLineClientStructure.TYPE) {
                     return true;
@@ -476,6 +487,8 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
                             selectedSegmentIds={this.state.selectedSegmentIds}
                             segmentNames={this.state.segmentNames}
                             segmentMaterials={this.state.segmentMaterials}
+                            segmentColors={this.state.segmentColors}
+                            motaApiAvailable={this.props.motaApiAvailable === true}
                             cuttingLine={this.state.cuttingLine}
                             convertPixelCoordinatesToCMSpace={(coordinates => {
                                 return this.structureManager.convertPixelCoordinatesToCMSpace(coordinates);

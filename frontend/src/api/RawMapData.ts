@@ -45,7 +45,9 @@ export interface RawMapLayerMetaData {
     segmentId?: string;
     name?: string;
     active?: boolean;
-    material?: RawMapLayerMaterial
+    material?: RawMapLayerMaterial;
+    // Mota: color de la habitación elegido por el usuario ("#rrggbb"). Si no está, se usa el automático
+    color?: string;
 }
 
 export enum RawMapLayerType {

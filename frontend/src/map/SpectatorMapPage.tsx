@@ -25,6 +25,9 @@ class SpectatorMap extends BaseMap<MapProps, MapState> {
     constructor(props: MapProps) {
         super(props);
 
+        // Mota: el robot se mueve de forma animada entre las posiciones recibidas (F21)
+        this.robotAnimationEnabled = true;
+
         this.state = {
             selectedSegmentIds: [],
             dialogOpen: false,

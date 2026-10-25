@@ -5,6 +5,7 @@ import {
     StatusState,
     useJoinSegmentsMutation,
     useMapSegmentMaterialControlPropertiesQuery,
+    useMotaRoomColorMutation,
     useRenameSegmentMutation,
     useSetSegmentMaterialMutation,
     useSplitSegmentMutation
@@ -34,10 +35,12 @@ import {
     ContentCut as SplitIcon,
     Dashboard as MaterialIcon,
     JoinFull as JoinIcon,
+    Palette as ColorIcon,
 } from "@mui/icons-material";
 import {AddCuttingLineIcon, RenameIcon} from "../../../components/CustomIcons";
 import i18n from "../../../i18n";
 import {useTranslation} from "react-i18next";
+import SegmentColorDialog from "./SegmentColorDialog";
 
 const getMaterialLabel = (material: MapSegmentMaterial): string => {
     switch (material) {
@@ -191,6 +194,10 @@ interface SegmentActionsProperties {
     selectedSegmentIds: string[];
     segmentNames: Record<string, string>;
     segmentMaterials: Record<string, RawMapLayerMaterial>;
+    // Mota: color elegido por el usuario para cada habitación ("#rrggbb"); sin entrada = automático
+    segmentColors: Record<string, string | undefined>;
+    // Mota: el robot tiene la API propia de Mota (necesaria para cambiar el color)
+    motaApiAvailable: boolean;
     cuttingLine: CuttingLineClientStructure | undefined,
 
     convertPixelCoordinatesToCMSpace(coordinates: PointCoordinates): PointCoordinates
@@ -214,6 +221,8 @@ const SegmentActions = (
         selectedSegmentIds,
         segmentNames,
         segmentMaterials,
+        segmentColors,
+        motaApiAvailable,
         cuttingLine,
         convertPixelCoordinatesToCMSpace,
         supportedCapabilities,
@@ -223,6 +232,7 @@ const SegmentActions = (
 
     const [renameDialogOpen, setRenameDialogOpen] = React.useState(false);
     const [materialDialogOpen, setMaterialDialogOpen] = React.useState(false);
+    const [colorDialogOpen, setColorDialogOpen] = React.useState(false);
 
     const {
         mutate: joinSegments,
@@ -246,6 +256,12 @@ const SegmentActions = (
         mutate: setSegmentMaterial,
         isPending: setSegmentMaterialExecuting
     } = useSetSegmentMaterialMutation({
+        onSuccess: onClear,
+    });
+    const {
+        mutate: setRoomColor,
+        isPending: setRoomColorExecuting
+    } = useMotaRoomColorMutation({
         onSuccess: onClear,
     });
 
@@ -301,6 +317,17 @@ const SegmentActions = (
             material: material
         });
     }, [canEdit, setSegmentMaterial, selectedSegmentIds]);
+
+    const handleSetColor = React.useCallback((color: string) => {
+        if (!canEdit || selectedSegmentIds.length !== 1) {
+            return;
+        }
+        setColorDialogOpen(false);
+        setRoomColor({
+            id: selectedSegmentIds[0],
+            color: color
+        });
+    }, [canEdit, setRoomColor, selectedSegmentIds]);
 
 
     return (
@@ -373,6 +400,33 @@ const SegmentActions = (
                         <RenameIcon style={{marginRight: "0.25rem", marginLeft: "-0.25rem"}}/>
                         {t("map.segments.rename")}
                         {renameSegmentExecuting && (
+                            <CircularProgress
+                                color="inherit"
+                                size={18}
+                                style={{marginLeft: 10}}
+                            />
+                        )}
+                    </ActionButton>
+                </Grid2>
+            }
+            {
+                motaApiAvailable &&
+                selectedSegmentIds.length === 1 &&
+                cuttingLine === undefined &&
+
+                <Grid2>
+                    <ActionButton
+                        disabled={setRoomColorExecuting || !canEdit}
+                        color="inherit"
+                        size="medium"
+                        variant="extended"
+                        onClick={() => {
+                            setColorDialogOpen(true);
+                        }}
+                    >
+                        <ColorIcon style={{marginRight: "0.25rem", marginLeft: "-0.25rem"}}/>
+                        {t("map.segments.color")}
+                        {setRoomColorExecuting && (
                             <CircularProgress
                                 color="inherit"
                                 size={18}
@@ -481,6 +535,17 @@ const SegmentActions = (
                     name={segmentNames[selectedSegmentIds[0]] ?? selectedSegmentIds[0]}
                     currentMaterial={segmentMaterials[selectedSegmentIds[0]] as unknown as MapSegmentMaterial ?? MapSegmentMaterial.Generic}
                     onSubmit={handleSetMaterial}
+                />
+            }
+
+            {
+                motaApiAvailable && selectedSegmentIds.length === 1 &&
+                <SegmentColorDialog
+                    open={colorDialogOpen}
+                    onClose={() => setColorDialogOpen(false)}
+                    name={segmentNames[selectedSegmentIds[0]] ?? selectedSegmentIds[0]}
+                    currentColor={segmentColors[selectedSegmentIds[0]]}
+                    onSubmit={handleSetColor}
                 />
             }
         </Grid2>

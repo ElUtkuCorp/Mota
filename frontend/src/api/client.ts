@@ -39,6 +39,7 @@ import {
     MotaCleanHistoryTotals,
     MotaDiagnostics,
     MotaMirrorZone,
+    MotaRoom,
     MopDockMopDryingTimeControlProperties,
     MopDockMopDryingTimePayload,
     MopDockMopWashTemperature,
@@ -1482,4 +1483,17 @@ export const sendMotaMirrors = async (zones: Array<MotaMirrorZone>): Promise<voi
 
 export const sendMotaResegment = async (): Promise<void> => {
     await valetudoAPI.post("/mota/rooms/resegment");
+};
+
+export const fetchMotaRooms = async (): Promise<Array<MotaRoom>> => {
+    return valetudoAPI
+        .get<Array<MotaRoom>>("/mota/rooms")
+        .then(({data}) => {
+            return data;
+        });
+};
+
+// color: "#rrggbb", o "" para volver al color automático
+export const sendMotaRoomColor = async (id: string, color: string): Promise<void> => {
+    await valetudoAPI.put(`/mota/rooms/${encodeURIComponent(id)}/color`, {color: color});
 };

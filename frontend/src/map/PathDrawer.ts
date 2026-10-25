@@ -12,7 +12,55 @@ type PathDrawerOptions = {
     opacity?: number,
 };
 
+// Grosor por defecto del recorrido, en píxeles del mapa
+export const DEFAULT_PATH_WIDTH = 0.5;
+
+// Mota: pasadas de Chaikin para suavizar las esquinas del recorrido (solo al dibujar; los datos no cambian)
+const PATH_SMOOTHING_ITERATIONS = 2;
+
+/**
+ * Suavizado de Chaikin sobre una lista plana [x0, y0, x1, y1, ...]. Conserva el primer y el último punto.
+ *
+ * @param {Array<number>} points
+ * @param {number} iterations - número de pasadas
+ * @returns {Array<number>}
+ */
+export function chaikinSmooth(points: Array<number>, iterations: number): Array<number> {
+    let current = points;
+
+    for (let iteration = 0; iteration < iterations; iteration++) {
+        if (current.length < 6) { // Menos de tres puntos: no hay esquinas que suavizar
+            return current;
+        }
+
+        const next: Array<number> = [current[0], current[1]];
+
+        for (let i = 0; i < current.length - 2; i = i + 2) {
+            const x0 = current[i];
+            const y0 = current[i + 1];
+            const x1 = current[i + 2];
+            const y1 = current[i + 3];
+
+            next.push(
+                0.75 * x0 + 0.25 * x1, 0.75 * y0 + 0.25 * y1,
+                0.25 * x0 + 0.75 * x1, 0.25 * y0 + 0.75 * y1
+            );
+        }
+
+        // Los extremos se conservan tal cual
+        next.push(current[current.length - 2], current[current.length - 1]);
+
+        current = next;
+    }
+
+    return current;
+}
+
 export class PathDrawer {
+    static getPathColor(paletteMode: PaletteMode): string {
+        return paletteMode === "dark" ? "#000000" : "#ffffff";
+    }
+
     static drawPaths(options: PathDrawerOptions): Promise<HTMLImageElement> {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -43,16 +91,7 @@ export class PathDrawer {
         } = options;
 
         let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${mapWidth}" height="${mapHeight}" viewBox="0 0 ${mapWidth} ${mapHeight}">`;
-        let pathColor: string;
-
-        switch (paletteMode) {
-            case "light":
-                pathColor = "#ffffff";
-                break;
-            case "dark":
-                pathColor = "#000000";
-                break;
-        }
+        const pathColor = PathDrawer.getPathColor(paletteMode);
 
         const paths = pathMapEntities.filter(e => e.type === RawMapEntityType.Path).map(e => e.points);
         if (paths.length > 0) {
@@ -91,12 +130,12 @@ export class PathDrawer {
         width?: number,
         opacity?: number,
     ) {
-        const pathWidth = width ?? 0.5;
+        const pathWidth = width ?? DEFAULT_PATH_WIDTH;
         const pathOpacity = opacity ?? 1;
         let commands = "";
 
         paths.forEach(points => {
-            const simplifiedPoints = simplify(points, 0.8);
+            const simplifiedPoints = chaikinSmooth(simplify(points, 0.8), PATH_SMOOTHING_ITERATIONS);
 
             for (let i = 0; i < simplifiedPoints.length; i = i + 2) {
                 let type = "L";

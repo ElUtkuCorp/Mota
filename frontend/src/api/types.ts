@@ -786,6 +786,21 @@ export interface MotaMirrorZone {
 
 export const MOTA_MAX_MIRROR_ZONES = 20;
 
+// Mota: habitación virtual (GET /api/v2/mota/rooms)
+export interface MotaRoom {
+    id: number;
+    name: string;
+    // "#rrggbb" elegido por el usuario, o null si se usa el color automático
+    color: string | null;
+    cells: number;
+}
+
+export interface MotaRoomColorRequest {
+    id: string;
+    // "#rrggbb", o "" para volver al color automático
+    color: string;
+}
+
 export interface MotaMirrorsSaveRequest {
     zones: Array<MotaMirrorZone>;
     // Zonas prohibidas que hay que añadir a las restricciones actuales (una por zona de espejo nueva)

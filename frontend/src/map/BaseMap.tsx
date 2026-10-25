@@ -1,7 +1,7 @@
 import React, {createRef} from "react";
-import {RawMapData, RawMapEntityType} from "../api";
+import {RawMapData, RawMapEntity, RawMapEntityType} from "../api";
 import {MapLayerManager} from "./MapLayerManager";
-import {PathDrawer} from "./PathDrawer";
+import {DEFAULT_PATH_WIDTH, PathDrawer} from "./PathDrawer";
 import {TouchHandler} from "./utils/touch_handling/TouchHandler";
 import StructureManager from "./StructureManager";
 import {Box, PaletteMode, styled} from "@mui/material";
@@ -19,6 +19,8 @@ import {PinchEndTouchHandlerEvent} from "./utils/touch_handling/events/PinchEndT
 import {PointCoordinates} from "./utils/types";
 import { create } from "zustand";
 import {clampMapScalingFactorFactor, considerHiDPI} from "./utils/helpers";
+import {prefersReducedMotion, RobotMovementAnimator, RobotPose} from "./utils/RobotMovementAnimator";
+import RobotPositionMapStructure from "./structures/map_structures/RobotPositionMapStructure";
 
 export interface MapProps {
     rawMap: RawMapData;
@@ -52,6 +54,11 @@ const SCROLL_PARAMETERS = {
     PIXELS_PER_FULL_STEP: 100
 };
 
+// Mota: grosor mínimo de las paredes en píxeles de pantalla (al alejar el mapa)
+const WALL_MIN_SCREEN_WIDTH = 1.5;
+// Mota: cuántos puntos del final del recorrido se miran para encontrar dónde estaba el robot al empezar la animación
+const PATH_TAIL_SEARCH_POINTS = 50;
+
 abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState > {
     protected readonly canvasRef: React.RefObject<HTMLCanvasElement | null>;
     protected structureManager: StructureManager;
@@ -74,6 +81,14 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
     protected activeScrollEvent = false;
     protected pendingInternalDrawableStateUpdate = false;
     protected scrollTimeout: NodeJS.Timeout | undefined;
+
+    // Mota: movimiento animado del robot (F21). Solo lo activa el mapa en vivo
+    protected robotAnimationEnabled = false;
+    private readonly robotAnimator = new RobotMovementAnimator();
+    // Inicio (en píxeles del mapa) del último tramo del recorrido, que se dibuja hasta la posición animada
+    private pathTailStart: PointCoordinates | undefined;
+    private drawScheduled = false;
+    private unmounted = false;
 
 
     protected constructor(props : MapProps) {
@@ -124,6 +139,7 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
     }
 
     componentDidMount(): void {
+        this.unmounted = false;
         this.canvas = this.canvasRef.current!;
         this.canvas.height = considerHiDPI(this.canvas.clientHeight);
         this.canvas.width = considerHiDPI(this.canvas.clientWidth);
@@ -205,6 +221,7 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
     }
 
     componentWillUnmount(): void {
+        this.unmounted = true;
         window.removeEventListener("resize", this.resizeListener);
         document.removeEventListener("visibilitychange", this.visibilityStateChangeListener);
 
@@ -242,9 +259,9 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
         this.drawableComponents.push(this.mapLayerManager.getCanvas());
 
         const pathsImage = await PathDrawer.drawPaths( {
-            pathMapEntities: this.props.rawMap.entities.filter(e => {
+            pathMapEntities: this.updateRobotAnimation(this.props.rawMap.entities.filter(e => {
                 return e.type === RawMapEntityType.Path || e.type === RawMapEntityType.PredictedPath;
-            }),
+            })),
             mapWidth: this.props.rawMap.size.x,
             mapHeight: this.props.rawMap.size.y,
             pixelSize: this.props.rawMap.pixelSize,
@@ -258,6 +275,102 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
         this.updateState();
 
         this.drawableComponentsMutex.leave();
+    }
+
+    /**
+     * Mota: registra la nueva posición del robot en el animador y, si hay animación, recorta el final del recorrido
+     * desde el punto más cercano a donde se está dibujando el robot. Ese último tramo se dibuja en cada fotograma
+     * hasta la posición animada (drawPathTail), para que la línea siga al robot.
+     *
+     * @param {Array<RawMapEntity>} pathEntities - las entidades de recorrido del mapa
+     * @returns {Array<RawMapEntity>} las entidades de recorrido que van a la imagen estática
+     */
+    protected updateRobotAnimation(pathEntities: Array<RawMapEntity>): Array<RawMapEntity> {
+        this.pathTailStart = undefined;
+
+        if (!this.robotAnimationEnabled) {
+            return pathEntities;
+        }
+
+        const pixelSize = this.props.rawMap.pixelSize;
+        const robotEntity = this.props.rawMap.entities.find(e => {
+            return e.type === RawMapEntityType.RobotPosition;
+        });
+        const target: RobotPose | undefined = robotEntity !== undefined && robotEntity.points.length >= 2 ? {
+            x: robotEntity.points[0] / pixelSize,
+            y: robotEntity.points[1] / pixelSize,
+            angle: robotEntity.metaData.angle ?? 0
+        } : undefined;
+
+        const from = this.robotAnimator.update(target, performance.now(), !prefersReducedMotion());
+
+        if (from === undefined) {
+            return pathEntities;
+        }
+
+        let lastPathIdx = -1;
+        pathEntities.forEach((e, idx) => {
+            if (e.type === RawMapEntityType.Path) {
+                lastPathIdx = idx;
+            }
+        });
+
+        if (lastPathIdx < 0 || pathEntities[lastPathIdx].points.length < 2) {
+            return pathEntities;
+        }
+
+        const points = pathEntities[lastPathIdx].points;
+        let closestIdx = points.length - 2;
+        let closestDistance = Infinity;
+
+        for (let i = points.length - 2; i >= 0 && i >= points.length - (PATH_TAIL_SEARCH_POINTS * 2); i = i - 2) {
+            const distance = Math.hypot(points[i] / pixelSize - from.x, points[i + 1] / pixelSize - from.y);
+
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIdx = i;
+            }
+        }
+
+        this.pathTailStart = {
+            x: points[closestIdx] / pixelSize,
+            y: points[closestIdx + 1] / pixelSize
+        };
+
+        return pathEntities.map((e, idx) => {
+            if (idx !== lastPathIdx) {
+                return e;
+            }
+
+            return {
+                ...e,
+                points: points.slice(0, closestIdx + 2)
+            };
+        });
+    }
+
+    /**
+     * Mota: dibuja el último tramo del recorrido hasta la posición animada del robot.
+     * El contexto tiene que estar en el espacio de píxeles del mapa.
+     *
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {RobotPose | undefined} robotPose - la posición del robot que se está dibujando
+     */
+    private drawPathTail(ctx: CanvasRenderingContext2D, robotPose: RobotPose | undefined): void {
+        if (this.pathTailStart === undefined || robotPose === undefined) {
+            return;
+        }
+
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = DEFAULT_PATH_WIDTH;
+        ctx.strokeStyle = PathDrawer.getPathColor(this.props.paletteMode);
+        ctx.beginPath();
+        ctx.moveTo(this.pathTailStart.x, this.pathTailStart.y);
+        ctx.lineTo(robotPose.x, robotPose.y);
+        ctx.stroke();
+        ctx.restore();
     }
 
     protected updateState() : void {
@@ -303,9 +416,19 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
 
 
     protected draw() : void {
+        // Mota: se agrupan las peticiones de dibujo de un mismo fotograma (la animación del robot pide uno por fotograma)
+        if (this.drawScheduled) {
+            return;
+        }
+        this.drawScheduled = true;
+
         window.requestAnimationFrame(() => {
+            this.drawScheduled = false;
+
             this.drawableComponentsMutex.take(() => {
                 const ctx = this.ctxWrapper.getContext();
+                const now = performance.now();
+                const robotPose = this.robotAnimationEnabled ? this.robotAnimator.getPose(now) : undefined;
 
                 this.ctxWrapper.save();
                 this.ctxWrapper.setTransform(1, 0, 0, 1, 0, 0);
@@ -317,9 +440,28 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
 
                 this.drawableComponents.forEach(c => {
                     ctx.drawImage(c, 0, 0);
+
+                    // Mota: las paredes van como trazos encima de la imagen de suelo y habitaciones
+                    if (c === this.mapLayerManager.getCanvas()) {
+                        this.mapLayerManager.drawWalls(ctx, this.currentScaleFactor, considerHiDPI(WALL_MIN_SCREEN_WIDTH));
+                    }
                 });
 
                 ctx.imageSmoothingEnabled = true;
+
+                this.drawPathTail(ctx, robotPose);
+
+                if (robotPose !== undefined) {
+                    this.structureManager.getMapStructures().forEach(s => {
+                        if (s.type === RobotPositionMapStructure.TYPE) {
+                            const robot = s as RobotPositionMapStructure;
+
+                            robot.x0 = robotPose.x;
+                            robot.y0 = robotPose.y;
+                            robot.angle = robotPose.angle;
+                        }
+                    });
+                }
 
 
                 /**
@@ -352,6 +494,11 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
 
                 this.ctxWrapper.restore();
                 this.drawableComponentsMutex.leave();
+
+                // Mota: solo se sigue repintando mientras dure la animación del robot
+                if (!this.unmounted && this.robotAnimationEnabled && this.robotAnimator.isAnimating(now)) {
+                    this.draw();
+                }
             });
         });
     }

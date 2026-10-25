@@ -234,7 +234,12 @@ const materialToPixelPatternHandler: {[key in RawMapLayerMaterial]: PixelPattern
     [RawMapLayerMaterial.CarpetHigh]: carpetHighPilePixelPatternHandler,
 };
 
-export function PROCESS_LAYERS(layers: Array<RawMapLayer>, pixelSize: number, paletteMode: PaletteMode, selectedSegmentIds: string[]) {
+export type ProcessLayersOptions = {
+    // Mota: las paredes se dibujan aparte como trazos vectoriales (ver MapWallPathBuilder)
+    skipWalls?: boolean;
+};
+
+export function PROCESS_LAYERS(layers: Array<RawMapLayer>, pixelSize: number, paletteMode: PaletteMode, selectedSegmentIds: string[], options?: ProcessLayersOptions) {
     const dimensions = CALCULATE_REQUIRED_DIMENSIONS(layers);
     const width = dimensions.x.sum;
     const height = dimensions.y.sum;
@@ -262,6 +267,8 @@ export function PROCESS_LAYERS(layers: Array<RawMapLayer>, pixelSize: number, pa
 
     [...layers].sort((a,b) => {
         return (TYPE_SORT_MAPPING[a.type] ?? 0) - (TYPE_SORT_MAPPING[b.type] ?? 0);
+    }).filter(layer => {
+        return !(options?.skipWalls === true && layer.type === "wall");
     }).forEach(layer => {
         let color: RGBColor = {r: 128, g: 128, b: 128};
         let accentColor: RGBColor = {r: 64, g: 192, b: 128};
@@ -286,9 +293,19 @@ export function PROCESS_LAYERS(layers: Array<RawMapLayer>, pixelSize: number, pa
                 }
                 break;
             case "segment": {
+                const isHighlighted = hasSelectedSegments || selectedSegmentIds.includes(layer.metaData.segmentId ?? "");
+                // Mota: si el usuario ha elegido un color para la habitación, se usa ese en lugar del automático
+                const customColors = getCustomSegmentColors(layer.metaData.color, paletteMode);
+
+                if (customColors !== undefined) {
+                    color = isHighlighted ? customColors.color : customColors.backgroundColor;
+                    accentColor = isHighlighted ? customColors.accentColor : customColors.backgroundAccentColor;
+                    break;
+                }
+
                 const colorId = colorFinder.getColor((layer.metaData.segmentId ?? ""));
 
-                if (hasSelectedSegments || selectedSegmentIds.includes(layer.metaData.segmentId ?? "")) {
+                if (isHighlighted) {
                     color = colors.segments[colorId];
                     accentColor = accentColors.segments[colorId];
                 } else {
@@ -341,6 +358,72 @@ export function PROCESS_LAYERS(layers: Array<RawMapLayer>, pixelSize: number, pa
         segmentLookupData: segmentLookupData,
         segmentLookupIdMapping: Object.fromEntries(segmentLookupIdMapping)
     };
+}
+
+export const CUSTOM_SEGMENT_COLOR_REGEX = /^#[0-9a-f]{6}$/i;
+
+type CustomSegmentColors = {
+    color: RGBColor;
+    accentColor: RGBColor;
+    backgroundColor: RGBColor;
+    backgroundAccentColor: RGBColor;
+};
+
+/**
+ * Mota: variantes de un color elegido por el usuario, con las mismas reglas que los colores automáticos
+ * (más apagado en el tema oscuro y oscurecido cuando hay otras habitaciones seleccionadas).
+ * Devuelve undefined si no hay color o no es válido ("#rrggbb").
+ *
+ * @param {string | undefined} hex
+ * @param {PaletteMode} paletteMode
+ * @returns {CustomSegmentColors | undefined}
+ */
+function getCustomSegmentColors(hex: string | undefined, paletteMode: PaletteMode): CustomSegmentColors | undefined {
+    if (typeof hex !== "string" || !CUSTOM_SEGMENT_COLOR_REGEX.test(hex.trim())) {
+        return undefined;
+    }
+
+    const base = hexToRgb(hex);
+
+    if (paletteMode === "dark") {
+        const color = adjustRGBColorBrightness(base, -20);
+        const backgroundColor = adjustRGBColorBrightness(base, -50);
+
+        return {
+            color: color,
+            accentColor: adjustRGBColorBrightness(color, -15),
+            backgroundColor: backgroundColor,
+            backgroundAccentColor: adjustRGBColorBrightness(backgroundColor, -10)
+        };
+    } else {
+        const backgroundColor = adjustRGBColorBrightness(base, -40);
+
+        return {
+            color: base,
+            accentColor: adjustRGBColorBrightness(base, -7.5),
+            backgroundColor: backgroundColor,
+            backgroundAccentColor: adjustRGBColorBrightness(backgroundColor, -7.5)
+        };
+    }
+}
+
+/**
+ * Mota: color de las paredes (el mismo que tenían como píxeles), según haya o no habitaciones seleccionadas
+ *
+ * @param {PaletteMode} paletteMode
+ * @param {boolean} hasSelectedSegments
+ * @returns {string} color CSS
+ */
+export function GET_WALL_COLOR(paletteMode: PaletteMode, hasSelectedSegments: boolean): string {
+    let wall: RGBColor;
+
+    if (paletteMode === "dark") {
+        wall = hasSelectedSegments ? DARK_BACKGROUND_COLORS.wall : DARK_COLORS.wall;
+    } else {
+        wall = hasSelectedSegments ? BACKGROUND_COLORS.wall : COLORS.wall;
+    }
+
+    return `rgb(${wall.r}, ${wall.g}, ${wall.b})`;
 }
 
 function CALCULATE_REQUIRED_DIMENSIONS(layers: Array<RawMapLayer>) {
