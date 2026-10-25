@@ -16,7 +16,7 @@ class CecotecVirtualRooms {
      */
     constructor(options) {
         this.path = options.path;
-        /** @type {{width: number, rooms: Array<{id: number, name: string, pixels: Array<number>}>}} */
+        /** @type {{width: number, rooms: Array<{id: number, name: string, color?: string, pixels: Array<number>}>}} */
         this.data = {width: 0, rooms: []};
         /** @type {Map<number, Array<number>> | undefined} celdas ajustadas al suelo actual (no se guardan) */
         this.fitted = undefined;
@@ -34,11 +34,11 @@ class CecotecVirtualRooms {
     /**
      * Habitaciones con sus celdas ajustadas al suelo actual si ya se ha llamado a fitToFloor()
      *
-     * @returns {Array<{id: number, name: string, pixels: Array<number>}>}
+     * @returns {Array<{id: number, name: string, color?: string, pixels: Array<number>}>}
      */
     getRooms() {
         return this.data.rooms.map(r => {
-            return {id: r.id, name: r.name, pixels: this.fitted?.get(r.id) ?? r.pixels};
+            return {id: r.id, name: r.name, color: r.color, pixels: this.fitted?.get(r.id) ?? r.pixels};
         });
     }
 
@@ -193,6 +193,21 @@ class CecotecVirtualRooms {
             return r.id;
         })) + 1;
         this.data.rooms.push({id: newId, name: `Habitación ${newId}`, pixels: sideB});
+        this.save();
+    }
+
+    /**
+     * Mota: color con el que se pinta la habitación ("#rrggbb"); undefined vuelve al automático
+     *
+     * @param {number} id
+     * @param {string|undefined} color
+     */
+    setColor(id, color) {
+        if (color !== undefined && !/^#[0-9a-fA-F]{6}$/.test(color)) {
+            throw new Error("Invalid color");
+        }
+
+        this.getRoom(id).color = color?.toLowerCase();
         this.save();
     }
 

@@ -28,6 +28,7 @@ class MapLayer extends SerializableEntity {
      * @param {string} [options.metaData.name]
      * @param {boolean} [options.metaData.active]
      * @param {MapLayerMaterial} [options.metaData.material]
+     * @param {string} [options.metaData.color] Mota: color de la habitación elegido por el usuario ("#rrggbb")
      */
     constructor(options) {
         super(options);

@@ -43,6 +43,24 @@ class CecotecMotaRouter {
             }
         });
 
+        this.router.get("/rooms", (req, res) => {
+            res.json(this.robot.virtualRooms.getRooms().map(room => {
+                return {id: room.id, name: room.name, color: room.color ?? null, cells: room.pixels.length};
+            }));
+        });
+
+        this.router.put("/rooms/:id/color", express.json(), (req, res) => {
+            try {
+                const color = req.body?.color;
+
+                this.robot.virtualRooms.setColor(Number(req.params.id), typeof color === "string" && color.length > 0 ? color : undefined);
+                this.robot.refreshMap();
+                res.sendStatus(200);
+            } catch (e) {
+                res.status(400).json(e.message);
+            }
+        });
+
         this.router.post("/rooms/resegment", (req, res) => {
             try {
                 this.robot.resegmentRooms();

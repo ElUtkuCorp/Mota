@@ -911,6 +911,8 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
                     segmentId: String(room.id),
                     active: false,
                     name: room.name,
+                    // Mota: color elegido por el usuario (si no hay, el frontend asigna uno)
+                    ...(room.color ? {color: room.color} : {}),
                 });
             });
         }
