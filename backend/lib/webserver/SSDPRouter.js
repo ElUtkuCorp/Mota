@@ -71,7 +71,7 @@ class SSDPRouter {
                         "manufacturerURL": "https://valetudo.cloud"
                     },
                     {
-                        "modelDescription": "Valetudo-enabled robot"
+                        "modelDescription": "Mota-enabled robot (based on Valetudo)"
                     },
                     {
                         "modelName": this.robot.getModelName()

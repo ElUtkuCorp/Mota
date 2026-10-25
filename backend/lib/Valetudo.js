@@ -59,7 +59,7 @@ class Valetudo {
             }
         });
 
-        Logger.info(`Starting Valetudo ${Tools.GET_VALETUDO_VERSION()}`);
+        Logger.info(`Starting Mota ${Tools.GET_VALETUDO_VERSION()}`);
         Logger.info(`Commit ID: ${Tools.GET_COMMIT_ID()}`);
         Logger.info(`Configuration file: ${this.config.location}`);
         Logger.info(`Logfile: ${Logger.getLogFilePath()}`);
@@ -175,7 +175,7 @@ class Valetudo {
 
                 if (rss > rssLimit && this.config.get("embedded") === true) {
                     Logger.error(
-                        "Valetudo is currently taking up " + (rss / 1024 / 1024).toFixed(2) +
+                        "Mota is currently taking up " + (rss / 1024 / 1024).toFixed(2) +
                         " MiB, which is more than 1/3 of available system memory. " +
                         "To ensure safe robot operation, it will now shutdown.\n",
                         {
@@ -246,7 +246,7 @@ class Valetudo {
     async shutdown(phoenixMode = false) {
         let forceShutdownTimeout;
         if (!phoenixMode) {
-            Logger.info("Valetudo shutdown in progress...");
+            Logger.info("Mota shutdown in progress...");
 
             forceShutdownTimeout = setTimeout(() => {
                 Logger.warn("Failed to shutdown valetudo in a timely manner. Using (the) force");
@@ -268,7 +268,7 @@ class Valetudo {
         await this.ntpClient.shutdown();
 
         if (!phoenixMode) {
-            Logger.info("Valetudo shutdown done");
+            Logger.info("Mota shutdown done");
 
             clearTimeout(forceShutdownTimeout);
         }

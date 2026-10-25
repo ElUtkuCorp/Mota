@@ -39,6 +39,9 @@ const DEVICE_MODE_TO_STATUS_STATE_FLAG = {
     [DeviceMode.VALUE.ZONE]: StatusStateAttribute.FLAG.ZONE,
 };
 
+// Mota: evento del firmware "vuelvo a la base por batería baja" (pushFaultEvent2Server)
+const FIRMWARE_EVENT_LOW_BATTERY_RETURN = 2100;
+
 /** @type {Set<string>} */
 const NON_BLOCKING_DEVICE_ERRORS = new Set([
     DeviceError.VALUE.GLOBAL_APPOINT_CLEAN,
@@ -308,6 +311,49 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
     }
 
     /**
+     * Mota: lo que falta por limpiar de la última orden, según el recorrido hecho. Limpieza completa o
+     * por habitaciones: las habitaciones virtuales que el recorrido no ha cubierto. Zonas: las mismas.
+     *
+     * @param {import("@agnoc/core").Robot} robot
+     * @returns {any}
+     */
+    getRemainingCleaningRequest(robot) {
+        const request = this.lastCleaningRequest;
+        const map = robot.device.map;
+
+        if (!request || !map || request.type === "zones" || !this.virtualRooms.hasRooms()) {
+            return request;
+        }
+
+        if (request.type === "mode" && request.mode !== PresetSelectionStateAttribute.MODE.VACUUM && request.mode !== PresetSelectionStateAttribute.MODE.MOP) {
+            return request; // bordes y espiral se repiten tal cual
+        }
+
+        const pathEntity = this.getPathEntity(map);
+        const path = pathEntity?.points?.length > 0 ? pathEntity.points : this.pathPoints;
+        let pending = this.virtualRooms.getUncoveredRoomIds(path, this.getMapResolution(map));
+
+        if (request.type === "segments") {
+            const requested = request.segments.map(s => {
+                return Number(s.id);
+            });
+            pending = pending.filter(id => {
+                return requested.includes(id);
+            });
+        }
+
+        if (pending.length === 0) {
+            return undefined;
+        }
+
+        Logger.info(`Remaining rooms to clean after charging: ${pending.join(", ")}`);
+
+        return {type: "segments", segments: pending.map(id => {
+            return {id: String(id)};
+        })};
+    }
+
+    /**
      * Mota: metros por celda del mapa del firmware
      *
      * @param {import("@agnoc/core").DeviceMap} map
@@ -477,6 +523,9 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             this.lastCleanStatistics = { time: currentClean.time * 60, area: currentClean.size * 100 };
         }
         this.state.upsertFirstMatchingAttribute(newStatus);
+        if (robot.device.motaRawFaultCode === FIRMWARE_EVENT_LOW_BATTERY_RETURN) {
+            this.batteryGuard.onFirmwareLowBatteryReturn(this.getRemainingCleaningRequest(robot));
+        }
         this.batteryGuard.onStateUpdate(robot.device.battery?.value, newStatus.value);
 
         // Mota: al llegar a la base, recolocar el robot sobre ella en el mapa
@@ -988,6 +1037,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
                 Logger.warn("Virtual rooms: automatic segmentation failed", e);
             }
         }
+        this.virtualRooms?.fitToFloor(floor, map.size.x, map.size.y);
 
         this.updatePathPoints(map);
 
@@ -1126,7 +1176,17 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         const flag =
       DEVICE_MODE_TO_STATUS_STATE_FLAG[mode?.value] ||
       StatusStateAttribute.FLAG.NONE;
-        const errorValue = error && error.value !== DeviceError.VALUE.NONE ? error.value : undefined;
+        // Mota: los códigos 2xxx desconocidos son eventos del firmware (2100 = vuelve por batería,
+        // 2101 = carga para reanudar, 2103 = fin de la tarea...), no errores; solo se registran
+        const rawFaultCode = robot.device.motaRawFaultCode;
+        const isFirmwareEvent = error?.value === DeviceError.VALUE.UNKNOWN && typeof rawFaultCode === "number" && rawFaultCode >= 2000;
+        if (typeof rawFaultCode === "number" && rawFaultCode !== this.lastLoggedFaultCode) {
+            this.lastLoggedFaultCode = rawFaultCode;
+            if (rawFaultCode !== 0) {
+                Logger.info(`Robot fault/event code ${rawFaultCode} (${error?.value ?? "none"})`);
+            }
+        }
+        const errorValue = error && error.value !== DeviceError.VALUE.NONE && !isFirmwareEvent ? error.value : undefined;
         const errorDescription = errorValue ? (DEVICE_ERROR_TO_DESCRIPTION[errorValue] || errorValue) : undefined;
         const hasActionableError = typeof errorValue === "string" && !NON_BLOCKING_DEVICE_ERRORS.has(errorValue);
         const deviceStateIsError = state?.value === DeviceState.VALUE.ERROR;

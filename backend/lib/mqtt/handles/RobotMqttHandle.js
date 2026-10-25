@@ -153,7 +153,7 @@ class RobotMqttHandle extends MqttHandle {
                 return p.topicName;
             }).join(","),
             "$extensions": "",
-            "$implementation": "Valetudo"
+            "$implementation": "Mota"
         };
     }
 

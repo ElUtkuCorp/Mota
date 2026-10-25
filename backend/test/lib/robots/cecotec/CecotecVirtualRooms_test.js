@@ -78,4 +78,38 @@ describe("CecotecVirtualRooms", () => {
 
         assert.strictEqual(rects.length, 2);
     });
+
+    it("assigns newly discovered floor to the nearest room and finds uncovered rooms", () => {
+        const rooms = new CecotecVirtualRooms({});
+        rooms.segment(twoRoomsFloor(), 200, 100, RESOLUTION);
+
+        // el robot descubre una franja nueva pegada a la habitación de la izquierda
+        const floor = twoRoomsFloor();
+        for (let y = 70; y < 75; y++) {
+            for (let x = 10; x < 60; x++) {
+                floor.push(x, y);
+            }
+        }
+        rooms.fitToFloor(floor, 200, 100);
+
+        const total = rooms.getRooms().reduce((sum, r) => {
+            return sum + r.pixels.length;
+        }, 0);
+        assert.strictEqual(total, floor.length / 2);
+
+        // recorrido que solo pasa por la habitación de la izquierda
+        const path = [];
+        for (let y = 12; y < 70; y += 6) {
+            for (let x = 12; x < 88; x += 6) {
+                path.push(x, y);
+            }
+        }
+        const leftRoom = rooms.getRooms().find(r => {
+            return r.pixels.includes(40 * 200 + 40);
+        });
+        const uncovered = rooms.getUncoveredRoomIds(path, RESOLUTION);
+
+        assert.strictEqual(uncovered.length, 1);
+        assert.notStrictEqual(uncovered[0], leftRoom.id);
+    });
 });

@@ -16,7 +16,7 @@ const options = {
     definition: {
         openapi: "3.0.0",
         info: {
-            title: "Valetudo REST API",
+            title: "Mota REST API",
             version: Tools.GET_VALETUDO_VERSION()
         },
         tags: [ //Swagger UI respects the order of these

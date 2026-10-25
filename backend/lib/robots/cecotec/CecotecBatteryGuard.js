@@ -43,6 +43,23 @@ class CecotecBatteryGuard {
     }
 
     /**
+     * El firmware ha vuelto a la base por batería baja (evento 2100). Su propia reanudación no es
+     * fiable en la 3090 (intenta reanudar y acaba la tarea al instante), así que Mota guarda lo que
+     * falta por limpiar y lo lanza al llegar a "reanudar al Y %".
+     *
+     * @param {any} remainingRequest
+     */
+    onFirmwareLowBatteryReturn(remainingRequest) {
+        const {resumeAt} = this.getSettings();
+
+        if (resumeAt > 0 && this.pendingResume === undefined && remainingRequest !== undefined) {
+            Logger.info("Firmware returned to the dock for low battery: the remaining work will be resumed by Mota");
+            this.pendingResume = {request: remainingRequest};
+            this.returningForBattery = true;
+        }
+    }
+
+    /**
      * Se llama en cada actualización de estado del robot
      *
      * @param {number|undefined} batteryLevel

@@ -18,6 +18,8 @@ class CecotecVirtualRooms {
         this.path = options.path;
         /** @type {{width: number, rooms: Array<{id: number, name: string, pixels: Array<number>}>}} */
         this.data = {width: 0, rooms: []};
+        /** @type {Map<number, Array<number>> | undefined} celdas ajustadas al suelo actual (no se guardan) */
+        this.fitted = undefined;
 
         this.load();
     }
@@ -30,10 +32,88 @@ class CecotecVirtualRooms {
     }
 
     /**
+     * Habitaciones con sus celdas ajustadas al suelo actual si ya se ha llamado a fitToFloor()
+     *
      * @returns {Array<{id: number, name: string, pixels: Array<number>}>}
      */
     getRooms() {
-        return this.data.rooms;
+        return this.data.rooms.map(r => {
+            return {id: r.id, name: r.name, pixels: this.fitted?.get(r.id) ?? r.pixels};
+        });
+    }
+
+    /**
+     * Ajusta las habitaciones guardadas al suelo actual del mapa: las celdas que ya no son suelo se
+     * descartan y el suelo nuevo (descubierto después de dividir) se asigna a la habitación más
+     * cercana recorriendo el suelo. No se guarda: se recalcula con cada mapa.
+     *
+     * @param {Array<number>} floor pares x, y planos
+     * @param {number} width
+     * @param {number} height
+     */
+    fitToFloor(floor, width, height) {
+        if (!this.hasRooms() || width !== this.data.width) {
+            this.fitted = undefined;
+
+            return;
+        }
+
+        const size = width * height;
+        const label = new Int32Array(size).fill(-1); // -1 = no es suelo, 0 = suelo sin habitación
+        const floorCells = [];
+
+        for (let i = 0; i < floor.length; i += 2) {
+            const cell = floor[i + 1] * width + floor[i];
+
+            label[cell] = 0;
+            floorCells.push(cell);
+        }
+
+        const queue = new Int32Array(size);
+        let head = 0;
+        let tail = 0;
+
+        this.data.rooms.forEach(room => {
+            room.pixels.forEach(cell => {
+                if (label[cell] === 0) {
+                    label[cell] = room.id;
+                    queue[tail++] = cell;
+                }
+            });
+        });
+
+        while (head < tail) {
+            const cell = queue[head++];
+            const x = cell % width;
+            const visit = (n) => {
+                if (label[n] === 0) {
+                    label[n] = label[cell];
+                    queue[tail++] = n;
+                }
+            };
+
+            if (x > 0) {
+                visit(cell - 1);
+            }
+            if (x < width - 1) {
+                visit(cell + 1);
+            }
+            if (cell >= width) {
+                visit(cell - width);
+            }
+            if (cell < size - width) {
+                visit(cell + width);
+            }
+        }
+
+        this.fitted = new Map(this.data.rooms.map(r => {
+            return [r.id, []];
+        }));
+        floorCells.forEach(cell => {
+            if (label[cell] > 0) {
+                this.fitted.get(label[cell]).push(cell);
+            }
+        });
     }
 
     /**
@@ -72,6 +152,7 @@ class CecotecVirtualRooms {
         const a = this.getRoom(idA);
         const b = this.getRoom(idB);
 
+        this.fitted = undefined;
         a.pixels = a.pixels.concat(b.pixels);
         this.data.rooms = this.data.rooms.filter(r => {
             return r.id !== b.id;
@@ -88,6 +169,9 @@ class CecotecVirtualRooms {
      */
     split(id, pA, pB) {
         const room = this.getRoom(id);
+        // Se divide la versión ajustada al suelo actual, que es la que ve el usuario
+        room.pixels = this.fitted?.get(room.id) ?? room.pixels;
+        this.fitted = undefined;
         const width = this.data.width;
         const sideA = [];
         const sideB = [];
@@ -130,7 +214,38 @@ class CecotecVirtualRooms {
      * @returns {Array<{x0: number, y0: number, x1: number, y1: number}>}
      */
     getCleaningRects(id, maxRects, resolution) {
-        return CecotecVirtualRooms.COVER(this.getRoom(id).pixels, this.data.width, maxRects, resolution);
+        return CecotecVirtualRooms.COVER(this.fitted?.get(Number(id)) ?? this.getRoom(id).pixels, this.data.width, maxRects, resolution);
+    }
+
+    /**
+     * Mota: habitaciones que el recorrido aún no ha cubierto (para reanudar tras cargar)
+     *
+     * @param {Array<number>} path pares x, y planos del recorrido
+     * @param {number} resolution metros por celda
+     * @returns {Array<number>} ids de las habitaciones con menos del 60 % de sus celdas a menos de 30 cm del recorrido
+     */
+    getUncoveredRoomIds(path, resolution) {
+        const width = this.data.width;
+        const radius = Math.max(1, Math.round(0.3 / resolution));
+        const near = new Set();
+
+        for (let i = 0; i < path.length; i += 2) {
+            for (let dy = -radius; dy <= radius; dy++) {
+                for (let dx = -radius; dx <= radius; dx++) {
+                    near.add((path[i + 1] + dy) * width + path[i] + dx);
+                }
+            }
+        }
+
+        return this.getRooms().filter(room => {
+            const covered = room.pixels.filter(cell => {
+                return near.has(cell);
+            }).length;
+
+            return room.pixels.length > 0 && covered / room.pixels.length < 0.6;
+        }).map(room => {
+            return room.id;
+        });
     }
 
     /**

@@ -105,10 +105,10 @@ class NetworkAdvertisementManager {
             });
         });
 
-        Logger.info("Valetudo can be reached via: " + Tools.GET_ZEROCONF_HOSTNAME());
+        Logger.info("Mota can be reached via: " + Tools.GET_ZEROCONF_HOSTNAME());
 
-        this.publishBonjourService(`Valetudo ${Tools.GET_HUMAN_READABLE_SYSTEM_ID()} Web`, "http");
-        this.publishBonjourService(`Valetudo ${Tools.GET_HUMAN_READABLE_SYSTEM_ID()}`, "valetudo");
+        this.publishBonjourService(`Mota ${Tools.GET_HUMAN_READABLE_SYSTEM_ID()} Web`, "http");
+        this.publishBonjourService(`Mota ${Tools.GET_HUMAN_READABLE_SYSTEM_ID()}`, "valetudo");
     }
 
     /**
