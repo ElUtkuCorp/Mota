@@ -51,6 +51,22 @@ class CecotecMapSegmentationCapability extends MapSegmentationCapability {
         this.robot.lastCleaningRequest = {type: "segments", segments: segments};
         await this.robot.robot.cleanAreas(areas.slice(0, CecotecMapSegmentationCapability.MAX_ZONES));
     }
+
+    /**
+     * Mota: las habitaciones se envían en el orden en que el usuario las selecciona. [H] El firmware
+     * recorre las zonas en el orden recibido.
+     *
+     * @returns {import("../../../core/capabilities/MapSegmentationCapability").MapSegmentationCapabilityProperties}
+     */
+    getProperties() {
+        return {
+            iterationCount: {
+                min: 1,
+                max: 1
+            },
+            customOrderSupport: true
+        };
+    }
 }
 
 CecotecMapSegmentationCapability.MAX_ZONES = 10;
