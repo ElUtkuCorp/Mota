@@ -1,3 +1,3 @@
-import ControlsBody from "./ControlsBody";
+import CleanPanel from "./CleanPanel";
 
-export default ControlsBody;
+export default CleanPanel;

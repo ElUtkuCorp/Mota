@@ -15,6 +15,7 @@ import {
     PlayArrow as GoIcon
 } from "@mui/icons-material";
 import {useTranslation} from "react-i18next";
+import {usePublishLiveMapPrimaryAction} from "../../liveMapControl";
 
 interface GoToActionsProperties {
     goToTarget: GoToTargetClientStructure | undefined;
@@ -51,6 +52,15 @@ const GoToActions = (
 
         goTo(convertPixelCoordinatesToCMSpace({x: goToTarget.x0, y: goToTarget.y0}));
     }, [canGo, goToTarget, goTo, convertPixelCoordinatesToCMSpace]);
+
+    // Mota: el botón principal del panel "Qué limpiar" lanza esta misma acción
+    usePublishLiveMapPrimaryAction({
+        label: t("map.actions.goToLocation"),
+        hasSelection: goToTarget !== undefined,
+        enabled: goToTarget !== undefined && canGo && !goToIsExecuting,
+        busy: goToIsExecuting,
+        run: handleClick
+    });
 
     const handleLongClick = React.useCallback(() => {
         if (!goToTarget) {

@@ -18,8 +18,14 @@ import {
 import {Check as CheckIcon} from "@mui/icons-material";
 import {useTranslation} from "react-i18next";
 
-// Mota: paleta propia de 12 colores suaves, separados en tono para que las habitaciones se distingan bien
+// Mota: paleta propia: primero los 5 pasteles del sistema visual (los mismos que usa el color automático)
+// y después 12 colores suaves, separados en tono para que las habitaciones se distingan bien
 export const ROOM_COLOR_PALETTE: Array<{key: string, color: string}> = [
+    {key: "sage", color: "#c9e4de"},
+    {key: "wheat", color: "#f3d9b1"},
+    {key: "wisteria", color: "#d8d4f2"},
+    {key: "blush", color: "#f2cfd4"},
+    {key: "mist", color: "#cfe0f5"},
     {key: "coral", color: "#ef8a80"},
     {key: "peach", color: "#f4ad72"},
     {key: "sand", color: "#f2d06b"},

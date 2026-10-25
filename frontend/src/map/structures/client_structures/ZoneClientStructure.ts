@@ -83,7 +83,7 @@ class ZoneClientStructure extends ClientStructure {
             ctx.textAlign = "start";
             ctx.fillStyle = "rgba(255, 255, 255, 1)";
             ctx.strokeStyle = "rgba(18, 18, 18, 1)";
-            ctx.font = `${fontSize}px "IBM Plex Sans", "Helvetica", sans-serif`;
+            ctx.font = `${fontSize}px "Inter", "Helvetica", sans-serif`;
 
             const textXOffset = (scaledDeleteButtonSize.width / 2) + considerHiDPI(5);
 

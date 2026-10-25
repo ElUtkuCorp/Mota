@@ -10,6 +10,7 @@ import {
     PlayArrow as GoIcon
 } from "@mui/icons-material";
 import {useTranslation} from "react-i18next";
+import {usePublishLiveMapPrimaryAction} from "../../liveMapControl";
 
 interface SegmentActionsProperties {
     segments: string[];
@@ -57,6 +58,15 @@ const SegmentActions = (
             customOrder: mapSegmentationProperties?.customOrderSupport
         });
     }, [canClean, didSelectSegments, executeSegmentAction, segments, iterationCount, mapSegmentationProperties]);
+
+    // Mota: el botón principal del panel "Qué limpiar" lanza esta misma acción
+    usePublishLiveMapPrimaryAction(mapSegmentationProperties ? {
+        label: t("map.actions.cleanSegments", {count: segments.length}),
+        hasSelection: didSelectSegments,
+        enabled: didSelectSegments && canClean && !segmentActionExecuting,
+        busy: segmentActionExecuting,
+        run: handleClick
+    } : null);
 
     const handleLongClick = React.useCallback(() => {
         setIntegrationHelpDialogPayload(JSON.stringify({

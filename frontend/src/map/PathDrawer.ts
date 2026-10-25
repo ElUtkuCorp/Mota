@@ -58,7 +58,8 @@ export function chaikinSmooth(points: Array<number>, iterations: number): Array<
 
 export class PathDrawer {
     static getPathColor(paletteMode: PaletteMode): string {
-        return paletteMode === "dark" ? "#000000" : "#ffffff";
+        // Mota: sobre los pasteles de habitación el blanco apenas se ve; se usa un tono de la paleta (2.4)
+        return paletteMode === "dark" ? "#E8EEEC" : "#3D4A46";
     }
 
     static drawPaths(options: PathDrawerOptions): Promise<HTMLImageElement> {

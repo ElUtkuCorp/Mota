@@ -1,59 +1,95 @@
-import {Box, Divider, Grid2, styled} from "@mui/material";
-import ControlsBody from "./controls";
+import {Box, Paper, useTheme} from "@mui/material";
 import {useIsMobileView} from "./hooks";
-import {FullHeightGrid} from "./components/FullHeightGrid";
 import LiveMapPage from "./map/LiveMapPage";
-import MobileControls from "./controls/MobileControls";
+import CleanPanel from "./controls/CleanPanel";
+import MapStatusPill from "./controls/MapStatusPill";
 import React from "react";
 
-const ScrollableGrid = styled(Grid2)({
-    overflow: "auto",
-});
+// Mota: tarjeta del mapa en vivo con la píldora de estado encima
+const LiveMapCard: React.FunctionComponent<{ height: string | number }> = ({height}): React.ReactElement => {
+    const theme = useTheme();
+
+    return (
+        <Paper
+            elevation={1}
+            sx={{
+                position: "relative",
+                overflow: "hidden",
+                height: height,
+                minHeight: 280,
+                backgroundColor: theme.palette.mota.mapBackground,
+                display: "flex",
+                flexDirection: "column",
+            }}
+        >
+            <LiveMapPage/>
+            <Box
+                sx={{
+                    position: "absolute",
+                    top: 12,
+                    left: 12,
+                    right: 12,
+                    pointerEvents: "none",
+                    zIndex: 1,
+                }}
+            >
+                <MapStatusPill/>
+            </Box>
+        </Paper>
+    );
+};
 
 const HomePage = (): React.ReactElement => {
     const mobileView = useIsMobileView();
-    const [mobileControlsOpen, setMobileControlsOpen] = React.useState(false);
 
     if (mobileView) {
+        // Móvil: todo apilado (mapa, qué limpiar, opciones, potencia) y la barra de acciones fija abajo
         return (
-            <Box sx={{
-                height: "100%",
-                width: "100%",
-                overflow: "hidden"
-            }}>
-                <Box sx={{
-                    height: "calc(100% - 68px)",
-                    display: mobileControlsOpen ? "none" : "inherit"
-                }}>
-                    <LiveMapPage/>
+            <Box
+                sx={{
+                    flex: "1 1 0",
+                    minHeight: 0,
+                    overflowY: "auto",
+                    overflowX: "hidden",
+                    px: 1.5,
+                    pt: 1.5,
+                }}
+            >
+                <Box sx={{mb: 1.5}}>
+                    <LiveMapCard height="min(50vh, 460px)"/>
                 </Box>
-                <Box sx={{
-                    height: "5%",
-                    display: mobileControlsOpen ? "inherit" : "none"
-                }}>
-                    &nbsp;
-                </Box>
-
-                <MobileControls
-                    open={mobileControlsOpen}
-                    setOpen={setMobileControlsOpen}
-                />
+                <CleanPanel stickyActions={true}/>
             </Box>
         );
     }
 
+    // Tableta y escritorio: mapa grande en el centro y panel de control a la derecha
     return (
-        <FullHeightGrid container direction="row" justifyContent="space-evenly">
-            <Grid2 size="grow">
-                <LiveMapPage/>
-            </Grid2>
-            <Divider orientation="vertical"/>
-            <ScrollableGrid size={{sm:4, md: 4, lg: 4, xl: 3}}>
-                <Box m={1}>
-                    <ControlsBody/>
-                </Box>
-            </ScrollableGrid>
-        </FullHeightGrid>
+        <Box
+            sx={{
+                flex: "1 1 0",
+                minHeight: 0,
+                display: "flex",
+                flexDirection: "row",
+                gap: 2,
+                p: 2,
+                overflow: "hidden",
+            }}
+        >
+            <Box sx={{flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column"}}>
+                <LiveMapCard height="100%"/>
+            </Box>
+            <Box
+                sx={{
+                    flex: "0 0 auto",
+                    width: {sm: 340, lg: 380},
+                    overflowY: "auto",
+                    pr: 0.5,
+                }}
+            >
+                <CleanPanel/>
+            </Box>
+        </Box>
     );
 };
 

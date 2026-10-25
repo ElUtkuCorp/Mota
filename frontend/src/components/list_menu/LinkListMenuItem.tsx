@@ -17,7 +17,7 @@ export const LinkListMenuItem: React.FunctionComponent<{
     return (
         <ListItem
             secondaryAction={
-                <ArrowIcon />
+                <ArrowIcon fontSize="small" sx={{color: "text.secondary"}}/>
             }
             style={{
                 cursor: "pointer",

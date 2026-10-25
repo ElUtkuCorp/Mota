@@ -1,6 +1,7 @@
-import {Box, Grid2, Paper, Skeleton, SvgIconProps, Typography} from "@mui/material";
+import {Box, Skeleton, SvgIconProps} from "@mui/material";
 import React, {ReactNode} from "react";
 import LoadingFade from "../components/LoadingFade";
+import {PanelCard, PanelSectionTitle} from "./PanelSection";
 
 
 interface ControlsCardProps {
@@ -11,39 +12,33 @@ interface ControlsCardProps {
     isLoading?: boolean
 }
 
+// Mota: misma tarjeta que el resto del panel de Inicio (2.4)
 const ControlsCard: React.FC<ControlsCardProps> = ({ icon: Icon, title, pending = false, children, isLoading }) => (
-    <Grid2>
-        <Paper>
-            <Grid2 container direction="column">
-                <Box px={1.5} py={1.5}>
-                    <Grid2 container alignItems="center" spacing={1}>
-                        <Grid2><Icon fontSize="small" /></Grid2>
-                        <Grid2 sx={{marginTop: "-8px" /* ugh */}}>
-                            <Typography variant="subtitle1">
-                                {title}
-                            </Typography>
-                        </Grid2>
-                        <Grid2>
-                            <LoadingFade
-                                in={pending}
-                                transitionDelay={pending ? "500ms" : "0ms"}
-                                size={20}
-                            />
-                        </Grid2>
-                    </Grid2>
-                    <Grid2 px={0.5}>
-                        {
-                            isLoading ? (
-                                <Skeleton height="4rem" />
-                            ) : (
-                                children
-                            )
-                        }
-                    </Grid2>
-                </Box>
-            </Grid2>
-        </Paper>
-    </Grid2>
+    <PanelCard>
+        <PanelSectionTitle
+            trailing={
+                <LoadingFade
+                    in={pending}
+                    transitionDelay={pending ? "500ms" : "0ms"}
+                    size={20}
+                />
+            }
+        >
+            <Box component="span" sx={{display: "inline-flex", alignItems: "center", gap: 1}}>
+                <Icon fontSize="small" sx={{color: "text.secondary"}}/>
+                {title}
+            </Box>
+        </PanelSectionTitle>
+        <Box>
+            {
+                isLoading ? (
+                    <Skeleton height="4rem" />
+                ) : (
+                    children
+                )
+            }
+        </Box>
+    </PanelCard>
 );
 
 export default ControlsCard;

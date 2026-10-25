@@ -39,7 +39,12 @@ import {
 } from "@mui/icons-material";
 import {Link, useLocation} from "react-router-dom";
 import ValetudoEvents from "./ValetudoEvents";
-import {Capability, useDuststreamingConfigurationQuery, useMotaCleanHistoryQuery} from "../api";
+import {
+    Capability,
+    useDuststreamingConfigurationQuery,
+    useMotaCleanHistoryQuery,
+    useValetudoCustomizationsQuery
+} from "../api";
 import {useCapabilitiesSupported} from "../CapabilitiesProvider";
 import {
     RobotMonochromeIcon,
@@ -48,6 +53,9 @@ import {
     ValetudoHeartMonochromeIcon
 } from "./CustomIcons";
 import {useTranslation} from "react-i18next";
+import {DESKTOP_DRAWER_WIDTH, useIsDesktopLayout} from "../hooks";
+import {TITLE_FONT_FAMILY} from "../theme";
+import {BatteryChips, WifiChip} from "../controls/StatusChips";
 
 // Note: "title" and "menuText" are i18n keys
 interface MenuEntry {
@@ -84,6 +92,8 @@ interface MenuSubheader {
 
 
 
+// Mota: primero las secciones principales (Inicio, Mapa, Programación, Historial) y después Robot,
+// Ajustes y Sistema (2.4). Las rutas no cambian
 //Note that order is important here
 const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     {
@@ -92,77 +102,6 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
         title: "nav.home",
         menuIcon: HomeIcon,
         menuText: "nav.home"
-    },
-    {
-        kind: "Subheader",
-        title: "nav.robot",
-        showIfMotaApi: true,
-        requiredCapabilities: {
-            capabilities: [
-                Capability.ConsumableMonitoring,
-                Capability.ManualControl,
-                Capability.HighResolutionManualControl,
-                Capability.TotalStatistics,
-                Capability.Duststreaming
-            ],
-            type: "anyof"
-        }
-    },
-    {
-        kind: "MenuEntry",
-        route: "/robot/consumables",
-        title: "nav.consumables",
-        menuIcon: PendingActionsIcon,
-        menuText: "nav.consumables",
-        requiredCapabilities: {
-            capabilities: [Capability.ConsumableMonitoring],
-            type: "allof"
-        }
-    },
-    {
-        kind: "MenuEntry",
-        route: "/robot/manual_control",
-        title: "nav.manualControl",
-        menuIcon: SettingsRemoteIcon,
-        menuText: "nav.manualControl",
-        requiredCapabilities: {
-            capabilities: [Capability.ManualControl, Capability.HighResolutionManualControl],
-            type: "anyof"
-        }
-    },
-    {
-        kind: "MenuEntry",
-        route: "/robot/total_statistics",
-        title: "nav.statistics",
-        menuIcon: StatisticsIcon,
-        menuText: "nav.statistics",
-        requiredCapabilities: {
-            capabilities: [Capability.TotalStatistics],
-            type: "allof"
-        }
-    },
-    {
-        kind: "MenuEntry",
-        route: "/robot/history",
-        title: "nav.history",
-        menuIcon: HistoryIcon,
-        menuText: "nav.history",
-        requiresMotaApi: true
-    },
-    {
-        kind: "MenuEntry",
-        route: "/robot/camera",
-        title: "nav.camera",
-        menuIcon: CameraIcon,
-        menuText: "nav.camera",
-        requiredCapabilities: {
-            capabilities: [Capability.Duststreaming],
-            type: "allof"
-        }
-    },
-    {
-        kind: "Subheader",
-        title: "nav.options"
     },
     {
         kind: "MenuEntry",
@@ -223,6 +162,102 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     },
     {
         kind: "MenuEntry",
+        route: "/valetudo/timers",
+        title: "nav.timers",
+        menuIcon: TimeIcon,
+        menuText: "nav.timers"
+    },
+    {
+        kind: "MenuEntry",
+        route: "/robot/history",
+        title: "nav.history",
+        menuIcon: HistoryIcon,
+        menuText: "nav.history",
+        requiresMotaApi: true
+    },
+    {
+        kind: "Subheader",
+        title: "nav.robot",
+        requiredCapabilities: {
+            capabilities: [
+                Capability.ConsumableMonitoring,
+                Capability.ManualControl,
+                Capability.HighResolutionManualControl,
+                Capability.TotalStatistics,
+                Capability.Duststreaming
+            ],
+            type: "anyof"
+        }
+    },
+    {
+        kind: "MenuEntry",
+        route: "/robot/consumables",
+        title: "nav.consumables",
+        menuIcon: PendingActionsIcon,
+        menuText: "nav.consumables",
+        requiredCapabilities: {
+            capabilities: [Capability.ConsumableMonitoring],
+            type: "allof"
+        }
+    },
+    {
+        kind: "MenuEntry",
+        route: "/robot/manual_control",
+        title: "nav.manualControl",
+        menuIcon: SettingsRemoteIcon,
+        menuText: "nav.manualControl",
+        requiredCapabilities: {
+            capabilities: [Capability.ManualControl, Capability.HighResolutionManualControl],
+            type: "anyof"
+        }
+    },
+    {
+        kind: "MenuEntry",
+        route: "/robot/total_statistics",
+        title: "nav.statistics",
+        menuIcon: StatisticsIcon,
+        menuText: "nav.statistics",
+        requiredCapabilities: {
+            capabilities: [Capability.TotalStatistics],
+            type: "allof"
+        }
+    },
+    {
+        kind: "MenuEntry",
+        route: "/robot/camera",
+        title: "nav.camera",
+        menuIcon: CameraIcon,
+        menuText: "nav.camera",
+        requiredCapabilities: {
+            capabilities: [Capability.Duststreaming],
+            type: "allof"
+        }
+    },
+    {
+        kind: "Subheader",
+        title: "nav.options"
+    },
+    {
+        kind: "MenuEntry",
+        route: "/options/robot",
+        title: "nav.robotOptions",
+        menuIcon: RobotMonochromeIcon,
+        menuText: "nav.robot"
+    },
+    {
+        kind: "MenuSubEntry",
+        route: "/options/robot/system",
+        title: "nav.systemOptions",
+        parentRoute: "/options/robot"
+    },
+    {
+        kind: "MenuSubEntry",
+        route: "/options/robot/quirks",
+        title: "nav.quirks",
+        parentRoute: "/options/robot"
+    },
+    {
+        kind: "MenuEntry",
         route: "/options/connectivity",
         title: "nav.connectivityOptions",
         menuIcon: ConnectivityIcon,
@@ -260,41 +295,14 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     },
     {
         kind: "MenuEntry",
-        route: "/options/robot",
-        title: "nav.robotOptions",
-        menuIcon: RobotMonochromeIcon,
-        menuText: "nav.robot"
-    },
-    {
-        kind: "MenuSubEntry",
-        route: "/options/robot/system",
-        title: "nav.systemOptions",
-        parentRoute: "/options/robot"
-    },
-    {
-        kind: "MenuSubEntry",
-        route: "/options/robot/quirks",
-        title: "nav.quirks",
-        parentRoute: "/options/robot"
-    },
-    {
-        kind: "MenuEntry",
         route: "/options/valetudo",
         title: "nav.motaOptions",
         menuIcon: ValetudoMonochromeIcon,
         menuText: "nav.mota"
     },
-
     {
         kind: "Subheader",
-        title: "nav.misc"
-    },
-    {
-        kind: "MenuEntry",
-        route: "/valetudo/timers",
-        title: "nav.timers",
-        menuIcon: TimeIcon,
-        menuText: "nav.timers"
+        title: "nav.system"
     },
     {
         kind: "MenuEntry",
@@ -333,13 +341,69 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     },
 ];
 
+// Mota: marca propia en la cabecera del menú (monograma y nombre)
+const MotaBrand = (): React.ReactElement => {
+    const {t} = useTranslation();
+
+    return (
+        <Box sx={{display: "flex", alignItems: "center", gap: 1.25, px: 2.5, pt: 2.5, pb: 1.5}}>
+            <Box
+                aria-hidden={true}
+                sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "12px",
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontFamily: TITLE_FONT_FAMILY,
+                    fontWeight: 800,
+                    fontSize: "1.15rem",
+                }}
+            >
+                {t("app.name").charAt(0)}
+            </Box>
+            <Typography sx={{fontFamily: TITLE_FONT_FAMILY, fontWeight: 800, fontSize: "1.25rem"}}>
+                {t("app.name")}
+            </Typography>
+        </Box>
+    );
+};
+
+// Mota: cabecera de Inicio: nombre de la app y del robot
+const HomeHeaderTitle = (): React.ReactElement => {
+    const {t} = useTranslation();
+    const {data: customizations} = useValetudoCustomizationsQuery();
+    const friendlyName = customizations?.friendlyName?.trim();
+    const robotName = friendlyName || t("home.header.robotFallback");
+
+    return (
+        <Box sx={{minWidth: 0, flex: "1 1 auto"}}>
+            <Typography
+                component="h1"
+                noWrap
+                sx={{fontFamily: TITLE_FONT_FAMILY, fontWeight: 800, fontSize: "1.2rem", lineHeight: 1.15}}
+            >
+                {t("app.name")}
+            </Typography>
+            <Typography component="div" variant="caption" color="text.secondary" noWrap sx={{lineHeight: 1.25}}>
+                {robotName}
+            </Typography>
+        </Box>
+    );
+};
+
 const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPaletteMode: (newMode: PaletteMode) => void }> = ({
     paletteMode,
     setPaletteMode
 }): React.ReactElement => {
     const {t} = useTranslation();
     const [drawerOpen, setDrawerOpen] = React.useState<boolean>(false);
+    const desktopLayout = useIsDesktopLayout();
     const currentLocation = useLocation()?.pathname;
+    const isHome = currentLocation === "/";
     const robotCapabilities = useCapabilitiesSupported(...Object.values(Capability));
 
     const duststreamingSupported = robotCapabilities[
@@ -386,7 +450,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
     const drawerContent = React.useMemo(() => {
         return (
             <Box
-                sx={{width: 250}}
+                sx={{width: desktopLayout ? "100%" : 280, pb: 2}}
                 role="presentation"
                 onClick={() => {
                     setDrawerOpen(false);
@@ -399,6 +463,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                     overflowX: "hidden"
                 }}
             >
+                <MotaBrand/>
                 <List>
                     {menuTree.filter(item => {
                         return item.kind !== "MenuSubEntry";
@@ -484,7 +549,10 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                                 return (
                                     <ListItemButton
                                         key={value.route}
-                                        selected={value.route === currentLocation}
+                                        selected={
+                                            value.route === currentLocation ||
+                                            (value.route !== "/" && currentLocation.startsWith(value.route + "/"))
+                                        }
                                         component={Link}
                                         to={value.route}
                                     >
@@ -498,7 +566,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                         }
                     })}
 
-                    <Divider/>
+                    <Divider sx={{my: 1}}/>
                     <ListItem
                         onClick={(e) => e.stopPropagation()}
                         sx={{
@@ -540,7 +608,6 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                         </ListItemIcon>
                         <ListItemText primary={t("nav.swaggerUi")}/>
                     </ListItemButton>
-                    <Divider/>
                     <ListItemButton
                         component="a"
                         href="https://github.com/ElUtkuCorp/Mota"
@@ -582,29 +649,43 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                 </List>
             </Box>
         );
-    }, [currentLocation, paletteMode, setPaletteMode, robotCapabilities, duststreamingEnabled, motaApiAvailable, t]);
+    }, [currentLocation, paletteMode, setPaletteMode, robotCapabilities, duststreamingEnabled, motaApiAvailable, desktopLayout, t]);
 
     const toolbarContent = React.useMemo(() => {
         switch (currentMenuEntry.kind) {
             case "MenuEntry":
                 return (
                     <>
-                        <IconButton
-                            size="large"
-                            edge="start"
-                            color="inherit"
-                            aria-label={t("common.menu")}
-                            sx={{mr: 2}}
-                            onClick={() => {
-                                setDrawerOpen(true);
-                            }}
-                            title={t("common.menu")}
-                        >
-                            <MenuIcon/>
-                        </IconButton>
-                        <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
-                            {pageTitle}
-                        </Typography>
+                        {
+                            !desktopLayout &&
+                            <IconButton
+                                size="large"
+                                edge="start"
+                                color="inherit"
+                                aria-label={t("common.menu")}
+                                sx={{mr: isHome ? 0.5 : 1.5}}
+                                onClick={() => {
+                                    setDrawerOpen(true);
+                                }}
+                                title={t("common.menu")}
+                            >
+                                <MenuIcon/>
+                            </IconButton>
+                        }
+                        {
+                            isHome ?
+                                <HomeHeaderTitle/> :
+                                <Typography variant="h6" component="h1" noWrap sx={{flexGrow: 1, minWidth: 0}}>
+                                    {pageTitle}
+                                </Typography>
+                        }
+                        {
+                            isHome &&
+                            <Box sx={{display: "flex", alignItems: "center", gap: 0.75, flexShrink: 0}}>
+                                <WifiChip/>
+                                <BatteryChips/>
+                            </Box>
+                        }
                     </>
                 );
             case "MenuSubEntry":
@@ -615,14 +696,15 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                             edge="start"
                             color="inherit"
                             aria-label={t("common.back")}
-                            sx={{mr: 2}}
+                            title={t("common.back")}
+                            sx={{mr: 1.5}}
 
                             component={Link}
                             to={currentMenuEntry.parentRoute}
                         >
                             <BackIcon/>
                         </IconButton>
-                        <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
+                        <Typography variant="h6" component="h1" noWrap sx={{flexGrow: 1, minWidth: 0}}>
                             {pageTitle}
                         </Typography>
                     </>
@@ -631,7 +713,7 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                 //This can never happen
                 return (<></>);
         }
-    }, [currentMenuEntry, setDrawerOpen, pageTitle, t]);
+    }, [currentMenuEntry, setDrawerOpen, pageTitle, desktopLayout, isHome, t]);
 
     return (
         <Box
@@ -639,17 +721,38 @@ const ValetudoAppBar: React.FunctionComponent<{ paletteMode: PaletteMode, setPal
                 userSelect: "none"
             }}
         >
-            <AppBar position="fixed">
-                <Toolbar>
+            <AppBar
+                position="fixed"
+                sx={desktopLayout ? {
+                    width: `calc(100% - ${DESKTOP_DRAWER_WIDTH}px)`,
+                    ml: `${DESKTOP_DRAWER_WIDTH}px`,
+                } : undefined}
+            >
+                <Toolbar sx={{gap: 0.75, px: {xs: 1.5, sm: 2.5}}}>
                     {toolbarContent}
-                    <div>
+                    <Box sx={{flexShrink: 0}}>
                         <ValetudoEvents/>
-                    </div>
+                    </Box>
                 </Toolbar>
             </AppBar>
             <Toolbar/>
             {
-                currentMenuEntry.kind !== "MenuSubEntry" &&
+                desktopLayout &&
+                <Drawer
+                    variant="permanent"
+                    anchor="left"
+                    sx={{
+                        "& .MuiDrawer-paper": {
+                            width: DESKTOP_DRAWER_WIDTH,
+                            boxSizing: "border-box",
+                        },
+                    }}
+                >
+                    {drawerContent}
+                </Drawer>
+            }
+            {
+                !desktopLayout && currentMenuEntry.kind !== "MenuSubEntry" &&
                 <Drawer
                     anchor={"left"}
                     open={drawerOpen}

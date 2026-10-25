@@ -7,6 +7,7 @@ import RobotRouter from "./robot";
 import ValetudoAppBar from "./components/ValetudoAppBar";
 import React from "react";
 import ValetudoRouter from "./valetudo";
+import {DESKTOP_DRAWER_WIDTH, useIsDesktopLayout} from "./hooks";
 
 const Root = styled(Div100vh)({
     display: "flex",
@@ -26,10 +27,13 @@ const AppRouter: React.FunctionComponent<{ paletteMode: PaletteMode, setPaletteM
     paletteMode,
     setPaletteMode
 }): React.ReactElement => {
+    // Mota: en escritorio el menú lateral es fijo y el contenido empieza a su derecha
+    const desktopLayout = useIsDesktopLayout();
+
     return (
         <HashRouter>
             <Root>
-                <Content>
+                <Content sx={desktopLayout ? {pl: `${DESKTOP_DRAWER_WIDTH}px`} : undefined}>
                     <ValetudoAppBar paletteMode={paletteMode} setPaletteMode={setPaletteMode}/>
                     <Routes>
                         <Route path="" element={<HomePage />} />

@@ -4,6 +4,7 @@ import {SpacerListMenuItem} from "./SpacerListMenuItem";
 import HelpDialog from "../HelpDialog";
 import {Help as HelpIcon} from "@mui/icons-material";
 import {useTranslation} from "react-i18next";
+import {TITLE_FONT_FAMILY} from "../../theme";
 
 
 export const ListMenu: React.FunctionComponent<{
@@ -45,6 +46,16 @@ export const ListMenu: React.FunctionComponent<{
                                 }}
                                 primary={primaryHeader}
                                 secondary={secondaryHeader}
+                                // Mota: cabecera de sección del sistema visual (2.4)
+                                primaryTypographyProps={{
+                                    fontFamily: TITLE_FONT_FAMILY,
+                                    fontWeight: 800,
+                                    fontSize: "1.2rem",
+                                    lineHeight: 1.3,
+                                }}
+                                secondaryTypographyProps={{
+                                    sx: {mt: 0.25},
+                                }}
                             />
                         </Grid2>
                         {helpText && (

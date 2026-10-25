@@ -6,6 +6,7 @@ import {
 } from "@mui/icons-material";
 import HelpDialog from "./HelpDialog";
 import {useTranslation} from "react-i18next";
+import {TITLE_FONT_FAMILY} from "../theme";
 
 const TopRightRefreshButton = styled(Button)(({theme}) => {
     return {
@@ -35,11 +36,11 @@ const DetailPageHeaderRow: FunctionComponent<DetailPageHeaderRowProps> = ({
         <>
             <Grid2 container alignItems="center" spacing={1} justifyContent="space-between">
                 <Grid2 style={{display:"flex"}}>
-                    <Grid2 style={{paddingRight: "8px"}}>
+                    <Grid2 style={{paddingRight: "8px", display: "flex", alignItems: "center"}} sx={{color: "text.secondary"}}>
                         {icon}
                     </Grid2>
                     <Grid2>
-                        <Typography>{title}</Typography>
+                        <Typography sx={{fontFamily: TITLE_FONT_FAMILY, fontWeight: 700, fontSize: "1.05rem"}}>{title}</Typography>
                     </Grid2>
                 </Grid2>
                 <Grid2>

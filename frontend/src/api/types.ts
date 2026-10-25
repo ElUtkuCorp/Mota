@@ -709,6 +709,10 @@ export interface MotaCleanHistoryEntry {
     area?: number;
     hasMap: boolean;
     rawTask: Record<string, unknown>;
+    /** Mota (opcional, aún no lo envía el backend): modo de la limpieza (preajuste de OperationModeControl) */
+    mode?: string;
+    /** Mota (opcional, aún no lo envía el backend): cómo terminó la limpieza */
+    result?: "completed" | "interrupted" | "error";
 }
 
 export interface MotaCleanHistoryTotals {

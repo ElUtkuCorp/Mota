@@ -318,6 +318,11 @@
             "colorInvalid": "Enter a color in the #rrggbb format",
             "colorPicker": "Open the color picker",
             "colorNames": {
+                "sage": "Sage",
+                "wheat": "Wheat",
+                "wisteria": "Wisteria",
+                "blush": "Blush",
+                "mist": "Mist",
                 "coral": "Coral",
                 "peach": "Peach",
                 "sand": "Sand",
@@ -378,6 +383,50 @@
     "app": {
         "name": "Mota"
     },
+    "home": {
+        "header": {
+            "robotFallback": "Your robot"
+        },
+        "chips": {
+            "battery": "{{level}}%",
+            "batteryCharging": "{{battery}} · charging",
+            "wifiOn": "Wi-Fi",
+            "wifiOff": "No Wi-Fi"
+        },
+        "status": {
+            "withDetail": "{{status}} · {{detail}}"
+        },
+        "clean": {
+            "what": "What to clean",
+            "targets": {
+                "whole": "Whole home",
+                "segments": "Rooms",
+                "zones": "Zone",
+                "goto": "Spot",
+                "edge": "Edges",
+                "spiral": "Spiral"
+            },
+            "notAvailable": "Not available on this robot",
+            "options": "Options",
+            "double": "x2",
+            "mop": "Mop",
+            "mopHelp": "Mops instead of vacuuming. Attach the mop and the water tank first.",
+            "mopOnlyWhole": "Mopping only applies to “Whole home”.",
+            "carpet": "Carpet",
+            "power": "Power",
+            "pause": "Pause",
+            "pick": {
+                "segments": "Choose rooms",
+                "zones": "Draw a zone",
+                "goto": "Choose a spot"
+            },
+            "pickHint": {
+                "segments": "Tap the rooms you want to clean on the map.",
+                "zones": "Press “Add” on the map and fit the box to the area.",
+                "goto": "Tap the spot on the map where the robot should clean."
+            }
+        }
+    },
     "nav": {
         "home": "Home",
         "robot": "Robot",
@@ -420,7 +469,8 @@
         "upstreamRepository": "Hypfer/Valetudo",
         "donate": "Donate to Valetudo",
         "motaRepository": "Mota repository",
-        "mirrorManagement": "Mirrors"
+        "mirrorManagement": "Mirrors",
+        "system": "System"
     },
     "options": {
         "common": {
@@ -1193,7 +1243,8 @@
         "totals": {
             "count": "Cleanups",
             "time": "Total time",
-            "area": "Total area"
+            "area": "Total area",
+            "hoursShort": "{{value}} h"
         },
         "empty": "No cleanups recorded yet. They will show up here once the robot finishes its first one.",
         "loadError": "Unable to load the cleanup history.",
@@ -1209,7 +1260,12 @@
         "mapLoadError": "Unable to load the map",
         "mapAlt": "Cleanup map: {{title}}",
         "openMap": "View the map at full size",
-        "dialogSummary": "Duration: {{duration}} · Area: {{area}}"
+        "dialogSummary": "Duration: {{duration}} · Area: {{area}}",
+        "result": {
+            "completed": "Completed",
+            "interrupted": "Interrupted",
+            "error": "Error"
+        }
     },
     "diagnostics": {
         "title": "Mota diagnostics",

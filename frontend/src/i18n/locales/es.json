@@ -318,6 +318,11 @@
             "colorInvalid": "Escribe un color con el formato #rrggbb",
             "colorPicker": "Abrir el selector de color",
             "colorNames": {
+                "sage": "Salvia",
+                "wheat": "Trigo",
+                "wisteria": "Glicina",
+                "blush": "Rosa palo",
+                "mist": "Bruma",
                 "coral": "Coral",
                 "peach": "Melocotón",
                 "sand": "Arena",
@@ -378,6 +383,50 @@
     "app": {
         "name": "Mota"
     },
+    "home": {
+        "header": {
+            "robotFallback": "Tu robot"
+        },
+        "chips": {
+            "battery": "{{level}} %",
+            "batteryCharging": "{{battery}} · cargando",
+            "wifiOn": "Wifi",
+            "wifiOff": "Sin wifi"
+        },
+        "status": {
+            "withDetail": "{{status}} · {{detail}}"
+        },
+        "clean": {
+            "what": "Qué limpiar",
+            "targets": {
+                "whole": "Toda la casa",
+                "segments": "Habitaciones",
+                "zones": "Zona",
+                "goto": "Punto",
+                "edge": "Bordes",
+                "spiral": "Espiral"
+            },
+            "notAvailable": "No disponible en este robot",
+            "options": "Opciones",
+            "double": "x2",
+            "mop": "Fregar",
+            "mopHelp": "Friega en lugar de aspirar. Coloca antes la mopa y el depósito de agua.",
+            "mopOnlyWhole": "Fregar solo se aplica a «Toda la casa».",
+            "carpet": "Alfombra",
+            "power": "Potencia",
+            "pause": "Pausar",
+            "pick": {
+                "segments": "Elige habitaciones",
+                "zones": "Dibuja una zona",
+                "goto": "Elige un punto"
+            },
+            "pickHint": {
+                "segments": "Toca en el mapa las habitaciones que quieres limpiar.",
+                "zones": "Pulsa «Añadir» en el mapa y ajusta el recuadro a la zona.",
+                "goto": "Toca en el mapa el punto donde quieres que limpie el robot."
+            }
+        }
+    },
     "nav": {
         "home": "Inicio",
         "robot": "Robot",
@@ -420,7 +469,8 @@
         "upstreamRepository": "Valetudo en GitHub (Hypfer/Valetudo)",
         "donate": "Donar a Valetudo",
         "motaRepository": "Repositorio de Mota",
-        "mirrorManagement": "Espejos"
+        "mirrorManagement": "Espejos",
+        "system": "Sistema"
     },
     "options": {
         "common": {
@@ -1193,7 +1243,8 @@
         "totals": {
             "count": "Limpiezas",
             "time": "Tiempo total",
-            "area": "Superficie total"
+            "area": "Superficie total",
+            "hoursShort": "{{value}} h"
         },
         "empty": "Todavía no hay limpiezas registradas. Aparecerán aquí cuando el robot termine la primera.",
         "loadError": "No se ha podido cargar el historial de limpiezas.",
@@ -1209,7 +1260,12 @@
         "mapLoadError": "No se ha podido cargar el mapa",
         "mapAlt": "Mapa de la limpieza: {{title}}",
         "openMap": "Ver el mapa a tamaño completo",
-        "dialogSummary": "Duración: {{duration}} · Superficie: {{area}}"
+        "dialogSummary": "Duración: {{duration}} · Superficie: {{area}}",
+        "result": {
+            "completed": "Completada",
+            "interrupted": "Interrumpida",
+            "error": "Con error"
+        }
     },
     "diagnostics": {
         "title": "Diagnóstico de Mota",

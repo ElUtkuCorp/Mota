@@ -18,6 +18,7 @@ import {
     Add as AddIcon
 } from "@mui/icons-material";
 import {useTranslation} from "react-i18next";
+import {usePublishLiveMapPrimaryAction} from "../../liveMapControl";
 
 interface ZoneActionsProperties {
     zones: ZoneClientStructure[];
@@ -92,6 +93,15 @@ const ZoneActions = (
             iterations: iterationCount
         });
     }, [canClean, didSelectZones, zonesForAPI, iterationCount, cleanTemporaryZones]);
+
+    // Mota: el botón principal del panel "Qué limpiar" lanza esta misma acción
+    usePublishLiveMapPrimaryAction(zoneProperties ? {
+        label: t("map.actions.cleanZones", {count: zones.length}),
+        hasSelection: didSelectZones,
+        enabled: didSelectZones && canClean && !cleanTemporaryZonesIsExecuting,
+        busy: cleanTemporaryZonesIsExecuting,
+        run: handleClick
+    } : null);
 
     const handleLongClick = React.useCallback(() => {
         setIntegrationHelpDialogPayload(JSON.stringify({

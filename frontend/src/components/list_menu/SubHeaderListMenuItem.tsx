@@ -1,5 +1,6 @@
 import React from "react";
 import { ListItem, ListItemIcon, ListItemText } from "@mui/material";
+import {TITLE_FONT_FAMILY} from "../../theme";
 
 interface SubHeaderListMenuItemProps {
     primaryLabel: string;
@@ -21,7 +22,9 @@ export const SubHeaderListMenuItem = ({
                 primary={primaryLabel}
                 primaryTypographyProps={{
                     variant: "subtitle1",
-                    fontSize: "1.25rem"
+                    fontFamily: TITLE_FONT_FAMILY,
+                    fontWeight: 700,
+                    fontSize: "1.05rem"
                 }}
                 sx={{marginTop: "0.2rem"}}
             />

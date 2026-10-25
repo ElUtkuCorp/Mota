@@ -9,7 +9,7 @@ import ZoneClientStructure from "./structures/client_structures/ZoneClientStruct
 import GoToActions from "./actions/live_map_actions/GoToActions";
 import {TapTouchHandlerEvent} from "./utils/touch_handling/events/TapTouchHandlerEvent";
 import React from "react";
-import {LiveMapModeSwitcher} from "./LiveMapModeSwitcher";
+import {useLiveMapControl} from "./liveMapControl";
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle} from "@mui/material";
 import i18n from "../i18n";
 
@@ -60,12 +60,17 @@ class LiveMap extends BaseMap<LiveMapProps, LiveMapState> {
                 this.supportedModes.findIndex(e => e === previousMode),
                 0 //default to the first if not defined or not supported
             );
+
+            // Mota: "none" (toda la casa, bordes, espiral) también se recuerda
+            if (previousMode === "none") {
+                modeIdxToUse = -1;
+            }
         } catch (e) {
             /* users with non-working local storage will have to live with the defaults */
         }
 
         this.state = {
-            mode: this.supportedModes[modeIdxToUse] ?? "none",
+            mode: modeIdxToUse >= 0 ? (this.supportedModes[modeIdxToUse] ?? "none") : "none",
             selectedSegmentIds: [],
 
             dialogOpen: false,
@@ -75,6 +80,76 @@ class LiveMap extends BaseMap<LiveMapProps, LiveMapState> {
             zones: [],
             goToTarget: undefined
         };
+    }
+
+    private unsubscribeLiveMapControl: (() => void) | undefined;
+
+    componentDidMount(): void {
+        super.componentDidMount();
+
+        // Mota: el panel "Qué limpiar" cambia el modo del mapa a través de este almacén
+        useLiveMapControl.setState({
+            mode: this.state.mode,
+            supportedModes: this.supportedModes,
+            requestedMode: null
+        });
+
+        this.unsubscribeLiveMapControl = useLiveMapControl.subscribe((state, prevState) => {
+            if (state.requestedMode !== null && state.requestedMode !== prevState.requestedMode) {
+                const requested = state.requestedMode.mode;
+
+                if (requested === "none" || this.supportedModes.includes(requested)) {
+                    this.setMode(requested);
+                }
+            }
+        });
+    }
+
+    componentWillUnmount(): void {
+        super.componentWillUnmount();
+
+        this.unsubscribeLiveMapControl?.();
+        useLiveMapControl.setState({
+            mode: "none",
+            supportedModes: [],
+            requestedMode: null,
+            primaryAction: null
+        });
+    }
+
+    private setMode(newMode: LiveMapMode): void {
+        this.structureManager.getMapStructures().forEach(s => {
+            if (s.type === SegmentLabelMapStructure.TYPE) {
+                const label = s as SegmentLabelMapStructure;
+
+                label.selected = false;
+            }
+        });
+
+        this.structureManager.getClientStructures().forEach(s => {
+            if (s.type === GoToTargetClientStructure.TYPE) {
+                this.structureManager.removeClientStructure(s);
+            }
+
+            if (s.type === ZoneClientStructure.TYPE) {
+                this.structureManager.removeClientStructure(s);
+            }
+        });
+
+        this.updateState();
+
+        this.redrawLayers();
+
+        this.setState({
+            mode: newMode
+        });
+        useLiveMapControl.setState({mode: newMode});
+
+        try {
+            window.localStorage.setItem(LIVE_MAP_MODE_LOCAL_STORAGE_KEY, newMode);
+        } catch (e) {
+            /* intentional */
+        }
     }
 
     protected updateState() : void {
@@ -176,47 +251,6 @@ class LiveMap extends BaseMap<LiveMapProps, LiveMapState> {
                         imageRendering: "crisp-edges"
                     }}
                 />
-                {
-                    this.supportedModes.length > 0 &&
-                    <LiveMapModeSwitcher
-                        supportedModes={this.supportedModes}
-                        currentMode={this.state.mode}
-                        setMode={(newMode) => {
-                            this.structureManager.getMapStructures().forEach(s => {
-                                if (s.type === SegmentLabelMapStructure.TYPE) {
-                                    const label = s as SegmentLabelMapStructure;
-
-                                    label.selected = false;
-                                }
-                            });
-
-                            this.structureManager.getClientStructures().forEach(s => {
-                                if (s.type === GoToTargetClientStructure.TYPE) {
-                                    this.structureManager.removeClientStructure(s);
-                                }
-
-                                if (s.type === ZoneClientStructure.TYPE) {
-                                    this.structureManager.removeClientStructure(s);
-                                }
-                            });
-
-                            this.updateState();
-
-                            this.redrawLayers();
-
-                            this.setState({
-                                mode: newMode
-                            });
-
-                            try {
-                                window.localStorage.setItem(LIVE_MAP_MODE_LOCAL_STORAGE_KEY, newMode);
-                            } catch (e) {
-                                /* intentional */
-                            }
-                        }}
-                    />
-                }
-
                 <ActionsContainer>
                     {
                         this.state.mode === "segments" &&

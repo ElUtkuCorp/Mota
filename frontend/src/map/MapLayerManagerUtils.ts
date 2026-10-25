@@ -2,7 +2,7 @@
 import {RawMapLayer, RawMapLayerMaterial} from "../api/RawMapData";
 import {FourColorTheoremSolver} from "./utils/colors/FourColorTheoremSolver";
 import {PaletteMode} from "@mui/material";
-import {darkPalette, lightPalette} from "../colors";
+import {ROOM_PASTELS} from "../colors";
 
 export type RGBColor = {
     r: number;
@@ -463,18 +463,16 @@ const TYPE_SORT_MAPPING = {
     "wall": 16
 };
 
-const wallColor = hexToRgb("#333333");
+// Mota: paredes, suelo sin habitaciones y paleta automática de habitaciones del sistema visual (2.4).
+// Los cinco pasteles: los cuatro primeros los reparte el solucionador de cuatro colores y el quinto
+// es el de reserva
+const wallColor = hexToRgb("#2E3A37");
+const darkWallColor = hexToRgb("#93A39E");
 
 export const COLORS: LayerColors = {
-    floor: hexToRgb(lightPalette.blue),
+    floor: hexToRgb("#D3E2DE"),
     wall: wallColor,
-    segments: [
-        hexToRgb(lightPalette.teal),
-        hexToRgb(lightPalette.green),
-        hexToRgb(lightPalette.red),
-        hexToRgb(lightPalette.yellow),
-        hexToRgb(lightPalette.purple) // "fallback" color
-    ]
+    segments: ROOM_PASTELS.map(c => hexToRgb(c))
 };
 
 export const ACCENT_COLORS: LayerColors = {
@@ -496,28 +494,22 @@ export const BACKGROUND_ACCENT_COLORS: LayerColors = {
 };
 
 export const DARK_COLORS: LayerColors = {
-    floor: hexToRgb(darkPalette.blue),
-    wall: wallColor,
-    segments: [
-        hexToRgb(darkPalette.teal),
-        hexToRgb(darkPalette.green),
-        hexToRgb(darkPalette.red),
-        hexToRgb(darkPalette.yellow),
-        hexToRgb(darkPalette.purple) // "fallback" color
-    ]
+    floor: hexToRgb("#3A4B46"),
+    wall: darkWallColor,
+    segments: ROOM_PASTELS.map(c => adjustRGBColorBrightness(hexToRgb(c), -42))
 };
 
 export const DARK_ACCENT_COLORS: LayerColors = {
-    floor: adjustRGBColorBrightness(DARK_COLORS.floor, -25),
+    floor: adjustRGBColorBrightness(DARK_COLORS.floor, -15),
     wall: adjustRGBColorBrightness(DARK_COLORS.wall, -15),
-    segments: COLORS.segments.map(c => adjustRGBColorBrightness(c, -25))
+    segments: DARK_COLORS.segments.map(c => adjustRGBColorBrightness(c, -15))
 };
 
 
 export const DARK_BACKGROUND_COLORS: LayerColors = {
-    floor: adjustRGBColorBrightness(COLORS.floor, -50),
-    wall: adjustRGBColorBrightness(COLORS.wall, -20),
-    segments: COLORS.segments.map(c => adjustRGBColorBrightness(c, -50))
+    floor: adjustRGBColorBrightness(DARK_COLORS.floor, -45),
+    wall: adjustRGBColorBrightness(DARK_COLORS.wall, -45),
+    segments: DARK_COLORS.segments.map(c => adjustRGBColorBrightness(c, -50))
 };
 
 export const DARK_BACKGROUND_ACCENT_COLORS: LayerColors = {
