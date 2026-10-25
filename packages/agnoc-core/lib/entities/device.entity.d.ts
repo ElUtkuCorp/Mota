@@ -51,6 +51,8 @@ export declare class Device extends Entity<DeviceProps> {
     get waterLevel(): DeviceWaterLevel | undefined;
     get hasMopAttached(): boolean | undefined;
     get hasWaitingMap(): boolean | undefined;
+    /** Mota: código de fallo o evento tal y como lo envía el firmware */
+    motaRawFaultCode?: number;
     updateSystem(system: DeviceSystem): void;
     updateVersion(version: DeviceVersion): void;
     updateConfig(config: DeviceConfig): void;

@@ -809,6 +809,8 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
       chargeStatus
     }));
     this.device.updateMode(_deviceMode.DeviceModeMapper.toDomain(workMode));
+    // Mota: se conserva el código original (los 2xxx son eventos del firmware, no errores)
+    this.device.motaRawFaultCode = faultCode;
     this.device.updateError(_deviceError.DeviceErrorMapper.toDomain(faultCode));
     this.device.updateBattery(_deviceBattery.DeviceBatteryMapper.toDomain(battery));
     this.device.updateFanSpeed(_deviceFanSpeed.DeviceFanSpeedMapper.toDomain(cleanPreference));
@@ -856,6 +858,8 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
         workMode,
         chargeStatus
       }));
+      // Mota: se conserva el código original (los 2xxx son eventos del firmware, no errores)
+      this.device.motaRawFaultCode = faultCode;
       this.device.updateError(_deviceError.DeviceErrorMapper.toDomain(faultCode));
       this.device.updateFanSpeed(_deviceFanSpeed.DeviceFanSpeedMapper.toDomain(cleanPreference));
       this.emit('updateDevice');
