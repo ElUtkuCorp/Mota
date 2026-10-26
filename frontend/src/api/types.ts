@@ -719,8 +719,8 @@ export interface MotaCleanHistoryEntry {
 export interface MotaMapVersion {
     id: number;
     createdAt: string;
-    /** first: la primera foto; changed: el mapa cambió mucho en una limpieza; manual: la guardó el usuario */
-    reason: "first" | "changed" | "manual";
+    /** first: la primera foto; changed: el mapa cambió mucho en una limpieza; manual: la guardó el usuario; reset: antes de borrar el mapa */
+    reason: "first" | "changed" | "manual" | "reset";
     /** % de parecido con el mapa de después de la limpieza (solo en changed) */
     similarity: number | null;
     floorCells: number;

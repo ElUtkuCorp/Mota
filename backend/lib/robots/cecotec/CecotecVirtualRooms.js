@@ -280,6 +280,15 @@ class CecotecVirtualRooms {
     }
 
     /**
+     * Borra todas las habitaciones (al borrar el mapa)
+     */
+    clear() {
+        this.data = {width: 0, rooms: []};
+        this.fitted = undefined;
+        this.save();
+    }
+
+    /**
      * Copia de las habitaciones guardadas, para las versiones del mapa
      *
      * @returns {{width: number, rooms: Array<{id: number, name: string, color?: string, pixels: Array<number>}>}}

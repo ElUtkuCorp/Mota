@@ -552,7 +552,7 @@
                 "description": "Borrar el mapa actual",
                 "button": "Borrar",
                 "confirmTitle": "¿Restablecer el mapa?",
-                "confirmBody": "¿Seguro que quieres restablecer el mapa?"
+                "confirmBody": "¿Seguro que quieres restablecer el mapa? También se borran las habitaciones y las zonas de espejo de Mota; el mapa actual queda guardado en «Versiones del mapa»."
             },
             "persistent": {
                 "title": "Mapa persistente",
@@ -1380,7 +1380,8 @@
         "reason": {
             "first": "Primera versión",
             "changed": "Antes de una limpieza que cambió el mapa (parecido {{similarity}} %)",
-            "manual": "Guardada a mano"
+            "manual": "Guardada a mano",
+            "reset": "Antes de borrar el mapa"
         },
         "rooms_one": "{{count}} habitación",
         "rooms_other": "{{count}} habitaciones",

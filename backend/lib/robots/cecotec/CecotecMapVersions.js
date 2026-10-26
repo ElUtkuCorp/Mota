@@ -151,6 +151,18 @@ class CecotecMapVersions {
     }
 
     /**
+     * Guarda el mapa actual justo antes de que el usuario lo borre
+     *
+     * @param {Snapshot} snapshot
+     * @returns {VersionInfo|undefined}
+     */
+    saveBeforeReset(snapshot) {
+        this.pending = undefined;
+
+        return snapshot.floor.length > 0 ? this.save(snapshot, null, "reset") : undefined;
+    }
+
+    /**
      * @param {number} id
      */
     delete(id) {
@@ -168,7 +180,7 @@ class CecotecMapVersions {
      * @private
      * @param {Snapshot} snapshot
      * @param {number|null} similarity
-     * @param {"first"|"changed"|"manual"} reason
+     * @param {"first"|"changed"|"manual"|"reset"} reason
      * @returns {VersionInfo}
      */
     save(snapshot, similarity, reason) {
@@ -262,7 +274,7 @@ CecotecMapVersions.MAX_VERSIONS = 15;
  * @typedef {object} VersionInfo
  * @property {number} id
  * @property {string} createdAt
- * @property {"first"|"changed"|"manual"} reason
+ * @property {"first"|"changed"|"manual"|"reset"} reason
  * @property {number|null} similarity parecido con el mapa de después de la limpieza, en %
  * @property {number} floorCells
  * @property {number} roomCount

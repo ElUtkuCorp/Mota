@@ -552,7 +552,7 @@
                 "description": "Delete the current map",
                 "button": "Go",
                 "confirmTitle": "Reset map?",
-                "confirmBody": "Do you really want to reset the map?"
+                "confirmBody": "Do you really want to reset the map? The Mota rooms and mirror zones are deleted too; the current map is kept in «Map versions»."
             },
             "persistent": {
                 "title": "Persistent maps",
@@ -1380,7 +1380,8 @@
         "reason": {
             "first": "First version",
             "changed": "Before a cleanup that changed the map ({{similarity}} % similar)",
-            "manual": "Saved manually"
+            "manual": "Saved manually",
+            "reset": "Before the map was deleted"
         },
         "rooms_one": "{{count}} room",
         "rooms_other": "{{count}} rooms",

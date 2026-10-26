@@ -386,6 +386,27 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
     }
 
     /**
+     * Mota: el usuario borra el mapa. Se guarda como versión (con sus habitaciones) y se borran las habitaciones
+     * virtuales y las zonas de espejo, que eran de ese mapa. Un reinicio de mapa del propio firmware no pasa por
+     * aquí: ese no borra nada de Mota.
+     */
+    onUserMapReset() {
+        const map = this.robot?.device.map;
+
+        if (this.mapVersions && map) {
+            try {
+                this.mapVersions.saveBeforeReset(this.getMapSnapshot(map));
+            } catch (e) {
+                Logger.warn("Map versions: unable to save the map before the reset", e);
+            }
+        }
+
+        this.virtualRooms.clear();
+        this.setMirrorZones([]);
+        Logger.info("Map reset by the user: rooms and mirror zones cleared");
+    }
+
+    /**
      * Mota: vuelve a generar el mapa de Mota (p. ej. tras editar habitaciones)
      */
     refreshMap() {

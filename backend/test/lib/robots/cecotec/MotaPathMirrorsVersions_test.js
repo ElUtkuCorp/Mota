@@ -163,3 +163,32 @@ describe("Mota: versiones del mapa", () => {
         assert.strictEqual(versions.list().length, 0);
     });
 });
+
+describe("Mota: borrar el mapa", () => {
+    it("guarda el mapa como versión y borra habitaciones y espejos", () => {
+        const robot = Object.create(CecotecCongaRobot.prototype);
+        const calls = [];
+
+        Object.defineProperty(robot, "robot", { value: { device: { map: {} } } });
+        robot.getMapSnapshot = () => {
+            return { createdAt: 1, width: 10, floor: [1, 2, 3], map: null, rooms: { width: 10, rooms: [] } };
+        };
+        robot.mapVersions = {
+            saveBeforeReset: (snapshot) => {
+                calls.push(["version", snapshot.floor.length]);
+            }
+        };
+        robot.virtualRooms = {
+            clear: () => {
+                calls.push(["rooms"]);
+            }
+        };
+        robot.setMirrorZones = (zones) => {
+            calls.push(["mirrors", zones.length]);
+        };
+
+        robot.onUserMapReset();
+
+        assert.deepStrictEqual(calls, [["version", 3], ["rooms"], ["mirrors", 0]]);
+    });
+});
