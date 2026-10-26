@@ -1,7 +1,7 @@
 const capabilities = require("./capabilities");
 const CecotecBatteryGuard = require("./CecotecBatteryGuard");
 const CecotecCleanHistory = require("./CecotecCleanHistory");
-const CecotecMapGuard = require("./CecotecMapGuard");
+const CecotecMapVersions = require("./CecotecMapVersions");
 const CecotecMotaRouter = require("./CecotecMotaRouter");
 const CecotecQuirkFactory = require("./CecotecQuirkFactory");
 const CecotecVirtualRooms = require("./CecotecVirtualRooms");
@@ -12,6 +12,7 @@ const PendingMapChangeValetudoEvent = require("../../valetudo_events/events/Pend
 const QuirksCapability = require("../../core/capabilities/QuirksCapability");
 const SelectionPreset = require("../../entities/core/ValetudoSelectionPreset");
 const ValetudoRobot = require("../../core/ValetudoRobot");
+const ValetudoRobotError = require("../../entities/core/ValetudoRobotError");
 const {
     BatteryStateAttribute,
     StatusStateAttribute,
@@ -41,6 +42,11 @@ const DEVICE_MODE_TO_STATUS_STATE_FLAG = {
 
 // Mota: evento del firmware "vuelvo a la base por batería baja" (pushFaultEvent2Server)
 const FIRMWARE_EVENT_LOW_BATTERY_RETURN = 2100;
+// Mota: una limpieza nueva empieza al pasar de uno de estos estados a limpiando (desde pausa es reanudar)
+const CLEANING_START_FROM_STATES = [StatusStateAttribute.VALUE.DOCKED, StatusStateAttribute.VALUE.IDLE, StatusStateAttribute.VALUE.ERROR];
+const CLEANING_STATES = [StatusStateAttribute.VALUE.CLEANING, StatusStateAttribute.VALUE.MOVING];
+// Mota: dos posiciones seguidas del recorrido más separadas que esto son un salto (no se dibuja la recta)
+const PATH_MAX_GAP_METERS = 0.5;
 
 /** @type {Set<string>} */
 const NON_BLOCKING_DEVICE_ERRORS = new Set([
@@ -146,8 +152,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             quirks: [
                 quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.RESUME_AFTER_CHARGE),
                 quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.RETURN_AT_BATTERY),
-                quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.RESUME_AT_BATTERY),
-                quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.MAP_GUARD_THRESHOLD)
+                quirkFactory.getQuirk(CecotecQuirkFactory.KNOWN_QUIRKS.RESUME_AT_BATTERY)
             ]
         }));
         this.registerCapability(
@@ -267,10 +272,12 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             this.cleanHistory = new CecotecCleanHistory({
                 directory: path.join(path.dirname(this.config.location), "historial")
             });
-            this.mapGuard = new CecotecMapGuard({
+            this.mapVersions = new CecotecMapVersions({
                 robot: this,
-                referencePath: path.join(path.dirname(this.config.location), "mapa-referencia.json")
+                directory: path.join(path.dirname(this.config.location), "versiones")
             });
+            // Mota: el guardián del mapa se sustituyó por las versiones; su referencia ya no se usa
+            fs.rmSync(path.join(path.dirname(this.config.location), "mapa-referencia.json"), { force: true });
             this.registerCapability(
                 new capabilities.CecotecTotalStatisticsCapability({
                     robot: this,
@@ -329,8 +336,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             return request; // bordes y espiral se repiten tal cual
         }
 
-        const pathEntity = this.getPathEntity(map);
-        const path = pathEntity?.points?.length > 0 ? pathEntity.points : this.pathPoints;
+        const path = this.getPathPoints(map);
         let pending = this.virtualRooms.getUncoveredRoomIds(path, this.getMapResolution(map));
 
         if (request.type === "segments") {
@@ -480,20 +486,13 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             return this.onUpdateChargerPosition(robot);
         });
         robot.on("cleanReport", (report) => {
-            this.cleanHistory?.store(report, this.lastCleanStatistics);
+            this.cleanHistory?.store(report, this.lastCleanStatistics, this.state.map);
             this.lastCleanStatistics = undefined;
 
-            // Mota: la espiral trabaja con un mapa temporal; no se compara con la referencia
+            // Mota: la espiral trabaja con un mapa temporal; no cuenta para las versiones
             const { map, mode } = robot.device;
-            if (this.mapGuard && map && mode?.value !== DeviceMode.VALUE.SPIRAL) {
-                const { floor } = this.getMapPixels(map);
-                const indices = [];
-
-                for (let i = 0; i < floor.length; i += 2) {
-                    indices.push(floor[i + 1] * map.size.x + floor[i]);
-                }
-
-                this.mapGuard.check({ width: map.size.x, floor: indices });
+            if (this.mapVersions && map && mode?.value !== DeviceMode.VALUE.SPIRAL) {
+                this.mapVersions.onCleaningFinished(this.getFloorSnapshot(map));
             }
         });
     }
@@ -505,6 +504,22 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         const oldStatus =
       this.state.getFirstMatchingAttributeByConstructor(StatusStateAttribute);
         const newStatus = this.getStatusState(robot);
+
+        // Mota: foto del mapa al empezar una limpieza nueva (no al reanudar), para las versiones del mapa
+        if (
+            this.mapVersions &&
+            oldStatus &&
+            CLEANING_START_FROM_STATES.includes(oldStatus.value) &&
+            CLEANING_STATES.includes(newStatus.value) &&
+            robot.device.mode?.value !== DeviceMode.VALUE.SPIRAL &&
+            robot.device.map
+        ) {
+            try {
+                this.mapVersions.onCleaningStarted(this.getMapSnapshot(robot.device.map));
+            } catch (e) {
+                Logger.warn("Map versions: unable to take the snapshot", e);
+            }
+        }
 
         // Reset path points when robot goes from docked to another state.
         if (
@@ -638,9 +653,12 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
     }
 
     /**
+     * Recorrido completo como lista plana [x, y, x, y, ...] en píxeles del mapa
+     *
      * @param {import("@agnoc/core").DeviceMap} map
+     * @returns {Array<number>}
      */
-    getPathEntity(map) {
+    getPathPoints(map) {
         const offset = map.size.y;
         const robotPath =
       map.robotPath &&
@@ -652,16 +670,85 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
           })
           .flat();
 
-        const points =
-      robotPath && robotPath.length > 0 ? robotPath : this.pathPoints;
+        return robotPath && robotPath.length > 0 ? robotPath : this.pathPoints;
+    }
 
-        if (points.length === 0) {
-            return;
+    /**
+     * Mota: el firmware solo guarda las posiciones mientras limpia. Lo que recorre sin limpiar (de la base a la
+     * zona, la vuelta a casa, o un salto al relocalizarse) llega como un salto entre dos puntos lejanos, y se dibujaba
+     * como una recta que atraviesa paredes. El recorrido se parte en tramos en cada salto y los saltos no se dibujan.
+     *
+     * @param {import("@agnoc/core").DeviceMap} map
+     * @returns {Array<PathMapEntity>}
+     */
+    getPathEntities(map) {
+        const points = this.getPathPoints(map);
+        const maxGap = PATH_MAX_GAP_METERS / this.getMapResolution(map);
+
+        return CecotecCongaRobot.SPLIT_PATH(points, maxGap).map(segment => {
+            return new PathMapEntity({
+                type: PathMapEntity.TYPE.PATH,
+                points: segment,
+            });
+        });
+    }
+
+    /**
+     * @param {Array<number>} points lista plana [x, y, x, y, ...]
+     * @param {number} maxGap distancia máxima entre dos puntos seguidos del mismo tramo, en píxeles
+     * @returns {Array<Array<number>>} tramos con al menos dos puntos
+     */
+    static SPLIT_PATH(points, maxGap) {
+        const segments = [];
+        let current = [];
+
+        for (let i = 0; i < points.length - 1; i += 2) {
+            const x = points[i];
+            const y = points[i + 1];
+
+            if (current.length >= 2 && Math.hypot(x - current[current.length - 2], y - current[current.length - 1]) > maxGap) {
+                segments.push(current);
+                current = [];
+            }
+
+            current.push(x, y);
         }
 
-        return new PathMapEntity({
-            type: PathMapEntity.TYPE.PATH,
-            points: points,
+        segments.push(current);
+
+        return segments.filter(segment => {
+            return segment.length >= 4;
+        });
+    }
+
+    /**
+     * Mota: celdas de suelo del mapa como índices y * width + x
+     *
+     * @param {import("@agnoc/core").DeviceMap} map
+     * @returns {{width: number, floor: Array<number>}}
+     */
+    getFloorSnapshot(map) {
+        const { floor } = this.getMapPixels(map);
+        const indices = [];
+
+        for (let i = 0; i < floor.length; i += 2) {
+            indices.push(floor[i + 1] * map.size.x + floor[i]);
+        }
+
+        return { width: map.size.x, floor: indices };
+    }
+
+    /**
+     * Mota: foto del mapa actual para las versiones del mapa
+     *
+     * @param {import("@agnoc/core").DeviceMap} map
+     * @returns {import("./CecotecMapVersions").Snapshot}
+     */
+    getMapSnapshot(map) {
+        return Object.assign(this.getFloorSnapshot(map), {
+            createdAt: Date.now(),
+            map: this.state.map ? JSON.parse(JSON.stringify(this.state.map)) : null,
+            rooms: this.virtualRooms.exportData(),
         });
     }
 
@@ -711,10 +798,160 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
                 return result;
             };
 
-            return { floor: outside(floor), walls: outside(walls) };
+            return CecotecCongaRobot.HIDE_BEHIND_MIRRORS(outside(floor), outside(walls), mirrorZones, this.getHomePixel(map));
         }
 
         return { floor: floor, walls: walls };
+    }
+
+    /**
+     * Mota: posición de la base en píxeles de las capas, si se conoce
+     *
+     * @param {import("@agnoc/core").DeviceMap} map
+     * @returns {{x: number, y: number} | undefined}
+     */
+    getHomePixel(map) {
+        const pose = map.charger ?? map.robot;
+
+        if (!pose) {
+            return undefined;
+        }
+
+        const { x, y } = map.toPixel(pose.toCoordinates());
+
+        return { x: Math.round(x), y: Math.round(map.size.y - y) };
+    }
+
+    /**
+     * Mota: el láser ve a través del espejo una "habitación" reflejada, más grande que la zona marcada. La zona de
+     * espejo hace de pared: el suelo que solo se alcanza desde la base cruzando una zona de espejo es reflejo y se
+     * oculta (con sus paredes). Si no se sabe dónde está la base, solo se quita lo que hay dentro de las zonas.
+     *
+     * @param {Array<number>} floor pares x, y planos, ya sin lo que hay dentro de las zonas
+     * @param {Array<number>} walls pares x, y planos, ya sin lo que hay dentro de las zonas
+     * @param {Array<{x0: number, y0: number, x1: number, y1: number}>} mirrorZones
+     * @param {{x: number, y: number} | undefined} home
+     * @returns {{floor: Array<number>, walls: Array<number>}}
+     */
+    static HIDE_BEHIND_MIRRORS(floor, walls, mirrorZones, home) {
+        if (!home || floor.length === 0) {
+            return { floor: floor, walls: walls };
+        }
+
+        const key = (x, y) => {
+            return (y << 16) | (x & 0xffff);
+        };
+        const floorSet = new Set();
+        for (let i = 0; i < floor.length; i += 2) {
+            floorSet.add(key(floor[i], floor[i + 1]));
+        }
+
+        // La base está junto al suelo, no sobre él: se busca el suelo más cercano en un radio pequeño
+        let seed;
+        for (let r = 0; r <= 6 && seed === undefined; r++) {
+            for (let dx = -r; dx <= r && seed === undefined; dx++) {
+                for (let dy = -r; dy <= r && seed === undefined; dy++) {
+                    if (floorSet.has(key(home.x + dx, home.y + dy))) {
+                        seed = [home.x + dx, home.y + dy];
+                    }
+                }
+            }
+        }
+        if (seed === undefined) {
+            return { floor: floor, walls: walls };
+        }
+
+        const reached = new Set([key(seed[0], seed[1])]);
+        const queue = [seed];
+        while (queue.length > 0) {
+            const [x, y] = queue.pop();
+
+            for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+                const k = key(nx, ny);
+
+                if (floorSet.has(k) && !reached.has(k)) {
+                    reached.add(k);
+                    queue.push([nx, ny]);
+                }
+            }
+        }
+
+        // Solo se oculta lo que queda pegado a una zona de espejo; las islas sueltas (p. ej. bajo un mueble)
+        // no tienen que ver con los espejos y se dejan como estaban
+        const nearMirror = (x, y) => {
+            return mirrorZones.some(z => {
+                return x >= z.x0 - 2 && x <= z.x1 + 2 && y >= z.y0 - 2 && y <= z.y1 + 2;
+            });
+        };
+        const hidden = new Set();
+        const visited = new Set();
+        for (let i = 0; i < floor.length; i += 2) {
+            const start = key(floor[i], floor[i + 1]);
+
+            if (reached.has(start) || visited.has(start)) {
+                continue;
+            }
+
+            const component = [];
+            let touchesMirror = false;
+            const stack = [[floor[i], floor[i + 1]]];
+            visited.add(start);
+            while (stack.length > 0) {
+                const [x, y] = stack.pop();
+                component.push(key(x, y));
+                touchesMirror = touchesMirror || nearMirror(x, y);
+
+                for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+                    const k = key(nx, ny);
+
+                    if (floorSet.has(k) && !visited.has(k) && !reached.has(k)) {
+                        visited.add(k);
+                        stack.push([nx, ny]);
+                    }
+                }
+            }
+
+            if (touchesMirror) {
+                component.forEach(k => {
+                    hidden.add(k);
+                });
+            }
+        }
+
+        if (hidden.size === 0) {
+            return { floor: floor, walls: walls };
+        }
+
+        const keptFloor = [];
+        for (let i = 0; i < floor.length; i += 2) {
+            if (!hidden.has(key(floor[i], floor[i + 1]))) {
+                keptFloor.push(floor[i], floor[i + 1]);
+            }
+        }
+
+        // Una pared se quita si toca suelo oculto y ningún suelo visible
+        const keptWalls = [];
+        for (let i = 0; i < walls.length; i += 2) {
+            const x = walls[i];
+            const y = walls[i + 1];
+            let touchesHidden = false;
+            let touchesVisible = false;
+
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    const k = key(x + dx, y + dy);
+
+                    touchesHidden = touchesHidden || hidden.has(k);
+                    touchesVisible = touchesVisible || (floorSet.has(k) && !hidden.has(k));
+                }
+            }
+
+            if (!touchesHidden || touchesVisible) {
+                keptWalls.push(x, y);
+            }
+        }
+
+        return { floor: keptFloor, walls: keptWalls };
     }
 
     /**
@@ -1049,7 +1286,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
                 this.getChargerEntity(map),
                 this.getRobotEntity(map),
                 this.getGoToTarget(map),
-                this.getPathEntity(map),
+                ...this.getPathEntities(map),
                 ...this.getRestrictedZoneEntities(map),
             ].filter(Boolean),
             layers: [
@@ -1204,6 +1441,16 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             metaData: {
                 error_description: errorDescription,
             },
+            // Mota: sin este objeto, MQTT fallaba al publicar el error ("reading 'severity'") en cada refresco
+            error: value === StatusStateAttribute.VALUE.ERROR ? new ValetudoRobotError({
+                severity: {
+                    kind: ValetudoRobotError.SEVERITY_KIND.UNKNOWN,
+                    level: ValetudoRobotError.SEVERITY_LEVEL.ERROR,
+                },
+                subsystem: ValetudoRobotError.SUBSYSTEM.UNKNOWN,
+                message: errorDescription ?? "",
+                vendorErrorCode: String(robot.device.motaRawFaultCode ?? errorValue ?? ""),
+            }) : undefined,
         });
     }
 

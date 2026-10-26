@@ -280,6 +280,26 @@ class CecotecVirtualRooms {
     }
 
     /**
+     * Copia de las habitaciones guardadas, para las versiones del mapa
+     *
+     * @returns {{width: number, rooms: Array<{id: number, name: string, color?: string, pixels: Array<number>}>}}
+     */
+    exportData() {
+        return JSON.parse(JSON.stringify(this.data));
+    }
+
+    /**
+     * Sustituye las habitaciones por las de una versión guardada
+     *
+     * @param {{width: number, rooms: Array<{id: number, name: string, color?: string, pixels: Array<number>}>}} data
+     */
+    importData(data) {
+        this.data = JSON.parse(JSON.stringify(data));
+        this.fitted = undefined;
+        this.save();
+    }
+
+    /**
      * @private
      */
     load() {

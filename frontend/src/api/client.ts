@@ -38,6 +38,8 @@ import {
     MotaCleanHistoryEntry,
     MotaCleanHistoryTotals,
     MotaDiagnostics,
+    MotaMapVersion,
+    MotaMapVersionsResponse,
     MotaMirrorZone,
     MotaRoom,
     MopDockMopDryingTimeControlProperties,
@@ -1496,4 +1498,61 @@ export const fetchMotaRooms = async (): Promise<Array<MotaRoom>> => {
 // color: "#rrggbb", o "" para volver al color automático
 export const sendMotaRoomColor = async (id: string, color: string): Promise<void> => {
     await valetudoAPI.put(`/mota/rooms/${encodeURIComponent(id)}/color`, {color: color});
+};
+
+// Mota: mapa de Mota guardado al terminar una limpieza (historial)
+export const fetchMotaCleanHistoryMap = async (cleanId: number): Promise<RawMapData> => {
+    return valetudoAPI
+        .get<RawMapData>(`/mota/history/${encodeURIComponent(String(cleanId))}/map.json`)
+        .then(({data}) => {
+            return preprocessMap(data);
+        });
+};
+
+// Mota: versiones del mapa
+
+export const fetchMotaMapVersions = async (): Promise<MotaMapVersionsResponse> => {
+    return valetudoAPI
+        .get<MotaMapVersionsResponse>("/mota/map-versions")
+        .then(({data}) => {
+            return data;
+        });
+};
+
+export const sendMotaMapVersionsThreshold = async (threshold: number): Promise<void> => {
+    await valetudoAPI.put("/mota/map-versions/threshold", {threshold: threshold});
+};
+
+export const sendMotaMapVersionSave = async (): Promise<MotaMapVersion> => {
+    return valetudoAPI
+        .post<MotaMapVersion>("/mota/map-versions")
+        .then(({data}) => {
+            return data;
+        });
+};
+
+export const fetchMotaMapVersionMap = async (id: number): Promise<RawMapData> => {
+    return valetudoAPI
+        .get<RawMapData>(`/mota/map-versions/${encodeURIComponent(String(id))}/map.json`)
+        .then(({data}) => {
+            return preprocessMap(data);
+        });
+};
+
+export const sendMotaMapVersionRestoreRooms = async (id: number): Promise<void> => {
+    await valetudoAPI.post(`/mota/map-versions/${encodeURIComponent(String(id))}/restore-rooms`);
+};
+
+export const deleteMotaMapVersion = async (id: number): Promise<void> => {
+    await valetudoAPI.delete(`/mota/map-versions/${encodeURIComponent(String(id))}`);
+};
+
+// Mota: reiniciar el robot y borrar el registro
+
+export const sendMotaSystemReboot = async (): Promise<void> => {
+    await valetudoAPI.post("/mota/system/reboot");
+};
+
+export const deleteValetudoLog = async (): Promise<void> => {
+    await valetudoAPI.delete("/valetudo/log/content");
 };

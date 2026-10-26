@@ -160,6 +160,15 @@ import {
     sendMotaMirrors,
     sendMotaResegment,
     fetchMotaRooms,
+    fetchMotaCleanHistoryMap,
+    fetchMotaMapVersions,
+    fetchMotaMapVersionMap,
+    sendMotaMapVersionsThreshold,
+    sendMotaMapVersionSave,
+    sendMotaMapVersionRestoreRooms,
+    deleteMotaMapVersion,
+    sendMotaSystemReboot,
+    deleteValetudoLog,
     sendMotaRoomColor,
     fetchCombinedVirtualRestrictions,
 } from "./client";
@@ -296,6 +305,9 @@ enum QueryKey {
     MotaDiagnostics = "mota_diagnostics",
     MotaMirrors = "mota_mirrors",
     MotaRooms = "mota_rooms",
+    MotaCleanHistoryMap = "mota_clean_history_map",
+    MotaMapVersions = "mota_map_versions",
+    MotaMapVersionMap = "mota_map_version_map",
 }
 
 // "capability" is either a capability name or an i18n key
@@ -2102,5 +2114,114 @@ export const useMotaResegmentMutation = (
             await queryClient.invalidateQueries({queryKey: [QueryKey.Map]});
             await options?.onSuccess?.(data, ...args);
         },
+    });
+};
+
+// Mota: mapa de Mota de una limpieza del historial
+
+export const useMotaCleanHistoryMapQuery = (cleanId: number | undefined) => {
+    return useQuery({
+        queryKey: [QueryKey.MotaCleanHistoryMap, cleanId],
+        queryFn: () => {
+            return fetchMotaCleanHistoryMap(cleanId as number);
+        },
+        enabled: cleanId !== undefined,
+
+        staleTime: Infinity,
+        retry: false
+    });
+};
+
+// Mota: versiones del mapa
+
+export const useMotaMapVersionsQuery = () => {
+    return useQuery({
+        queryKey: [QueryKey.MotaMapVersions],
+        queryFn: fetchMotaMapVersions,
+
+        staleTime: 30_000,
+        retry: 1
+    });
+};
+
+export const useMotaMapVersionMapQuery = (id: number | undefined) => {
+    return useQuery({
+        queryKey: [QueryKey.MotaMapVersionMap, id],
+        queryFn: () => {
+            return fetchMotaMapVersionMap(id as number);
+        },
+        enabled: id !== undefined,
+
+        staleTime: Infinity,
+        retry: false
+    });
+};
+
+const useInvalidateMotaMapVersions = () => {
+    const queryClient = useQueryClient();
+
+    return React.useCallback(async () => {
+        await queryClient.invalidateQueries({queryKey: [QueryKey.MotaMapVersions]});
+    }, [queryClient]);
+};
+
+export const useMotaMapVersionsThresholdMutation = () => {
+    const invalidate = useInvalidateMotaMapVersions();
+
+    return useMutation({
+        mutationFn: sendMotaMapVersionsThreshold,
+        onError: useOnCommandError("api.settings.mapVersions"),
+        onSuccess: invalidate,
+    });
+};
+
+export const useMotaMapVersionSaveMutation = () => {
+    const invalidate = useInvalidateMotaMapVersions();
+
+    return useMutation({
+        mutationFn: sendMotaMapVersionSave,
+        onError: useOnCommandError("api.settings.mapVersions"),
+        onSuccess: invalidate,
+    });
+};
+
+export const useMotaMapVersionDeleteMutation = () => {
+    const invalidate = useInvalidateMotaMapVersions();
+
+    return useMutation({
+        mutationFn: deleteMotaMapVersion,
+        onError: useOnCommandError("api.settings.mapVersions"),
+        onSuccess: invalidate,
+    });
+};
+
+export const useMotaMapVersionRestoreRoomsMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: sendMotaMapVersionRestoreRooms,
+        onError: useOnCommandError("api.settings.mapVersions"),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({queryKey: [QueryKey.MotaRooms]});
+            await queryClient.invalidateQueries({queryKey: [QueryKey.Map]});
+        },
+    });
+};
+
+// Mota: reiniciar el robot
+
+export const useMotaSystemRebootMutation = () => {
+    return useMutation({
+        mutationFn: sendMotaSystemReboot,
+        onError: useOnCommandError("api.settings.reboot"),
+    });
+};
+
+// Mota: borrar el registro
+
+export const useValetudoLogDeleteMutation = () => {
+    return useMutation({
+        mutationFn: deleteValetudoLog,
+        onError: useOnCommandError("api.settings.logDelete"),
     });
 };

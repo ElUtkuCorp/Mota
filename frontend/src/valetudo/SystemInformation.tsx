@@ -28,8 +28,11 @@ import {
     useValetudoVersionQuery,
     useRobotPropertiesQuery,
     useValetudoInformationQuery,
+    useMotaSystemRebootMutation,
     CPUUsageType,
+    SystemHostInfo,
 } from "../api";
+import ConfirmationDialog from "../components/ConfirmationDialog";
 import RatioBar from "../components/RatioBar";
 import {convertSecondsToHumans} from "../utils";
 import {useIsMobileView} from "../hooks";
@@ -43,6 +46,77 @@ import {formatNumber} from "../i18n";
 
 const formatMiB = (bytes: number): string => {
     return formatNumber(bytes / 1024 / 1024, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " MiB";
+};
+
+// Mota: uso de RAM y CPU en números (además de las barras)
+const getUsage = (info: SystemHostInfo): {ramPercent: number, ramUsed: number, cpuPercent: number} => {
+    const ramUsed = info.mem.total - info.mem.free;
+    const cpuBusy = info.cpus.map(cpu => {
+        return 100 - (cpu.usage[CPUUsageType.IDLE] ?? 0);
+    });
+
+    return {
+        ramPercent: info.mem.total > 0 ? Math.round(ramUsed / info.mem.total * 100) : 0,
+        ramUsed: ramUsed,
+        cpuPercent: cpuBusy.length > 0 ? Math.round(cpuBusy.reduce((a, b) => {
+            return a + b;
+        }, 0) / cpuBusy.length) : 0,
+    };
+};
+
+const UsageTile = ({label, value, detail}: {label: string, value: string, detail?: string}): React.ReactElement => {
+    return (
+        <Paper variant="outlined" sx={{px: 2, py: 1.25, minWidth: 140, flexGrow: 1}}>
+            <Typography variant="caption" color="textSecondary">{label}</Typography>
+            <Typography sx={{fontSize: "1.75rem", fontWeight: 800, lineHeight: 1.2}}>{value}</Typography>
+            {detail && <Typography variant="caption" color="textSecondary">{detail}</Typography>}
+        </Paper>
+    );
+};
+
+// Mota: reiniciar el sistema del robot (ejecuta reboot)
+const RebootCard = (): React.ReactElement => {
+    const {t} = useTranslation();
+    const [dialogOpen, setDialogOpen] = React.useState(false);
+    const {mutate: reboot, isPending, isSuccess} = useMotaSystemRebootMutation();
+
+    return (
+        <Card sx={{boxShadow: 3}}>
+            <CardContent>
+                <Typography variant="h6" gutterBottom>
+                    {t("systemInformation.reboot.title")}
+                </Typography>
+                <Divider/>
+                <Stack spacing={1.5} sx={{mt: 1.5}}>
+                    <Typography variant="body2" color="textSecondary">
+                        {isSuccess ? t("systemInformation.reboot.inProgress") : t("systemInformation.reboot.description")}
+                    </Typography>
+                    <Button
+                        variant="outlined"
+                        color="warning"
+                        disabled={isPending || isSuccess}
+                        onClick={() => {
+                            setDialogOpen(true);
+                        }}
+                        sx={{alignSelf: "flex-start"}}
+                    >
+                        {t("systemInformation.reboot.button")}
+                    </Button>
+                </Stack>
+                <ConfirmationDialog
+                    title={t("systemInformation.reboot.confirmTitle")}
+                    text={t("systemInformation.reboot.confirmText")}
+                    open={dialogOpen}
+                    onClose={() => {
+                        setDialogOpen(false);
+                    }}
+                    onAccept={() => {
+                        reboot();
+                    }}
+                />
+            </CardContent>
+        </Card>
+    );
 };
 
 const SystemRuntimeInfo = (): React.ReactElement => {
@@ -251,6 +325,19 @@ const SystemInformation = (): React.ReactElement => {
         isPending: robotPropertiesPending
     } = useRobotPropertiesQuery();
 
+    // Mota: el uso de RAM y CPU se refresca solo cada 5 s
+    React.useEffect(() => {
+        const interval = setInterval(() => {
+            fetchSystemHostInfo().catch(() => {
+                /* intentional */
+            });
+        }, 5000);
+
+        return () => {
+            clearInterval(interval);
+        };
+    }, [fetchSystemHostInfo]);
+
     const valetudoInformationViewLoading = versionPending || valetudoInformationPending;
 
     const valetudoInformationView = React.useMemo(() => {
@@ -352,8 +439,28 @@ const SystemInformation = (): React.ReactElement => {
         };
 
 
+        const usage = getUsage(systemHostInfo);
+
         return (
             <Grid2 container spacing={2}>
+                <Grid2 size={{xs: 12}}>
+                    <Stack direction="row" spacing={1.5} useFlexGap flexWrap="wrap">
+                        <UsageTile
+                            label={t("systemInformation.ramUsage")}
+                            value={`${usage.ramPercent} %`}
+                            detail={t("systemInformation.ramUsageDetail", {used: formatMiB(usage.ramUsed), total: formatMiB(systemHostInfo.mem.total)})}
+                        />
+                        <UsageTile
+                            label={t("systemInformation.cpuUsageNow")}
+                            value={`${usage.cpuPercent} %`}
+                            detail={t("systemInformation.cpuUsageDetail", {count: systemHostInfo.cpus.length})}
+                        />
+                        <UsageTile
+                            label={t("systemInformation.memoryMota")}
+                            value={formatMiB(systemHostInfo.mem.valetudo_current)}
+                        />
+                    </Stack>
+                </Grid2>
                 <Grid2>
                     <Typography variant="caption" color="textSecondary">
                         {t("systemInformation.hostname")}
@@ -494,6 +601,11 @@ const SystemInformation = (): React.ReactElement => {
                     style={{flexGrow: 1}}
                 >
                     <SystemRuntimeInfo/>
+                </Grid2>
+                <Grid2
+                    style={{flexGrow: 1}}
+                >
+                    <RebootCard/>
                 </Grid2>
                 <MotaDiagnostics/>
             </Grid2>

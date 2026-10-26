@@ -3,7 +3,7 @@ const fs = require("fs");
 const LinuxTools = require("../../utils/LinuxTools");
 const Logger = require("../../Logger");
 const os = require("os");
-const {execSync} = require("child_process");
+const {exec, execSync} = require("child_process");
 
 /**
  * Mota: API propia en /api/v2/mota/ con el historial de limpiezas y el diagnóstico del robot.
@@ -41,6 +41,109 @@ class CecotecMotaRouter {
             } else {
                 res.sendStatus(404);
             }
+        });
+
+        this.router.get("/history/:cleanId/map.json", (req, res) => {
+            try {
+                const map = this.robot.cleanHistory?.getMotaMap(Number(req.params.cleanId));
+
+                if (map) {
+                    res.json(map);
+                } else {
+                    res.sendStatus(404);
+                }
+            } catch (e) {
+                res.status(500).json(e.message);
+            }
+        });
+
+        this.router.get("/map-versions", (req, res) => {
+            if (!this.robot.mapVersions) {
+                res.sendStatus(404);
+
+                return;
+            }
+
+            res.json({
+                threshold: this.robot.mapVersions.getThreshold(),
+                versions: this.robot.mapVersions.list(),
+            });
+        });
+
+        this.router.put("/map-versions/threshold", express.json(), (req, res) => {
+            const threshold = req.body?.threshold;
+
+            if (!this.robot.mapVersions || typeof threshold !== "number" || !Number.isInteger(threshold) || threshold < 0 || threshold > 100) {
+                res.sendStatus(400);
+
+                return;
+            }
+
+            this.robot.mapVersions.setThreshold(threshold);
+            res.sendStatus(200);
+        });
+
+        this.router.post("/map-versions", (req, res) => {
+            try {
+                const map = this.robot.robot?.device.map;
+
+                if (!this.robot.mapVersions || !map) {
+                    res.status(400).json("There is no map");
+
+                    return;
+                }
+
+                res.json(this.robot.mapVersions.saveManual(this.robot.getMapSnapshot(map)));
+            } catch (e) {
+                res.status(400).json(e.message);
+            }
+        });
+
+        this.router.get("/map-versions/:id/map.json", (req, res) => {
+            try {
+                const version = this.robot.mapVersions?.get(Number(req.params.id));
+
+                if (version?.map) {
+                    res.json(version.map);
+                } else {
+                    res.sendStatus(404);
+                }
+            } catch (e) {
+                res.status(500).json(e.message);
+            }
+        });
+
+        this.router.post("/map-versions/:id/restore-rooms", (req, res) => {
+            try {
+                this.robot.mapVersions.restoreRooms(Number(req.params.id));
+                this.robot.refreshMap();
+                res.sendStatus(200);
+            } catch (e) {
+                res.status(400).json(e.message);
+            }
+        });
+
+        this.router.delete("/map-versions/:id", (req, res) => {
+            try {
+                this.robot.mapVersions.delete(Number(req.params.id));
+                res.sendStatus(200);
+            } catch (e) {
+                res.status(400).json(e.message);
+            }
+        });
+
+        // Reinicia el sistema del robot (botón de Información del sistema). Se responde antes de reiniciar.
+        this.router.post("/system/reboot", (req, res) => {
+            Logger.info("Rebooting the robot on request");
+            res.sendStatus(200);
+
+            setTimeout(() => {
+                exec("reboot", (err) => {
+                    if (err) {
+                        Logger.error("Unable to reboot", err);
+                    }
+                });
+            }, 1000);
         });
 
         this.router.get("/rooms", (req, res) => {

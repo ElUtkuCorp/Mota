@@ -21,7 +21,10 @@ import {
     ValetudoManualMovementVector,
     ManualControlInteraction,
     HighResolutionManualControlInteraction,
+    useRobotMapQuery,
 } from "../api";
+import {MotaMapView} from "../map/StaticMap";
+import {useLocalStorage} from "../hooks";
 import { useCapabilitiesSupported } from "../CapabilitiesProvider";
 import PaperContainer from "../components/PaperContainer";
 import { DuststreamCanvas, DuststreamPlaceholder } from "./Duststream";
@@ -235,8 +238,25 @@ const ManualControlInternal: React.FunctionComponent = (): React.ReactElement =>
     );
 };
 
+// Mota: mapa en vivo (opcional) para ver dónde está el robot mientras se maneja
+const ManualControlMap = (): React.ReactElement => {
+    const {t} = useTranslation();
+    const {data: mapData, isPending} = useRobotMapQuery();
+
+    if (isPending) {
+        return <Skeleton height={"12rem"}/>;
+    }
+
+    if (!mapData) {
+        return <Typography color="textSecondary">{t("map.noMapData")}</Typography>;
+    }
+
+    return <MotaMapView rawMap={mapData} height={"min(42vh, 440px)"} animateRobot={true}/>;
+};
+
 const ManualControl = (): React.ReactElement => {
     const {t} = useTranslation();
+    const [showMap, setShowMap] = useLocalStorage<boolean>("mota-manual-control-map", false);
     const [highResSupported, standardSupported] = useCapabilitiesSupported(
         Capability.HighResolutionManualControl,
         Capability.ManualControl
@@ -272,7 +292,8 @@ const ManualControl = (): React.ReactElement => {
                 flex: "0 1 auto",
                 maxHeight: "100%",
                 minHeight: 0,
-                overflow: "hidden",
+                // Mota: con el mapa visible puede no caber todo en pantallas bajas
+                overflow: showMap ? "auto" : "hidden",
             }}
         >
             {cameraEnabled && cameraProperties && (
@@ -290,6 +311,24 @@ const ManualControl = (): React.ReactElement => {
                     ) : (
                         <DuststreamPlaceholder dimensions={cameraProperties}/>
                     )}
+                </Box>
+            )}
+            <Box sx={{display: "flex", justifyContent: "flex-end", flexShrink: 0}}>
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={showMap}
+                            onChange={(e) => {
+                                setShowMap(e.target.checked);
+                            }}
+                        />
+                    }
+                    label={t("manualControl.showMap")}
+                />
+            </Box>
+            {showMap && (
+                <Box sx={{mb: 2, flexShrink: 0, width: "100%"}}>
+                    <ManualControlMap/>
                 </Box>
             )}
             <Box sx={{flexShrink: 0}}>

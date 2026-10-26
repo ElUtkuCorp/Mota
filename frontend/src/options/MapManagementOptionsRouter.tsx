@@ -7,6 +7,7 @@ import {Capability, useDuststreamingConfigurationQuery} from "../api";
 import React from "react";
 import RobotCoverageMapPage from "../map/RobotCoverageMapPage";
 import SpectatorMapPage from "../map/SpectatorMapPage";
+import MapVersionsPage from "./MapVersionsPage";
 
 const OptionsRouter = (): React.ReactElement => {
     const [
@@ -83,6 +84,9 @@ const OptionsRouter = (): React.ReactElement => {
             />
 
             <Route path={"robot_coverage"} element={<RobotCoverageMapPage/>}/>
+
+            {/* Mota: versiones del mapa (sin la API propia, la página muestra el error de carga) */}
+            <Route path={"versions"} element={<MapVersionsPage/>}/>
 
             <Route path={"spectator"} element={duststreamingPossible ? <SpectatorMapPage/> : <Navigate to="/" />}/>
 

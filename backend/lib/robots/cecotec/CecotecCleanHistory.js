@@ -1,11 +1,13 @@
 const fs = require("fs");
 const Logger = require("../../Logger");
 const path = require("path");
+const zlib = require("zlib");
 
 /**
  * Mota: historial de limpiezas a partir de los informes que el robot envía al terminar
  * (DEVICE_EVENT_REPORT_CLEANTASK + DEVICE_EVENT_REPORT_CLEANMAP). Se guardan en disco un JSON con
- * el resumen y el PNG del mapa, y se conservan las últimas MAX_ENTRIES para no llenar UDISK.
+ * el resumen, el mapa de Mota al terminar (comprimido, con el recorrido) y el PNG del firmware, y se
+ * conservan las últimas MAX_ENTRIES para no llenar UDISK.
  */
 class CecotecCleanHistory {
     /**
@@ -19,8 +21,9 @@ class CecotecCleanHistory {
     /**
      * @param {{cleanId: number, task?: Record<string, any>, mapdata?: Uint8Array}} report
      * @param {{time?: number, area?: number}} [lastStatistics] últimos valores de la limpieza en curso
+     * @param {any} [motaMap] el mapa de Mota al terminar la limpieza
      */
-    store(report, lastStatistics) {
+    store(report, lastStatistics, motaMap) {
         try {
             fs.mkdirSync(this.directory, { recursive: true });
 
@@ -32,12 +35,16 @@ class CecotecCleanHistory {
                 durationSeconds: typeof task.startTime === "number" && typeof task.endTime === "number" ? task.endTime - task.startTime : lastStatistics?.time,
                 area: lastStatistics?.area,
                 hasMap: report.mapdata !== undefined && report.mapdata.length > 0,
+                hasMotaMap: motaMap !== undefined && motaMap !== null,
                 rawTask: task
             };
 
             fs.writeFileSync(path.join(this.directory, `${report.cleanId}.json`), JSON.stringify(entry, null, 2));
             if (entry.hasMap) {
                 fs.writeFileSync(path.join(this.directory, `${report.cleanId}.png`), report.mapdata);
+            }
+            if (entry.hasMotaMap) {
+                fs.writeFileSync(path.join(this.directory, `${report.cleanId}.map.json.gz`), zlib.gzipSync(JSON.stringify(motaMap)));
             }
 
             this.addToTotals(entry);
@@ -92,6 +99,20 @@ class CecotecCleanHistory {
     }
 
     /**
+     * @param {number} cleanId
+     * @returns {any|undefined} el mapa de Mota de esa limpieza, si se guardó
+     */
+    getMotaMap(cleanId) {
+        const mapPath = path.join(this.directory, `${Number(cleanId)}.map.json.gz`);
+
+        if (!Number.isInteger(Number(cleanId)) || !fs.existsSync(mapPath)) {
+            return undefined;
+        }
+
+        return JSON.parse(zlib.gunzipSync(fs.readFileSync(mapPath)).toString());
+    }
+
+    /**
      * @private
      * @param {{durationSeconds?: number, area?: number}} entry
      */
@@ -114,7 +135,7 @@ class CecotecCleanHistory {
         });
 
         ids.slice(CecotecCleanHistory.MAX_ENTRIES).forEach(id => {
-            for (const ext of [".json", ".png"]) {
+            for (const ext of [".json", ".png", ".map.json.gz"]) {
                 fs.rmSync(path.join(this.directory, `${id}${ext}`), { force: true });
             }
         });

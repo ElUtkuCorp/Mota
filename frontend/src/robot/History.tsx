@@ -3,6 +3,7 @@ import {
     Box,
     Button,
     ButtonBase,
+    CircularProgress,
     Container,
     Dialog,
     DialogActions,
@@ -24,6 +25,7 @@ import {
     getMotaCleanHistoryMapUrl,
     MotaCleanHistoryEntry,
     PresetValue,
+    useMotaCleanHistoryMapQuery,
     useMotaCleanHistoryQuery,
     useMotaCleanHistoryTotalsQuery,
 } from "../api";
@@ -31,6 +33,7 @@ import {useIsMobileView} from "../hooks";
 import {DISPLAY_LOCALE, formatNumber} from "../i18n";
 import {getPresetFriendlyName} from "../presetUtils";
 import {TITLE_FONT_FAMILY} from "../theme";
+import {MotaMapView} from "../map/StaticMap";
 
 const THUMBNAIL_SIZE = 64;
 
@@ -196,6 +199,9 @@ const MapThumbnail: React.FunctionComponent<{ entry: MotaCleanHistoryEntry, alt:
 }): React.ReactElement => {
     const theme = useTheme();
     const [failed, setFailed] = React.useState(false);
+    // Mota: las limpiezas nuevas se ven con el mapa de Mota al abrirlas; la miniatura del firmware solo queda
+    // para las antiguas, que no tienen otro mapa
+    const showFirmwareImage = entry.hasMap && entry.hasMotaMap !== true && !failed;
 
     return (
         <Box
@@ -212,7 +218,7 @@ const MapThumbnail: React.FunctionComponent<{ entry: MotaCleanHistoryEntry, alt:
             }}
         >
             {
-                entry.hasMap && !failed ?
+                showFirmwareImage ?
                     <img
                         src={getMotaCleanHistoryMapUrl(entry.cleanId)}
                         alt={alt}
@@ -226,7 +232,7 @@ const MapThumbnail: React.FunctionComponent<{ entry: MotaCleanHistoryEntry, alt:
                             setFailed(true);
                         }}
                     /> :
-                    <HistoryIcon sx={{color: "text.disabled"}}/>
+                    <HistoryIcon sx={{color: entry.hasMotaMap ? "primary.main" : "text.disabled"}}/>
             }
         </Box>
     );
@@ -304,14 +310,14 @@ const HistoryEntryRow: React.FunctionComponent<{
                 </Typography>
             </Box>
             {entry.result && <ResultPill result={entry.result}/>}
-            {entry.hasMap && <OpenIcon sx={{color: "text.secondary", flexShrink: 0}} titleAccess={t("history.openMap")}/>}
+            {(entry.hasMap || entry.hasMotaMap) && <OpenIcon sx={{color: "text.secondary", flexShrink: 0}} titleAccess={t("history.openMap")}/>}
         </Stack>
     );
 
     return (
         <Paper elevation={1} sx={{overflow: "hidden"}}>
             {
-                entry.hasMap ?
+                (entry.hasMap || entry.hasMotaMap) ?
                     <ButtonBase
                         sx={{width: "100%", display: "block"}}
                         onClick={() => {
@@ -324,6 +330,28 @@ const HistoryEntryRow: React.FunctionComponent<{
                     content
             }
         </Paper>
+    );
+};
+
+const HistoryMotaMap: React.FunctionComponent<{ cleanId: number, height: string }> = ({
+    cleanId,
+    height
+}): React.ReactElement => {
+    const {t} = useTranslation();
+    const {data: map, isPending, isError} = useMotaCleanHistoryMapQuery(cleanId);
+
+    if (isPending) {
+        return <CircularProgress/>;
+    }
+
+    if (isError || !map) {
+        return <Typography color="error">{t("history.mapLoadError")}</Typography>;
+    }
+
+    return (
+        <Box sx={{width: "min(900px, 100%)"}}>
+            <MotaMapView key={cleanId} rawMap={map} height={height}/>
+        </Box>
     );
 };
 
@@ -368,21 +396,23 @@ const MapDialog: React.FunctionComponent<{
                             })}
                         </Typography>
                         {
-                            failed ?
-                                <Typography color="error">{t("history.mapLoadError")}</Typography> :
-                                <img
-                                    src={getMotaCleanHistoryMapUrl(entry.cleanId)}
-                                    alt={t("history.mapAlt", {title: title})}
-                                    style={{
-                                        maxWidth: "100%",
-                                        maxHeight: mobileView ? "none" : "75vh",
-                                        objectFit: "contain",
-                                        borderRadius: 16
-                                    }}
-                                    onError={() => {
-                                        setFailed(true);
-                                    }}
-                                />
+                            entry.hasMotaMap === true ?
+                                <HistoryMotaMap cleanId={entry.cleanId} height={mobileView ? "70vh" : "72vh"}/> :
+                                failed ?
+                                    <Typography color="error">{t("history.mapLoadError")}</Typography> :
+                                    <img
+                                        src={getMotaCleanHistoryMapUrl(entry.cleanId)}
+                                        alt={t("history.mapAlt", {title: title})}
+                                        style={{
+                                            maxWidth: "100%",
+                                            maxHeight: mobileView ? "none" : "75vh",
+                                            objectFit: "contain",
+                                            borderRadius: 16
+                                        }}
+                                        onError={() => {
+                                            setFailed(true);
+                                        }}
+                                    />
                         }
                     </Stack>
                 }

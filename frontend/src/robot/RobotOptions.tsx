@@ -878,8 +878,8 @@ const RobotOptions = (): React.ReactElement => {
         obstacleImagesSupported,
         collisionAvoidantNavigationControlCapabilitySupported,
         floorMaterialDirectionAwareNavigationControlSupported,
-        cleanRouteControlSupported,
-        carpetModeControlCapabilitySupported,
+        , // Mota: la limpieza x2 (CleanRouteControl) está en Inicio
+        , // Mota: el modo alfombra (CarpetModeControl) está en Inicio
         carpetSensorModeControlCapabilitySupported,
 
         mopExtensionControlCapabilitySupported,
@@ -972,8 +972,7 @@ const RobotOptions = (): React.ReactElement => {
 
         if (
             collisionAvoidantNavigationControlCapabilitySupported ||
-            floorMaterialDirectionAwareNavigationControlSupported ||
-            cleanRouteControlSupported
+            floorMaterialDirectionAwareNavigationControlSupported
         ) {
             items.push(<SpacerListMenuItem key={"spacer-navigation"} halfHeight={true}/>);
         }
@@ -984,7 +983,8 @@ const RobotOptions = (): React.ReactElement => {
             );
         }
 
-        if (carpetModeControlCapabilitySupported || carpetSensorModeControlCapabilitySupported) {
+        // Mota: el modo alfombra está en Inicio; sin estos controles el grupo quedaba vacío (solo separadores)
+        if (carpetSensorModeControlCapabilitySupported) {
             items.push(<SpacerListMenuItem key={"spacer-carpet"} halfHeight={true}/>);
         }
 
@@ -1008,7 +1008,7 @@ const RobotOptions = (): React.ReactElement => {
             );
         }
 
-        if (items.at(-1)?.type === SpacerListMenuItem) {
+        while (items.at(-1)?.type === SpacerListMenuItem) {
             items.pop();
         }
 
@@ -1016,8 +1016,6 @@ const RobotOptions = (): React.ReactElement => {
     }, [
         collisionAvoidantNavigationControlCapabilitySupported,
         floorMaterialDirectionAwareNavigationControlSupported,
-        cleanRouteControlSupported,
-        carpetModeControlCapabilitySupported,
         carpetSensorModeControlCapabilitySupported,
         mopExtensionControlCapabilitySupported,
         mopTwistControlSupported,

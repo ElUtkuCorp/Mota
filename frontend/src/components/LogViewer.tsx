@@ -2,6 +2,15 @@ import React, {FunctionComponent} from "react";
 import styles from "./LogViewer.module.css";
 import {LogLevel, LogLine} from "../api";
 import {useValetudoColorsInverse} from "../hooks/useValetudoColors";
+import {DISPLAY_LOCALE} from "../i18n";
+
+// Mota: la hora del registro en hora local (en el archivo está en UTC)
+const formatTimestamp = (date: Date): string => {
+    return date.toLocaleString(DISPLAY_LOCALE, {
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", second: "2-digit"
+    });
+};
 
 type LogViewerProps = {
     logLines: Array<LogLine>,
@@ -63,7 +72,7 @@ const LogViewer: FunctionComponent<LogViewerProps> = (props) => {
                             //The trailing spaces in the metadata section are important for copy-pasting
                             (<div key={"logline." + i} className={styles.logline}>
                                 <div className={styles.metadata}>
-                                    <span className={styles.timestamp}>{line.timestamp.toISOString()} </span>
+                                    <span className={styles.timestamp} title={line.timestamp.toISOString()}>{formatTimestamp(line.timestamp)} </span>
                                     <span
                                         className={styles.loglevel}
                                         style={{color: getLogLevelColor(line.level)}}

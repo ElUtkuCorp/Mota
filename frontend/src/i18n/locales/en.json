@@ -1,9 +1,26 @@
 {
     "log": {
-        "loadError": "Error loading log",
-        "filter": "Filter…",
-        "filterLabel": "filter",
-        "currentLevel": "Current Level"
+        "loadError": "Error while loading the log",
+        "filter": "Search text…",
+        "filterLabel": "search text in the log",
+        "minLevel": "Show from",
+        "levels": {
+            "trace": "Everything (trace)",
+            "debug": "Debug",
+            "info": "Info",
+            "warn": "Warnings",
+            "error": "Errors"
+        },
+        "from": "From",
+        "to": "To",
+        "clearDates": "Clear dates",
+        "download": "Download",
+        "delete": "Delete",
+        "count": "{{shown}} of {{total}} lines",
+        "serverLevel": "What is logged",
+        "serverLevelHelp": "This changes what Mota stores from now on (it is not a filter). It goes back to «Info» after a restart.",
+        "deleteConfirmTitle": "Delete the log?",
+        "deleteConfirmText": "The Mota log file is emptied. This cannot be undone; download it first if you need it."
     },
     "capabilities": {
         "loaded": "Successfully loaded capabilities!",
@@ -28,7 +45,10 @@
             "updaterCommand": "Updater",
             "mirrors": "the mirror zones",
             "resegment": "the room division",
-            "roomColor": "the room color"
+            "roomColor": "the room color",
+            "mapVersions": "the map versions",
+            "reboot": "the robot reboot",
+            "logDelete": "deleting the log"
         },
         "errors": {
             "setSegmentMaterial": "Could not set segment material",
@@ -121,11 +141,7 @@
             "runtimeErrorReason": "Reason: {{reason}}",
             "unknownType": "Unknown event type: {{type}}",
             "dustBinFull": "The dust bin is full. Please empty it.",
-            "mopAttached": "The mop is still attached to the robot.",
-            "motaMapChanged": "The map has changed: it is {{similarity}} % similar to the reference map (minimum {{threshold}} %). Accept the new map as the reference?",
-            "motaMapChangedCells": "Floor cells: {{referenceCells}} in the reference map and {{currentCells}} in the current one.",
-            "motaMapChangedAccept": "Accept",
-            "motaMapChangedKeep": "Keep the previous one"
+            "mopAttached": "The mop is still attached to the robot."
         }
     },
     "robot": {
@@ -375,7 +391,7 @@
         "mirrors": {
             "addCount": "Mirror zone ({{count}}/{{max}})",
             "requiresDocked": "Editing mirror zones requires the robot to be docked",
-            "explanation": "Mark the ghost area the LiDAR sees behind a floor-level mirror. That area is hidden from the map and, when saving, every new zone is also added as a no-go area so the robot does not try to drive into the reflection.",
+            "explanation": "Mark the mirror area (at floor level). It works like a wall: whatever the LiDAR sees behind the mirror and can only be reached by crossing the area is hidden from the map and does not count for the rooms. When saving, every new area is also added as a no-go zone so the robot does not try to enter the reflection.",
             "limitReached": "You have reached the maximum of {{max}} mirror zones.",
             "loadError": "The mirror zones could not be loaded. This feature is only available on robots running Mota."
         }
@@ -415,6 +431,7 @@
             "carpet": "Carpet",
             "power": "Power",
             "pause": "Pause",
+            "homeConfirm": "Are you sure you want to end the cleanup and return home?",
             "pick": {
                 "segments": "Choose rooms",
                 "zones": "Draw a zone",
@@ -572,6 +589,10 @@
             "mirrors": {
                 "title": "Mirrors",
                 "description": "Mark the reflection the LiDAR sees behind floor-level mirrors"
+            },
+            "versions": {
+                "title": "Map versions",
+                "description": "View previous maps and recover their rooms"
             }
         },
         "mota": {
@@ -981,7 +1002,8 @@
             "dpad": "D-Pad",
             "keyboard": "Keyboard"
         },
-        "easterEgg": "I found an easter egg and all I got was this lousy notification."
+        "easterEgg": "I found an easter egg and all I got was this lousy notification.",
+        "showMap": "Show the map"
     },
     "units": {
         "daysShort": "d",
@@ -1106,7 +1128,19 @@
         "cpuIdle": "idle",
         "robot": "Robot",
         "mota": "Mota",
-        "hostInformation": "System Host Information"
+        "hostInformation": "System Host Information",
+        "ramUsage": "RAM in use",
+        "ramUsageDetail": "{{used}} of {{total}}",
+        "cpuUsageNow": "CPU in use",
+        "cpuUsageDetail": "average of {{count}} cores",
+        "reboot": {
+            "title": "Reboot the robot",
+            "description": "Reboots the robot system (like turning it off and on). It takes about a minute; Mota does not respond meanwhile.",
+            "button": "Reboot the robot",
+            "confirmTitle": "Reboot the robot?",
+            "confirmText": "If it is cleaning, the cleanup is interrupted. Mota will be available again in about a minute.",
+            "inProgress": "Rebooting… Reload the page in a minute."
+        }
     },
     "timers": {
         "weekdays": {
@@ -1331,5 +1365,30 @@
             "recentBlocks": "Recently blocked destinations",
             "noRecentBlocks": "No recent blocks"
         }
+    },
+    "mapVersions": {
+        "title": "Map versions",
+        "explanation": "Before every cleanup, Mota takes a snapshot of the map. If the map changed more than allowed when the cleanup ends (for example because the robot lost it), the previous snapshot is stored here as a version. You can also save the current map at any time.",
+        "firmwareLimit": "The 3090 firmware does not accept a map from outside. Restoring a version recovers the Mota rooms (divisions, names and colours), but the robot map does not go back: that is left for the firmware phase.",
+        "threshold": "Save a version if the similarity drops below",
+        "thresholdOff": "Do not save versions",
+        "thresholdValue": "{{value}} %",
+        "saveNow": "Save the current map",
+        "empty": "There are no versions yet. The first one is saved when the next cleanup starts.",
+        "loadError": "The map versions could not be loaded. This feature is only available on robots running Mota.",
+        "mapLoadError": "The map of this version could not be loaded.",
+        "reason": {
+            "first": "First version",
+            "changed": "Before a cleanup that changed the map ({{similarity}} % similar)",
+            "manual": "Saved manually"
+        },
+        "rooms_one": "{{count}} room",
+        "rooms_other": "{{count}} rooms",
+        "view": "View",
+        "restoreRooms": "Recover rooms",
+        "delete": "Delete",
+        "restoreConfirmTitle": "Recover the rooms of this version?",
+        "restoreConfirmText": "The current rooms are replaced by the ones of this version and fitted to the floor of the current map.",
+        "deleteConfirmTitle": "Delete this map version?"
     }
 }

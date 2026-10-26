@@ -392,8 +392,6 @@ export interface ValetudoEvent {
     previousVersion?: string;
     newVersion?: string;
     generation?: number;
-    // Mota: datos adicionales del evento (p. ej. MotaMapChangedValetudoEvent)
-    metaData?: Partial<MotaMapChangedEventMetaData>;
 }
 
 export interface ValetudoEventInteraction {
@@ -708,11 +706,31 @@ export interface MotaCleanHistoryEntry {
     /** cm² */
     area?: number;
     hasMap: boolean;
+    /** Mota: hay un mapa de Mota guardado de esta limpieza (con el recorrido) */
+    hasMotaMap?: boolean;
     rawTask: Record<string, unknown>;
     /** Mota (opcional, aún no lo envía el backend): modo de la limpieza (preajuste de OperationModeControl) */
     mode?: string;
     /** Mota (opcional, aún no lo envía el backend): cómo terminó la limpieza */
     result?: "completed" | "interrupted" | "error";
+}
+
+// Mota: versión guardada del mapa
+export interface MotaMapVersion {
+    id: number;
+    createdAt: string;
+    /** first: la primera foto; changed: el mapa cambió mucho en una limpieza; manual: la guardó el usuario */
+    reason: "first" | "changed" | "manual";
+    /** % de parecido con el mapa de después de la limpieza (solo en changed) */
+    similarity: number | null;
+    floorCells: number;
+    roomCount: number;
+}
+
+export interface MotaMapVersionsResponse {
+    /** % de parecido por debajo del cual se guarda una versión (0 = desactivado) */
+    threshold: number;
+    versions: Array<MotaMapVersion>;
 }
 
 export interface MotaCleanHistoryTotals {
@@ -768,16 +786,6 @@ export interface MotaDiagnostics {
         mode: string | null;
         error: string | null;
     } | null;
-}
-
-// Mota: evento del guardián del mapa (MotaMapChangedValetudoEvent, id "mota_map_changed")
-export interface MotaMapChangedEventMetaData {
-    /** % de parecido con el mapa de referencia */
-    similarity: number;
-    /** % mínimo de parecido */
-    threshold: number;
-    referenceCells: number;
-    currentCells: number;
 }
 
 // Mota: zona de espejo (rectángulo en píxeles de las capas del mapa, extremos incluidos)

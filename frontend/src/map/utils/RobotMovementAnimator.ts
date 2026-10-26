@@ -6,6 +6,8 @@
  * - va en línea recta hasta la nueva posición, y el ángulo gira por el camino más corto;
  * - dura lo mismo que el intervalo medido entre las dos últimas actualizaciones, acotado entre 300 y 2.500 ms.
  * Nunca se extrapola: al terminar, el robot se queda en el último punto recibido.
+ * Un salto largo (el robot se relocaliza o el firmware manda una posición de otro sitio) no se anima: deslizar el
+ * icono en línea recta daría a entender un camino que el robot no ha hecho, atravesando paredes.
  *
  * Las posiciones están en píxeles del mapa y el ángulo en grados.
  */
@@ -20,6 +22,8 @@ export const ROBOT_ANIMATION_MIN_DURATION = 300;
 export const ROBOT_ANIMATION_MAX_DURATION = 2500;
 // Si entre dos actualizaciones pasa más que esto (p. ej. la pestaña estaba oculta), no se anima: se salta al punto
 const STALE_UPDATE_THRESHOLD = 10_000;
+// Distancia máxima (en píxeles del mapa, unos 5 cm cada uno) que se anima; más allá se salta al punto
+export const ROBOT_ANIMATION_MAX_JUMP = 20;
 
 export function prefersReducedMotion(): boolean {
     try {
@@ -69,7 +73,8 @@ export class RobotMovementAnimator {
         if (
             !animate ||
             current === undefined ||
-            interval > STALE_UPDATE_THRESHOLD
+            interval > STALE_UPDATE_THRESHOLD ||
+            Math.hypot(target.x - current.x, target.y - current.y) > ROBOT_ANIMATION_MAX_JUMP
         ) {
             this.snapTo(target);
 

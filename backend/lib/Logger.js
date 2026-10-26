@@ -218,6 +218,21 @@ class Logger {
     }
 
     /**
+     * Mota: vacía el archivo de registro (botón "Borrar" de la página de registros)
+     *
+     * @public
+     */
+    clearLogFile() {
+        if (this.logFileWriteStream) {
+            this.logFileWriteStream.close();
+        }
+
+        fs.writeFileSync(this.logFilePath, "");
+        this.logFileWriteStream = fs.createWriteStream(this.logFilePath, Logger.LogFileOptions);
+        this.info("Logfile cleared on request");
+    }
+
+    /**
      * @public
      */
     getProperties() {

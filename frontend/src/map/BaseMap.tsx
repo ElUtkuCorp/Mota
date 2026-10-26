@@ -19,7 +19,7 @@ import {PinchEndTouchHandlerEvent} from "./utils/touch_handling/events/PinchEndT
 import {PointCoordinates} from "./utils/types";
 import { create } from "zustand";
 import {clampMapScalingFactorFactor, considerHiDPI} from "./utils/helpers";
-import {prefersReducedMotion, RobotMovementAnimator, RobotPose} from "./utils/RobotMovementAnimator";
+import {prefersReducedMotion, ROBOT_ANIMATION_MAX_JUMP, RobotMovementAnimator, RobotPose} from "./utils/RobotMovementAnimator";
 import RobotPositionMapStructure from "./structures/map_structures/RobotPositionMapStructure";
 
 export interface MapProps {
@@ -330,6 +330,12 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
                 closestDistance = distance;
                 closestIdx = i;
             }
+        }
+
+        // Lejos del recorrido (de camino a la zona o volviendo a la base, que el firmware no registra) no se une
+        // el robot con la línea: sería una recta inventada
+        if (closestDistance > ROBOT_ANIMATION_MAX_JUMP) {
+            return pathEntities;
         }
 
         this.pathTailStart = {

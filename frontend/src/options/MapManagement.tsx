@@ -20,6 +20,7 @@ import {
     EditNote as MapAnnotationsIcon,
     Videocam as SpectatorIcon,
     Flip as MirrorsIcon,
+    History as MapVersionsIcon,
 } from "@mui/icons-material";
 import React from "react";
 import ConfirmationDialog from "../components/ConfirmationDialog";
@@ -301,6 +302,13 @@ const MapManagement = (): React.ReactElement => {
 
     const utilityMapItems = React.useMemo(() => {
         const items = [
+            <LinkListMenuItem
+                key="mapVersions"
+                url="/options/map_management/versions"
+                primaryLabel={t("options.map.versions.title")}
+                secondaryLabel={t("options.map.versions.description")}
+                icon={<MapVersionsIcon/>}
+            />,
             <LinkListMenuItem
                 key="robotCoverageMap"
                 url="/options/map_management/robot_coverage"

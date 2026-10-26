@@ -95,6 +95,16 @@ class ValetudoRouter {
             }
         });
 
+        // Mota: borrar el registro desde la página de registros
+        this.router.delete("/log/content", (req, res) => {
+            try {
+                Logger.clearLogFile();
+                res.sendStatus(200);
+            } catch (e) {
+                res.status(500).json(e.message);
+            }
+        });
+
 
         const LogLevels = Object.keys(Logger.getProperties().LogLevels);
         this.router.get("/log/level", (req, res) => {

@@ -1,9 +1,26 @@
 {
     "log": {
         "loadError": "Error al cargar el registro",
-        "filter": "Filtrar…",
-        "filterLabel": "filtro",
-        "currentLevel": "Nivel actual"
+        "filter": "Buscar texto…",
+        "filterLabel": "buscar texto en el registro",
+        "minLevel": "Mostrar desde",
+        "levels": {
+            "trace": "Todo (traza)",
+            "debug": "Depuración",
+            "info": "Información",
+            "warn": "Avisos",
+            "error": "Errores"
+        },
+        "from": "Desde",
+        "to": "Hasta",
+        "clearDates": "Quitar fechas",
+        "download": "Descargar",
+        "delete": "Borrar",
+        "count": "{{shown}} de {{total}} líneas",
+        "serverLevel": "Qué se registra",
+        "serverLevelHelp": "Esto cambia lo que Mota guarda a partir de ahora (no es un filtro). Vuelve a «Información» al reiniciar.",
+        "deleteConfirmTitle": "¿Borrar el registro?",
+        "deleteConfirmText": "Se vacía el archivo de registro de Mota. No se puede deshacer; si lo necesitas, descárgalo antes."
     },
     "capabilities": {
         "loaded": "¡Funciones cargadas correctamente!",
@@ -28,7 +45,10 @@
             "updaterCommand": "actualizaciones",
             "mirrors": "las zonas de espejo",
             "resegment": "la división en habitaciones",
-            "roomColor": "el color de la habitación"
+            "roomColor": "el color de la habitación",
+            "mapVersions": "las versiones del mapa",
+            "reboot": "el reinicio del robot",
+            "logDelete": "el borrado del registro"
         },
         "errors": {
             "setSegmentMaterial": "No se ha podido cambiar el tipo de suelo de la habitación",
@@ -121,11 +141,7 @@
             "runtimeErrorReason": "Motivo: {{reason}}",
             "unknownType": "Tipo de evento desconocido: {{type}}",
             "dustBinFull": "El depósito de polvo está lleno. Vacíalo, por favor.",
-            "mopAttached": "La mopa sigue puesta en el robot.",
-            "motaMapChanged": "El mapa ha cambiado: se parece un {{similarity}} % al de referencia (mínimo {{threshold}} %). ¿Aceptar el mapa nuevo como referencia?",
-            "motaMapChangedCells": "Celdas de suelo: {{referenceCells}} en el mapa de referencia y {{currentCells}} en el actual.",
-            "motaMapChangedAccept": "Aceptar",
-            "motaMapChangedKeep": "Conservar el anterior"
+            "mopAttached": "La mopa sigue puesta en el robot."
         }
     },
     "robot": {
@@ -375,7 +391,7 @@
         "mirrors": {
             "addCount": "Zona de espejo ({{count}}/{{max}})",
             "requiresDocked": "Para editar las zonas de espejo, el robot tiene que estar en la base",
-            "explanation": "Marca el área fantasma que el LiDAR ve detrás de un espejo a ras de suelo. Esa área se oculta del mapa y, al guardar, cada zona nueva se añade también como zona prohibida para que el robot no intente entrar en el reflejo.",
+            "explanation": "Marca la zona del espejo (a ras de suelo). Funciona como una pared: lo que el LiDAR ve detrás del espejo y solo se alcanza cruzando la zona se oculta del mapa y no cuenta para las habitaciones. Al guardar, cada zona nueva se añade también como zona prohibida para que el robot no intente entrar en el reflejo.",
             "limitReached": "Has llegado al máximo de {{max}} zonas de espejo.",
             "loadError": "No se han podido cargar las zonas de espejo. Esta función solo está disponible en robots con Mota."
         }
@@ -411,10 +427,11 @@
             "double": "x2",
             "mop": "Fregar",
             "mopHelp": "Friega en lugar de aspirar. Coloca antes la mopa y el depósito de agua.",
-            "mopOnlyWhole": "Fregar solo se aplica a «Toda la casa».",
+            "mopOnlyWhole": "Fregar solo se aplica a «Toda la casa»: el firmware de la 3090 solo tiene el fregado como limpieza de la casa entera.",
             "carpet": "Alfombra",
             "power": "Potencia",
             "pause": "Pausar",
+            "homeConfirm": "¿Seguro que desea terminar la limpieza y volver a casa?",
             "pick": {
                 "segments": "Elige habitaciones",
                 "zones": "Dibuja una zona",
@@ -572,6 +589,10 @@
             "mirrors": {
                 "title": "Espejos",
                 "description": "Marcar el reflejo que el LiDAR ve detrás de los espejos a ras de suelo"
+            },
+            "versions": {
+                "title": "Versiones del mapa",
+                "description": "Ver los mapas anteriores y recuperar sus habitaciones"
             }
         },
         "mota": {
@@ -981,7 +1002,8 @@
             "dpad": "Cruceta",
             "keyboard": "Teclado"
         },
-        "easterEgg": "He encontrado un huevo de Pascua y solo me han dado esta triste notificación."
+        "easterEgg": "He encontrado un huevo de Pascua y solo me han dado esta triste notificación.",
+        "showMap": "Mostrar el mapa"
     },
     "units": {
         "daysShort": "d",
@@ -1106,7 +1128,19 @@
         "cpuIdle": "inactiva",
         "robot": "Robot",
         "mota": "Mota",
-        "hostInformation": "Información del sistema anfitrión"
+        "hostInformation": "Información del sistema anfitrión",
+        "ramUsage": "RAM en uso",
+        "ramUsageDetail": "{{used}} de {{total}}",
+        "cpuUsageNow": "CPU en uso",
+        "cpuUsageDetail": "media de {{count}} núcleos",
+        "reboot": {
+            "title": "Reiniciar el robot",
+            "description": "Reinicia el sistema del robot (como apagarlo y encenderlo). Tarda alrededor de un minuto; mientras tanto Mota no responde.",
+            "button": "Reiniciar el robot",
+            "confirmTitle": "¿Reiniciar el robot?",
+            "confirmText": "Si está limpiando, la limpieza se interrumpe. Mota volverá a estar disponible en un minuto aproximadamente.",
+            "inProgress": "Reiniciando… Recarga la página en un minuto."
+        }
     },
     "timers": {
         "weekdays": {
@@ -1331,5 +1365,30 @@
             "recentBlocks": "Últimos destinos bloqueados",
             "noRecentBlocks": "No hay bloqueos recientes"
         }
+    },
+    "mapVersions": {
+        "title": "Versiones del mapa",
+        "explanation": "Antes de cada limpieza, Mota hace una foto del mapa. Si al terminar el mapa ha cambiado más de lo permitido (por ejemplo, porque el robot lo ha perdido), la foto de antes se guarda aquí como versión. También puedes guardar el mapa actual cuando quieras.",
+        "firmwareLimit": "El firmware de la 3090 no permite cargarle un mapa desde fuera. Restaurar una versión recupera las habitaciones de Mota (divisiones, nombres y colores), pero el mapa del robot no vuelve atrás: eso queda para la fase de firmware.",
+        "threshold": "Guardar versión si el parecido baja de",
+        "thresholdOff": "No guardar versiones",
+        "thresholdValue": "{{value}} %",
+        "saveNow": "Guardar el mapa actual",
+        "empty": "Todavía no hay versiones. La primera se guarda al empezar la próxima limpieza.",
+        "loadError": "No se han podido cargar las versiones del mapa. Esta función solo está disponible en robots con Mota.",
+        "mapLoadError": "No se ha podido cargar el mapa de esta versión.",
+        "reason": {
+            "first": "Primera versión",
+            "changed": "Antes de una limpieza que cambió el mapa (parecido {{similarity}} %)",
+            "manual": "Guardada a mano"
+        },
+        "rooms_one": "{{count}} habitación",
+        "rooms_other": "{{count}} habitaciones",
+        "view": "Ver",
+        "restoreRooms": "Recuperar habitaciones",
+        "delete": "Borrar",
+        "restoreConfirmTitle": "¿Recuperar las habitaciones de esta versión?",
+        "restoreConfirmText": "Las habitaciones actuales se sustituyen por las de esta versión y se ajustan al suelo del mapa actual.",
+        "deleteConfirmTitle": "¿Borrar esta versión del mapa?"
     }
 }

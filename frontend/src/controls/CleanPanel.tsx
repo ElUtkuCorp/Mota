@@ -51,6 +51,7 @@ import {PanelCard, PanelSectionTitle} from "./PanelSection";
 import PresetSegmented from "./PresetSegmented";
 import Dock from "./Dock";
 import Attachments from "./Attachments";
+import ConfirmationDialog from "../components/ConfirmationDialog";
 
 /**
  * Mota: panel "Limpiar" de Inicio (X8). Un solo flujo:
@@ -69,6 +70,8 @@ type LocalCleanTarget = "whole" | "edge" | "spiral";
 const MAP_TARGETS: Array<LiveMapMode> = ["segments", "zones", "goto"];
 const START_STATES: Array<StatusState["value"]> = ["idle", "docked", "paused", "error"];
 const PAUSE_STATES: Array<StatusState["value"]> = ["cleaning", "returning", "moving"];
+// Mota: con el robot en estos estados, volver a la base termina la limpieza y se pide confirmación
+const CLEANING_STATES: Array<StatusState["value"]> = ["cleaning", "moving", "paused"];
 
 const TARGET_STORAGE_KEY = "mota-clean-target";
 const MOP_STORAGE_KEY = "mota-clean-mop";
@@ -493,8 +496,9 @@ const CleanPanel: React.FunctionComponent<{
 
     const mapActionBusy = isMapTarget && mapPrimaryAction?.busy === true;
 
-    const stopEnabled = flag === "resumable" || (state !== undefined && state !== "idle" && state !== "docked");
-    const homeEnabled = state === "idle" || state === "error" || state === "paused";
+    // Mota: Detener y Volver a la base se pueden pulsar siempre; el firmware ignora lo que no aplique
+    const [homeConfirmOpen, setHomeConfirmOpen] = React.useState(false);
+    const homeNeedsConfirmation = state !== undefined && (CLEANING_STATES.includes(state) || flag === "resumable");
 
     const sendCommand = (command: BasicControlCommand) => {
         executeBasicControlCommand(command);
@@ -543,7 +547,7 @@ const CleanPanel: React.FunctionComponent<{
                 </Box>
             </Button>
             {
-                basicControlSupported && stopEnabled &&
+                basicControlSupported &&
                 <SquareActionButton
                     label={t("controls.basic.stop")}
                     icon={<StopIcon/>}
@@ -559,13 +563,27 @@ const CleanPanel: React.FunctionComponent<{
                 <SquareActionButton
                     label={t("controls.basic.home")}
                     icon={<HomeIcon/>}
-                    disabled={!homeEnabled || busy}
+                    disabled={busy}
                     variant="ink"
                     onClick={() => {
-                        sendCommand("home");
+                        if (homeNeedsConfirmation) {
+                            setHomeConfirmOpen(true);
+                        } else {
+                            sendCommand("home");
+                        }
                     }}
                 />
             }
+            <ConfirmationDialog
+                title={t("home.clean.homeConfirm")}
+                open={homeConfirmOpen}
+                onClose={() => {
+                    setHomeConfirmOpen(false);
+                }}
+                onAccept={() => {
+                    sendCommand("home");
+                }}
+            />
         </Box>
     );
 
