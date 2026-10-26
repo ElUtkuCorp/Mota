@@ -35,6 +35,20 @@ function isLocalIPv6Subnet(ip) {
         });
 }
 
+/**
+ * Mota: Tailscale da a sus equipos direcciones del rango CGNAT 100.64.0.0/10, que no son "privadas" para
+ * is-in-subnet. Detrás del NAT de casa solo llegan al robot por la red de Tailscale del usuario (el cortafuegos
+ * del robot también las admite).
+ *
+ * @param {string} ip
+ * @returns {boolean}
+ */
+function isTailscale(ip) {
+    const ipv4 = ip.startsWith("::ffff:") ? ip.substring(7) : ip;
+
+    return isInSubnet.isIPv4(ipv4) && isInSubnet.check(ipv4, "100.64.0.0/10");
+}
+
 function isAllowed(ip) {
     // IPv6 lookup is expensive, so we've decided to cache all the allow checks here in an LRU
     if (IPAccessLRU.has(ip)) {
@@ -48,7 +62,7 @@ function isAllowed(ip) {
              req.url and such are strings. req.ip is a getter property that calls req.remoteAddress that is a getter
              that does a network socket call, so its value depends on the state of the socket
          */
-        allowed = ip !== undefined && (isInSubnet.isPrivate(ip) || isInSubnet.isLocalhost(ip) || isLocalIPv6Subnet(ip));
+        allowed = ip !== undefined && (isInSubnet.isPrivate(ip) || isInSubnet.isLocalhost(ip) || isLocalIPv6Subnet(ip) || isTailscale(ip));
     } catch (e) {
         Logger.warn("Error during external access check", e);
     }
