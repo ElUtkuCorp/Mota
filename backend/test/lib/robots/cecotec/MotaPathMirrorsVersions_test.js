@@ -192,3 +192,51 @@ describe("Mota: borrar el mapa", () => {
         assert.deepStrictEqual(calls, [["version", 3], ["rooms"], ["mirrors", 0]]);
     });
 });
+
+describe("Mota: mapas distintos del firmware", () => {
+    const CecotecVirtualRooms = require("../../../../lib/robots/cecotec/CecotecVirtualRooms");
+    const WIDTH = 100;
+    const cellsOf = (pairs) => {
+        const result = [];
+
+        for (let i = 0; i < pairs.length; i += 2) {
+            result.push(pairs[i + 1] * WIDTH + pairs[i]);
+        }
+
+        return result;
+    };
+    const roomsData = { width: WIDTH, rooms: [{ id: 1, name: "Salón", pixels: cellsOf(rect(10, 10, 39, 29)) }] };
+
+    it("reconoce el mismo mapa, también a medio reconstruir, y rechaza otro", () => {
+        assert.strictEqual(CecotecVirtualRooms.MATCHES_FLOOR(roomsData, rect(10, 10, 39, 29), WIDTH), true);
+        assert.strictEqual(CecotecVirtualRooms.MATCHES_FLOOR(roomsData, rect(10, 10, 18, 15), WIDTH), true);
+        assert.strictEqual(CecotecVirtualRooms.MATCHES_FLOOR(roomsData, rect(50, 50, 69, 79), WIDTH), false);
+    });
+
+    it("oculta las habitaciones mientras el mapa sea otro y las recupera si vuelve", () => {
+        const rooms = new CecotecVirtualRooms({});
+
+        rooms.importData(roomsData);
+        rooms.fitToFloor(rect(50, 50, 69, 79), WIDTH, WIDTH);
+        assert.strictEqual(rooms.getRooms().length, 0);
+        assert.strictEqual(rooms.isUsable(), false);
+        assert.strictEqual(rooms.hasRooms(), true);
+
+        rooms.fitToFloor(rect(10, 10, 39, 29), WIDTH, WIDTH);
+        assert.strictEqual(rooms.getRooms().length, 1);
+        assert.strictEqual(rooms.isUsable(), true);
+    });
+
+    it("descarta el tramo de recorrido que no cae sobre el suelo actual", () => {
+        const floorCells = new Set();
+        const floor = rect(10, 10, 39, 29);
+
+        for (let i = 0; i < floor.length; i += 2) {
+            floorCells.add((floor[i + 1] << 16) | floor[i]);
+        }
+
+        assert.strictEqual(CecotecCongaRobot.IS_PATH_ON_FLOOR([12, 12, 13, 12, 14, 13], floorCells), true);
+        assert.strictEqual(CecotecCongaRobot.IS_PATH_ON_FLOOR([80, 80, 81, 80, 82, 81], floorCells), false);
+        assert.strictEqual(CecotecCongaRobot.IS_PATH_ON_FLOOR([80, 80, 81, 80], undefined), true);
+    });
+});

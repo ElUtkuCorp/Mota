@@ -21,7 +21,7 @@ export type RobotPose = {
 export const ROBOT_ANIMATION_MIN_DURATION = 300;
 export const ROBOT_ANIMATION_MAX_DURATION = 2500;
 // Si entre dos actualizaciones pasa más que esto (p. ej. la pestaña estaba oculta), no se anima: se salta al punto
-const STALE_UPDATE_THRESHOLD = 10_000;
+const STALE_UPDATE_THRESHOLD = 15_000;
 // Distancia máxima (en píxeles del mapa, unos 5 cm cada uno) que se anima; más allá se salta al punto
 export const ROBOT_ANIMATION_MAX_JUMP = 20;
 

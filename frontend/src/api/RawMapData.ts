@@ -87,4 +87,6 @@ export enum RawMapEntityType {
 export interface RawMapDataMetaData {
     version: number;
     nonce: string;
+    /** Mota: cambia cuando se mueven el robot, el recorrido o la base sin que llegue un mapa nuevo */
+    motaEntitiesNonce?: number;
 }

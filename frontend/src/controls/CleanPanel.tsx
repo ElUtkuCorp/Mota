@@ -496,9 +496,11 @@ const CleanPanel: React.FunctionComponent<{
 
     const mapActionBusy = isMapTarget && mapPrimaryAction?.busy === true;
 
-    // Mota: Detener y Volver a la base se pueden pulsar siempre; el firmware ignora lo que no aplique
+    // Mota: Volver a la base se puede pulsar siempre; el firmware ignora lo que no aplique
     const [homeConfirmOpen, setHomeConfirmOpen] = React.useState(false);
     const homeNeedsConfirmation = state !== undefined && (CLEANING_STATES.includes(state) || flag === "resumable");
+    // Mota: Detener no tiene sentido con el robot ya parado (en reposo o en la base) sin limpieza que reanudar
+    const stopEnabled = state !== undefined && !((state === "idle" || state === "docked") && flag !== "resumable");
 
     const sendCommand = (command: BasicControlCommand) => {
         executeBasicControlCommand(command);
@@ -551,7 +553,7 @@ const CleanPanel: React.FunctionComponent<{
                 <SquareActionButton
                     label={t("controls.basic.stop")}
                     icon={<StopIcon/>}
-                    disabled={busy}
+                    disabled={busy || !stopEnabled}
                     variant="outlined"
                     onClick={() => {
                         sendCommand("stop");

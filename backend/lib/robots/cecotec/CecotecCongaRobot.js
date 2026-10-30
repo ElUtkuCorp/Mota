@@ -47,6 +47,10 @@ const CLEANING_START_FROM_STATES = [StatusStateAttribute.VALUE.DOCKED, StatusSta
 const CLEANING_STATES = [StatusStateAttribute.VALUE.CLEANING, StatusStateAttribute.VALUE.MOVING];
 // Mota: dos posiciones seguidas del recorrido más separadas que esto son un salto (no se dibuja la recta)
 const PATH_MAX_GAP_METERS = 0.5;
+// Mota: un tramo del recorrido se dibuja solo si la mayor parte cae sobre el suelo del mapa actual. Si no, es de otro
+// mapa del firmware (lo reinicia al volver a la base o al empezar) y saldría desplazado o fuera de la casa
+const PATH_MIN_ON_FLOOR = 0.5;
+const PATH_FLOOR_TOLERANCE_PIXELS = 3;
 
 /** @type {Set<string>} */
 const NON_BLOCKING_DEVICE_ERRORS = new Set([
@@ -128,6 +132,10 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         super(options);
 
         this.pathPoints = [];
+        // Mota: posiciones desde el último mapa (píxeles), cuadrícula de suelo actual y último id de mapa
+        this.livePathTail = [];
+        this.floorCells = undefined;
+        this.lastMapId = undefined;
         /** Mota: modo de la próxima limpieza (ver CecotecOperationModeControlCapability) */
         this.selectedOperationMode = PresetSelectionStateAttribute.MODE.VACUUM;
         /** Mota: última orden de limpieza ({type: "mode", mode} o {type: "zones", options}), para reanudar */
@@ -328,12 +336,17 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         const request = this.lastCleaningRequest;
         const map = robot.device.map;
 
-        if (!request || !map || request.type === "zones" || !this.virtualRooms.hasRooms()) {
+        if (!request || !map || request.type === "zones") {
             return request;
         }
 
         if (request.type === "mode" && request.mode !== PresetSelectionStateAttribute.MODE.VACUUM && request.mode !== PresetSelectionStateAttribute.MODE.MOP) {
-            return request; // bordes y espiral se repiten tal cual
+            return undefined; // bordes y espiral: otra tarea borraría el mapa de trabajo; no se repiten
+        }
+
+        // Mota: con habitaciones de otro mapa no se puede saber qué falta
+        if (!this.virtualRooms.isUsable()) {
+            return request.type === "mode" ? undefined : request;
         }
 
         const path = this.getPathPoints(map);
@@ -510,9 +523,9 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             this.cleanHistory?.store(report, this.lastCleanStatistics, this.state.map);
             this.lastCleanStatistics = undefined;
 
-            // Mota: la espiral trabaja con un mapa temporal; no cuenta para las versiones
-            const { map, mode } = robot.device;
-            if (this.mapVersions && map && mode?.value !== DeviceMode.VALUE.SPIRAL) {
+            // Mota: bordes y espiral trabajan con un mapa temporal; no cuentan para las versiones
+            const { map } = robot.device;
+            if (this.mapVersions && map && !this.isTemporaryMapMode(robot)) {
                 this.mapVersions.onCleaningFinished(this.getFloorSnapshot(map));
             }
         });
@@ -532,7 +545,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             oldStatus &&
             CLEANING_START_FROM_STATES.includes(oldStatus.value) &&
             CLEANING_STATES.includes(newStatus.value) &&
-            robot.device.mode?.value !== DeviceMode.VALUE.SPIRAL &&
+            !this.isTemporaryMapMode(robot) &&
             robot.device.map
         ) {
             try {
@@ -549,6 +562,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
       oldStatus.value === StatusStateAttribute.VALUE.DOCKED
         ) {
             this.pathPoints = [];
+            this.livePathTail = [];
         }
 
         this.state.upsertFirstMatchingAttribute(this.getBatteryState(robot));
@@ -703,15 +717,56 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
      * @returns {Array<PathMapEntity>}
      */
     getPathEntities(map) {
-        const points = this.getPathPoints(map);
         const maxGap = PATH_MAX_GAP_METERS / this.getMapResolution(map);
+        const segments = CecotecCongaRobot.SPLIT_PATH(this.getPathPoints(map), maxGap).filter(segment => {
+            return CecotecCongaRobot.IS_PATH_ON_FLOOR(segment, this.floorCells);
+        });
 
-        return CecotecCongaRobot.SPLIT_PATH(points, maxGap).map(segment => {
+        // Mota: lo recorrido desde el último mapa (llega cada 10 s) se añade al final para que la línea siga al robot
+        if (this.livePathTail.length >= 2) {
+            segments.push(...CecotecCongaRobot.SPLIT_PATH([...(segments.pop() ?? []), ...this.livePathTail], maxGap));
+        }
+
+        return segments.map(segment => {
             return new PathMapEntity({
                 type: PathMapEntity.TYPE.PATH,
                 points: segment,
             });
         });
+    }
+
+    /**
+     * @param {Array<number>} segment pares x, y planos
+     * @param {Set<number>|undefined} floorCells celdas de suelo como (y << 16) | x; sin ellas no se descarta nada
+     * @returns {boolean}
+     */
+    static IS_PATH_ON_FLOOR(segment, floorCells) {
+        if (!floorCells || floorCells.size === 0) {
+            return true;
+        }
+
+        const step = Math.max(1, Math.floor(segment.length / 2 / 100)) * 2; // como mucho unos 100 puntos de muestra
+        let sampled = 0;
+        let onFloor = 0;
+
+        for (let i = 0; i < segment.length - 1; i += step) {
+            const x = Math.round(segment[i]);
+            const y = Math.round(segment[i + 1]);
+            let found = false;
+
+            sampled++;
+            for (let dx = -PATH_FLOOR_TOLERANCE_PIXELS; dx <= PATH_FLOOR_TOLERANCE_PIXELS && !found; dx++) {
+                for (let dy = -PATH_FLOOR_TOLERANCE_PIXELS; dy <= PATH_FLOOR_TOLERANCE_PIXELS && !found; dy++) {
+                    found = floorCells.has(((y + dy) << 16) | ((x + dx) & 0xffff));
+                }
+            }
+
+            if (found) {
+                onFloor++;
+            }
+        }
+
+        return sampled === 0 || onFloor / sampled >= PATH_MIN_ON_FLOOR;
     }
 
     /**
@@ -760,6 +815,19 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
     }
 
     /**
+     * Mota: bordes y espiral trabajan en un mapa temporal del firmware, que lo reinicia al empezar y al terminar:
+     * no cuentan para las versiones ni para volver y reanudar por batería
+     *
+     * @param {import("@agnoc/core").Robot} [robot]
+     * @returns {boolean}
+     */
+    isTemporaryMapMode(robot = this.robot) {
+        const mode = robot?.device.mode?.value;
+
+        return mode === DeviceMode.VALUE.SPIRAL || mode === DeviceMode.VALUE.EDGE;
+    }
+
+    /**
      * Mota: foto del mapa actual para las versiones del mapa
      *
      * @param {import("@agnoc/core").DeviceMap} map
@@ -768,9 +836,29 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
     getMapSnapshot(map) {
         return Object.assign(this.getFloorSnapshot(map), {
             createdAt: Date.now(),
-            map: this.state.map ? JSON.parse(JSON.stringify(this.state.map)) : null,
+            map: this.getMapWithoutPath(),
             rooms: this.virtualRooms.exportData(),
         });
+    }
+
+    /**
+     * Mota: el recorrido es de una limpieza y puede ser de otro mapa del firmware: no se guarda en las versiones
+     *
+     * @private
+     * @returns {any}
+     */
+    getMapWithoutPath() {
+        if (!this.state.map) {
+            return null;
+        }
+
+        const map = JSON.parse(JSON.stringify(this.state.map));
+
+        map.entities = map.entities.filter(entity => {
+            return entity.type !== PathMapEntity.TYPE.PATH;
+        });
+
+        return map;
     }
 
     /**
@@ -800,7 +888,8 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         }
 
         // Mota: lo que hay dentro de las zonas de espejo es un reflejo, no casa
-        const mirrorZones = this.getMirrorZones();
+        // (si las habitaciones son de otro mapa, las zonas de espejo también: se ignoran)
+        const mirrorZones = this.virtualRooms?.stale ? [] : this.getMirrorZones();
         if (mirrorZones.length > 0) {
             const outside = (pixels) => {
                 const result = [];
@@ -1282,6 +1371,21 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
 
         const { floor, walls } = this.getMapPixels(map);
 
+        // Mota: cambio de mapa del firmware. Lo acumulado en píxeles era del mapa anterior
+        const mapId = map.id?.value;
+        if (mapId !== this.lastMapId) {
+            Logger.info(`Firmware map changed: id ${this.lastMapId} -> ${mapId}, ${floor.length / 2} floor cells`);
+            this.lastMapId = mapId;
+            this.pathPoints = [];
+        }
+
+        // Mota: lo recorrido desde el mapa anterior ya viene en el historial de este
+        this.livePathTail = [];
+        this.floorCells = new Set();
+        for (let i = 0; i < floor.length; i += 2) {
+            this.floorCells.add((floor[i + 1] << 16) | floor[i]);
+        }
+
         // Mota: primera división automática en habitaciones virtuales, con el robot en la base
         // (mapa completo) y suficiente suelo (unos 4 m²)
         const status = this.state.getFirstMatchingAttributeByConstructor(StatusStateAttribute);
@@ -1347,6 +1451,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             }),
             entity,
         ];
+        this.bumpEntitiesNonce();
 
         this.emitMapUpdated();
     }
@@ -1367,14 +1472,40 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
 
         this.updatePathPoints(map);
 
+        if (robot.device.motaPoseMapHeadId !== undefined && robot.device.motaPoseMapHeadId !== this.lastPoseMapId) {
+            Logger.info(`Firmware position map id ${robot.device.motaPoseMapHeadId} (grid map id ${map.id?.value})`);
+            this.lastPoseMapId = robot.device.motaPoseMapHeadId;
+        }
+
+        const status = this.state.getFirstMatchingAttributeByConstructor(StatusStateAttribute);
+        if (map.robot && status?.value === StatusStateAttribute.VALUE.CLEANING) {
+            const { x, y } = map.toPixel(map.robot.toCoordinates());
+
+            this.livePathTail.push(x, map.size.y - y);
+        }
+
         this.state.map.entities = [
             ...this.state.map.entities.filter((entity) => {
-                return entity.type !== PointMapEntity.TYPE.ROBOT_POSITION;
+                return entity.type !== PointMapEntity.TYPE.ROBOT_POSITION && entity.type !== PathMapEntity.TYPE.PATH;
             }),
             this.getRobotEntity(map),
+            ...this.getPathEntities(map),
         ];
+        this.bumpEntitiesNonce();
 
         this.emitMapUpdated();
+    }
+
+    /**
+     * Mota: el frontend solo redibuja si cambia el nonce del mapa, que nace con cada ValetudoMap (el mapa llega cada
+     * 10 s) y sirve para no repintar las capas. Este contador marca los cambios de entidades (robot, recorrido, base)
+     * que llegan entre medias; sin él, el robot solo se movía en pantalla cada 10 s.
+     *
+     * @private
+     */
+    bumpEntitiesNonce() {
+        this.entitiesNonce = (this.entitiesNonce ?? 0) + 1;
+        this.state.map.metaData.motaEntitiesNonce = this.entitiesNonce;
     }
 
     /**

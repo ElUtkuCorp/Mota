@@ -552,7 +552,7 @@
                 "description": "Borrar el mapa actual",
                 "button": "Borrar",
                 "confirmTitle": "¿Restablecer el mapa?",
-                "confirmBody": "¿Seguro que quieres restablecer el mapa? También se borran las habitaciones y las zonas de espejo de Mota; el mapa actual queda guardado en «Versiones del mapa»."
+                "confirmBody": "Borra el mapa de Mota y el que el robot tiene guardado: la próxima limpieza empezará desde cero, sin mapa. Conviene dejarle hacer después una limpieza general completa sin interrumpirla. También se borran las habitaciones y las zonas de espejo; el mapa actual queda guardado en «Versiones del mapa». ¿Seguro que quieres continuar?"
             },
             "persistent": {
                 "title": "Mapa persistente",

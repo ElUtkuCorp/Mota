@@ -20,6 +20,8 @@ class CecotecVirtualRooms {
         this.data = {width: 0, rooms: []};
         /** @type {Map<number, Array<number>> | undefined} celdas ajustadas al suelo actual (no se guardan) */
         this.fitted = undefined;
+        // Las habitaciones no encajan con el mapa actual (el firmware ha empezado otro mapa, a menudo girado)
+        this.stale = false;
 
         this.load();
     }
@@ -37,6 +39,10 @@ class CecotecVirtualRooms {
      * @returns {Array<{id: number, name: string, color?: string, pixels: Array<number>}>}
      */
     getRooms() {
+        if (this.stale) {
+            return [];
+        }
+
         return this.data.rooms.map(r => {
             return {id: r.id, name: r.name, color: r.color, pixels: this.fitted?.get(r.id) ?? r.pixels};
         });
@@ -53,6 +59,21 @@ class CecotecVirtualRooms {
      */
     fitToFloor(floor, width, height) {
         if (!this.hasRooms() || width !== this.data.width) {
+            this.fitted = undefined;
+            this.stale = false;
+
+            return;
+        }
+
+        const stale = !CecotecVirtualRooms.MATCHES_FLOOR(this.data, floor, width);
+
+        if (stale !== this.stale) {
+            Logger.info(`Virtual rooms: ${stale ? "they do not match the current map, hidden until it comes back or the map is divided again" : "they match the current map again"}`);
+        }
+
+        this.stale = stale;
+
+        if (stale) {
             this.fitted = undefined;
 
             return;
@@ -280,11 +301,56 @@ class CecotecVirtualRooms {
     }
 
     /**
+     * Las habitaciones se guardan en celdas del mapa en que se crearon. Si el firmware empieza otro mapa, el mismo
+     * piso sale en otro sitio o girado y reasignar el suelo a las habitaciones daría resultados sin sentido. Se
+     * considera el mismo mapa si la mayor parte de lo pequeño (habitaciones o suelo) cae sobre lo grande: un mapa
+     * a medio reconstruir en el mismo sitio también encaja.
+     *
+     * @param {{rooms: Array<{pixels: Array<number>}>}} data
+     * @param {Array<number>} floor pares x, y planos
+     * @param {number} width
+     * @returns {boolean}
+     */
+    static MATCHES_FLOOR(data, floor, width) {
+        const floorCount = floor.length / 2;
+
+        if (floorCount === 0) {
+            return true;
+        }
+
+        const floorCells = new Set();
+        for (let i = 0; i < floor.length; i += 2) {
+            floorCells.add(floor[i + 1] * width + floor[i]);
+        }
+
+        let roomCells = 0;
+        let overlap = 0;
+        data.rooms.forEach(room => {
+            room.pixels.forEach(cell => {
+                roomCells++;
+                if (floorCells.has(cell)) {
+                    overlap++;
+                }
+            });
+        });
+
+        return roomCells === 0 || overlap / Math.min(roomCells, floorCount) >= CecotecVirtualRooms.MIN_MAP_OVERLAP;
+    }
+
+    /**
+     * @returns {boolean} si las habitaciones son del mapa actual
+     */
+    isUsable() {
+        return this.hasRooms() && !this.stale;
+    }
+
+    /**
      * Borra todas las habitaciones (al borrar el mapa)
      */
     clear() {
         this.data = {width: 0, rooms: []};
         this.fitted = undefined;
+        this.stale = false;
         this.save();
     }
 
@@ -305,6 +371,7 @@ class CecotecVirtualRooms {
     importData(data) {
         this.data = JSON.parse(JSON.stringify(data));
         this.fitted = undefined;
+        this.stale = false;
         this.save();
     }
 
@@ -647,5 +714,7 @@ class CecotecVirtualRooms {
         return best;
     }
 }
+
+CecotecVirtualRooms.MIN_MAP_OVERLAP = 0.6;
 
 module.exports = CecotecVirtualRooms;

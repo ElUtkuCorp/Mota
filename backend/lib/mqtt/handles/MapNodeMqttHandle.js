@@ -147,6 +147,13 @@ class MapNodeMqttHandle extends NodeMqttHandle {
      * @public
      */
     onMapUpdated() {
+        // Mota: la 3090 actualiza la posición casi cada segundo sin cambiar de mapa; cada envío son decenas de KB
+        const nonce = this.robot.state.map?.metaData?.nonce;
+        if (nonce !== undefined && nonce === this.lastPublishedMapNonce) {
+            return;
+        }
+        this.lastPublishedMapNonce = nonce;
+
         if (this.controller.isInitialized) {
             this.refresh().catch(err => {
                 Logger.error("Error during MQTT handle refresh", err);

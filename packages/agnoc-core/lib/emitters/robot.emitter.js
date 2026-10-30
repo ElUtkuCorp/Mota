@@ -891,14 +891,15 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
     }
     if (map) {
       if (historyHeadInfo) {
-        const currentIndex = map.robotPath.length;
-        map.updateRobotPath(map.robotPath.concat(historyHeadInfo.pointList.slice(currentIndex).map(({
+        // Mota: el firmware envía el recorrido entero. Se sustituye en vez de añadir por índice: tras reiniciar
+        // su mapa, la lista nueva es más corta y se mezclaba con la anterior
+        map.updateRobotPath(historyHeadInfo.pointList.map(({
           x,
           y
         }) => new _coordinate.Coordinate({
           x,
           y
-        }))));
+        })));
       }
       if (robotPoseInfo) {
         map.updateRobot(new _position.Position({
@@ -970,6 +971,8 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
       return;
     }
     const object = message.packet.payload.object;
+    // Mota: para diagnosticar cambios de mapa del firmware
+    this.device.motaPoseMapHeadId = object.mapHeadId;
     if (object.update) {
       this.device.map.updateRobot(new _position.Position({
         x: object.poseX,

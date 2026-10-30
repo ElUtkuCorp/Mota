@@ -552,7 +552,7 @@
                 "description": "Delete the current map",
                 "button": "Go",
                 "confirmTitle": "Reset map?",
-                "confirmBody": "Do you really want to reset the map? The Mota rooms and mirror zones are deleted too; the current map is kept in «Map versions»."
+                "confirmBody": "This deletes the Mota map and the one stored on the robot: the next cleanup starts from zero, without a map. Let it finish a full uninterrupted cleanup afterwards. Rooms and mirror zones are deleted too; the current map is kept in «Map versions». Are you sure?"
             },
             "persistent": {
                 "title": "Persistent maps",

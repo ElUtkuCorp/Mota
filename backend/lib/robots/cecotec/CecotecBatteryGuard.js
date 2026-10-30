@@ -4,7 +4,10 @@ const {StatusStateAttribute} = require("../../entities/state/attributes");
 /**
  * Mota: "volver a la base al X %" y "reanudar al Y %". El firmware tiene su propio umbral (no se
  * puede bajar); esto permite volver antes y reanudar cuando la batería alcanza el nivel elegido.
- * Al reanudar se repite la última orden de limpieza (el modo elegido o las mismas zonas).
+ * Al reanudar se lanzan las habitaciones que faltan o las mismas zonas: en la 3090 una orden de limpieza general o de
+ * bordes es siempre una tarea nueva, que borra el mapa de trabajo, así que nunca se repite una de esas. Bordes y
+ * espiral trabajan en un mapa temporal: mandarlos a la base reinicia el mapa y el robot se pierde, así que ahí la
+ * batería la gestiona el firmware.
  * Los ajustes se guardan en robot.implementationSpecificConfig.motaBattery.
  */
 class CecotecBatteryGuard {
@@ -78,10 +81,12 @@ class CecotecBatteryGuard {
                 this.pendingResume = undefined;
             }
 
-            if (returnAt > 0 && batteryLevel <= returnAt && this.returningForBattery === false) {
+            if (returnAt > 0 && batteryLevel <= returnAt && this.returningForBattery === false && !this.robot.isTemporaryMapMode()) {
+                const request = this.robot.getRemainingCleaningRequest(this.robot.robot);
+
                 Logger.info(`Battery at ${batteryLevel} % (limit ${returnAt} %): returning to the dock`);
                 this.returningForBattery = true;
-                this.pendingResume = {request: this.robot.lastCleaningRequest};
+                this.pendingResume = request !== undefined ? {request: request} : undefined;
                 this.robot.robot?.home().catch(err => {
                     Logger.warn("Unable to send the robot home for low battery", err);
                     this.returningForBattery = false;
@@ -98,6 +103,13 @@ class CecotecBatteryGuard {
                 const {request} = this.pendingResume;
 
                 this.pendingResume = undefined;
+
+                if (request.type === "segments" && !this.robot.virtualRooms.isUsable()) {
+                    Logger.warn("Not resuming the cleanup: the rooms do not match the current map");
+
+                    return;
+                }
+
                 Logger.info(`Battery at ${batteryLevel} % (resume at ${resumeAt} %): resuming the interrupted cleanup`);
                 this.robot.repeatCleaningRequest(request).catch(err => {
                     Logger.warn("Unable to resume the cleanup after charging", err);

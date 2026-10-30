@@ -213,6 +213,51 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
             }
         } else if (this.props.paletteMode !== prevProps.paletteMode) {
             this.updateInternalDrawableState();
+        } else if (prevProps.rawMap.metaData.motaEntitiesNonce !== this.props.rawMap.metaData.motaEntitiesNonce) {
+            // Mota: mismo mapa, pero el robot o el recorrido han cambiado (posición casi cada segundo)
+            if (
+                document.visibilityState !== "visible" ||
+                this.activeTouchEvent ||
+                this.activeScrollEvent
+            ) {
+                this.pendingInternalDrawableStateUpdate = true;
+            } else {
+                this.updateEntityDrawables().then(() => {
+                    this.draw();
+                }).catch(() => {
+                    /* intentional */
+                });
+            }
+        }
+    }
+
+    /**
+     * Mota: actualiza el robot, el recorrido y las estructuras sin volver a pintar las capas del mapa
+     */
+    protected async updateEntityDrawables(): Promise<void> {
+        await new Promise<void>((resolve) => {
+            this.drawableComponentsMutex.take(() => {
+                resolve();
+            });
+        });
+
+        try {
+            if (this.drawableComponents.length >= 2) {
+                this.drawableComponents[1] = await PathDrawer.drawPaths({
+                    pathMapEntities: this.updateRobotAnimation(this.props.rawMap.entities.filter(e => {
+                        return e.type === RawMapEntityType.Path || e.type === RawMapEntityType.PredictedPath;
+                    })),
+                    mapWidth: this.props.rawMap.size.x,
+                    mapHeight: this.props.rawMap.size.y,
+                    pixelSize: this.props.rawMap.pixelSize,
+                    paletteMode: this.props.paletteMode,
+                });
+
+                this.structureManager.updateMapStructuresFromMapData(this.props.rawMap);
+                this.updateState();
+            }
+        } finally {
+            this.drawableComponentsMutex.leave();
         }
     }
 

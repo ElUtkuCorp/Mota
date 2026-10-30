@@ -7,9 +7,21 @@ function buildRobot(settings) {
     const robotConfig = { implementation: "CecotecCongaRobot", implementationSpecificConfig: { motaBattery: settings } };
     const calls = [];
 
-    return {
+    const robotState = {
         calls: calls,
-        lastCleaningRequest: { type: "mode", mode: "edge" },
+        temporaryMap: false,
+        roomsUsable: true,
+        isTemporaryMapMode: function() {
+            return this.temporaryMap;
+        },
+        getRemainingCleaningRequest: () => {
+            return { type: "segments", segments: [{ id: "2" }] };
+        },
+        virtualRooms: {
+            isUsable: function() {
+                return robotState.roomsUsable;
+            }
+        },
         config: {
             get: () => {
                 return robotConfig;
@@ -30,10 +42,12 @@ function buildRobot(settings) {
             calls.push(["resume", request]);
         }
     };
+
+    return robotState;
 }
 
 describe("CecotecBatteryGuard", () => {
-    it("returns to the dock at the configured level and resumes the same cleanup when charged", () => {
+    it("returns to the dock at the configured level and resumes what is left when charged", () => {
         const robot = buildRobot({ returnAt: 30, resumeAt: 90 });
         const guard = new CecotecBatteryGuard({ robot: /** @type {any} */ (robot) });
 
@@ -45,7 +59,26 @@ describe("CecotecBatteryGuard", () => {
         guard.onStateUpdate(90, "docked");
         guard.onStateUpdate(91, "docked");
 
-        assert.deepStrictEqual(robot.calls, ["home", ["resume", { type: "mode", mode: "edge" }]]);
+        assert.deepStrictEqual(robot.calls, ["home", ["resume", { type: "segments", segments: [{ id: "2" }] }]]);
+    });
+
+    it("does not send the robot home in edge or spiral: it would reset the map and get lost", () => {
+        const robot = buildRobot({ returnAt: 30, resumeAt: 90 });
+        const guard = new CecotecBatteryGuard({ robot: /** @type {any} */ (robot) });
+
+        robot.temporaryMap = true;
+        guard.onStateUpdate(20, "cleaning");
+        assert.deepStrictEqual(robot.calls, []);
+    });
+
+    it("does not resume rooms that belong to another map", () => {
+        const robot = buildRobot({ returnAt: 30, resumeAt: 90 });
+        const guard = new CecotecBatteryGuard({ robot: /** @type {any} */ (robot) });
+
+        guard.onStateUpdate(29, "cleaning");
+        robot.roomsUsable = false;
+        guard.onStateUpdate(95, "docked");
+        assert.deepStrictEqual(robot.calls, ["home"]);
     });
 
     it("does nothing when disabled and persists new settings", () => {

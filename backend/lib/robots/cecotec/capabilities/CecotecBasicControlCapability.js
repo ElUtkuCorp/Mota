@@ -1,4 +1,5 @@
 const BasicControlCapability = require("../../../core/capabilities/BasicControlCapability");
+const Logger = require("../../../Logger");
 const {PresetSelectionStateAttribute, StatusStateAttribute} = require("../../../entities/state/attributes");
 
 /**
@@ -20,6 +21,7 @@ module.exports = class CecotecBasicControlCapability extends BasicControlCapabil
 
         // Mota: para poder reanudar tras cargar
         this.robot.lastCleaningRequest = {type: "mode", mode: this.robot.selectedOperationMode};
+        Logger.info(`Start requested: ${this.robot.selectedOperationMode}, battery ${this.robot.robot.device.battery?.value} %`);
 
         switch (this.robot.selectedOperationMode) {
             case PresetSelectionStateAttribute.MODE.MOP:
@@ -41,6 +43,15 @@ module.exports = class CecotecBasicControlCapability extends BasicControlCapabil
             throw new Error("There is no robot connected to server");
         }
 
+        // Mota: con el robot parado la orden no hace nada y el firmware solo pita
+        const status = this.robot.state.getFirstMatchingAttributeByConstructor(StatusStateAttribute);
+        if (
+            (status?.value === StatusStateAttribute.VALUE.DOCKED || status?.value === StatusStateAttribute.VALUE.IDLE) &&
+            status.flag !== StatusStateAttribute.FLAG.RESUMABLE
+        ) {
+            return;
+        }
+
         await this.robot.robot.stop();
     }
 
@@ -57,6 +68,7 @@ module.exports = class CecotecBasicControlCapability extends BasicControlCapabil
             throw new Error("There is no robot connected to server");
         }
 
+        Logger.info(`Return to the dock requested, battery ${this.robot.robot.device.battery?.value} %`);
         await this.robot.robot.home();
     }
 };
