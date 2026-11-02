@@ -237,11 +237,16 @@ describe("Mota: borrar el mapa", () => {
         robot.setMirrorZones = (zones) => {
             calls.push(["mirrors", zones.length]);
         };
+        robot.mapRetouch = {
+            forgetMap: () => {
+                calls.push(["retouch"]);
+            }
+        };
 
         robot.saveMapBeforeReset();
         robot.onUserMapReset();
 
-        assert.deepStrictEqual(calls, [["version", 3], ["rooms"], ["mirrors", 0]]);
+        assert.deepStrictEqual(calls, [["version", 3], ["rooms"], ["retouch"], ["mirrors", 0]]);
     });
 
     it("no enseña el recorrido desde que se borra hasta la siguiente limpieza", () => {
@@ -250,6 +255,7 @@ describe("Mota: borrar el mapa", () => {
         Object.defineProperty(robot, "robot", { value: undefined });
         robot.virtualRooms = { clear: () => {} };
         robot.setMirrorZones = () => {};
+        robot.mapRetouch = { forgetMap: () => {} };
         robot.pathPoints = [1, 1, 2, 2];
         robot.livePathTail = [3, 3];
         robot.lastPathPoints = [4, 4, 5, 5];

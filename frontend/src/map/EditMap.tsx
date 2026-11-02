@@ -1,5 +1,15 @@
 import BaseMap, {MapContainer, MapProps, MapState} from "./BaseMap";
-import {Capability, MotaMirrorZone, RawMapEntityType, RawMapLayerMaterial, RawMapLayerType, StatusState} from "../api";
+import {
+    Capability,
+    MotaMapPaintValue,
+    MotaMapRetouchAction,
+    MotaMapRetouchStatus,
+    MotaMirrorZone,
+    RawMapEntityType,
+    RawMapLayerMaterial,
+    RawMapLayerType,
+    StatusState
+} from "../api";
 import {ActionsContainer} from "./Styled";
 import SegmentLabelMapStructure from "./structures/map_structures/SegmentLabelMapStructure";
 import SegmentActions from "./actions/edit_map_actions/SegmentActions";
@@ -21,8 +31,33 @@ import i18n from "../i18n";
 import MirrorZoneClientStructure from "./structures/client_structures/MirrorZoneClientStructure";
 import MirrorActions, {mirrorZoneToClientStructure} from "./actions/edit_map_actions/MirrorActions";
 import ResegmentAction from "./actions/edit_map_actions/ResegmentAction";
+import RetouchActions, {RetouchTool} from "./actions/edit_map_actions/RetouchActions";
+import {PanStartTouchHandlerEvent} from "./utils/touch_handling/events/PanStartTouchHandlerEvent";
+import {PanMoveTouchHandlerEvent} from "./utils/touch_handling/events/PanMoveTouchHandlerEvent";
+import {PanEndTouchHandlerEvent} from "./utils/touch_handling/events/PanEndTouchHandlerEvent";
+import {PinchEndTouchHandlerEvent} from "./utils/touch_handling/events/PinchEndTouchHandlerEvent";
+import {PinchStartTouchHandlerEvent} from "./utils/touch_handling/events/PinchStartTouchHandlerEvent";
+import {considerHiDPI} from "./utils/helpers";
+import {forEachStrokeStamp} from "./utils/mapRetouchStroke";
 
-export type mode = "segments" | "virtual_restrictions" | "annotations" | "mirrors";
+export type mode = "segments" | "virtual_restrictions" | "annotations" | "mirrors" | "retouch";
+
+// Mota: colores de la capa de edición de retoques
+const RETOUCH_COLORS = {
+    island: "rgba(245, 158, 11, 0.85)",
+    hidden: "rgba(148, 163, 184, 0.5)",
+    floor: "rgba(34, 197, 94, 0.7)",
+    wall: "rgba(30, 41, 59, 0.85)",
+    void: "rgba(239, 68, 68, 0.6)"
+};
+// Mota: a cuántos píxeles de la pantalla se puede tocar una isla (hay islas de un solo píxel)
+const ISLAND_TAP_TOLERANCE = 12;
+
+interface RetouchStroke {
+    value: MotaMapPaintValue,
+    radius: number,
+    points: Array<number>
+}
 
 interface EditMapProps extends MapProps {
     supportedCapabilities: {
@@ -40,6 +75,10 @@ interface EditMapProps extends MapProps {
     mirrorZones?: Array<MotaMirrorZone>,
     // Mota: el robot tiene la API propia de Mota (/api/v2/mota/)
     motaApiAvailable?: boolean,
+    // Mota: retoques del mapa (solo en el modo "retouch")
+    retouch?: MotaMapRetouchStatus,
+    retouchBusy?: boolean,
+    onRetouchAction?: (action: MotaMapRetouchAction) => void,
     robotStatus: StatusState,
     enqueueSnackbar: ProviderContext["enqueueSnackbar"]
 }
@@ -61,12 +100,21 @@ interface EditMapState extends MapState {
 
     mirrorZones: Array<MirrorZoneClientStructure>,
 
+    retouchTool: RetouchTool,
+    retouchBrushRadius: number,
+
     helpDialogOpen: boolean
 }
 
 class EditMap extends BaseMap<EditMapProps, EditMapState> {
     protected pendingVirtualRestrictionsStructuresUpdate = false;
     protected pendingMapAnnotationsStructuresUpdate = false;
+
+    // Mota: capa del tamaño del mapa con las islas y los trazos, que gira y se mueve con él
+    private retouchOverlay: HTMLCanvasElement | undefined;
+    private activeStroke: RetouchStroke | undefined;
+    // Trazos enviados que todavía no han vuelto en un mapa nuevo
+    private sentStrokes: Array<RetouchStroke> = [];
 
     constructor(props: EditMapProps) {
         super(props);
@@ -92,6 +140,9 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
 
             mirrorZones: [],
 
+            retouchTool: "islands",
+            retouchBrushRadius: 1,
+
             helpDialogOpen: false
         };
 
@@ -115,6 +166,11 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
 
         this.updateStructures(this.props.mode);
 
+        if (this.props.mode === "retouch") {
+            this.drawableComponents.push(this.getRetouchOverlay());
+            this.drawRetouchOverlay();
+        }
+
         if (this.props.mode === "virtual_restrictions" || this.props.mode === "mirrors") {
             const pathsImage = await PathDrawer.drawPaths( {
                 pathMapEntities: this.props.rawMap.entities.filter(e => {
@@ -135,6 +191,13 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
         this.drawableComponentsMutex.leave();
     }
 
+    // Mota: en el editor de retoques no se ve el robot ni el recorrido, y la segunda capa es la de edición
+    protected async updateEntityDrawables(): Promise<void> {
+        if (this.props.mode !== "retouch") {
+            await super.updateEntityDrawables();
+        }
+    }
+
     private updateStructures(mode: mode) : void {
         this.structureManager.updateMapStructuresFromMapData({
             metaData: this.props.rawMap.metaData,
@@ -148,14 +211,14 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
                         return true;
                     // Mota: en el editor de espejos se ven (sin poder editarlas) las zonas prohibidas
                     case RawMapEntityType.NoGoArea:
-                        return mode === "mirrors";
+                        return mode === "mirrors" || mode === "retouch";
                     default:
                         return false;
                 }
             })
         });
 
-        if (mode === "virtual_restrictions" || mode === "mirrors") {
+        if (mode === "virtual_restrictions" || mode === "mirrors" || mode === "retouch") {
             // remove all segment labels
             this.structureManager.getMapStructures().forEach(s => {
                 if (s.type === SegmentLabelMapStructure.TYPE) {
@@ -395,7 +458,173 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
         this.redrawLayers();
     }
 
+    private getRetouchOverlay() : HTMLCanvasElement {
+        if (this.retouchOverlay === undefined) {
+            this.retouchOverlay = document.createElement("canvas");
+        }
+
+        if (this.retouchOverlay.width !== this.props.rawMap.size.x || this.retouchOverlay.height !== this.props.rawMap.size.y) {
+            this.retouchOverlay.width = this.props.rawMap.size.x;
+            this.retouchOverlay.height = this.props.rawMap.size.y;
+        }
+
+        return this.retouchOverlay;
+    }
+
+    private drawRetouchOverlay() : void {
+        const overlay = this.getRetouchOverlay();
+        const ctx = overlay.getContext("2d")!;
+        const retouch = this.props.retouch;
+
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+        if (retouch !== undefined && this.state.retouchTool === "islands") {
+            const paintIslands = (islands: MotaMapRetouchStatus["islands"], color: string) => {
+                ctx.fillStyle = color;
+                islands.forEach(island => {
+                    island.cells.forEach(cell => {
+                        ctx.fillRect(cell % retouch.width, Math.floor(cell / retouch.width), 1, 1);
+                    });
+                });
+            };
+
+            paintIslands(retouch.hidden, RETOUCH_COLORS.hidden);
+            paintIslands(retouch.islands, RETOUCH_COLORS.island);
+        }
+
+        [...this.sentStrokes, ...(this.activeStroke ? [this.activeStroke] : [])].forEach(stroke => {
+            ctx.fillStyle = RETOUCH_COLORS[stroke.value];
+            forEachStrokeStamp(stroke.points, stroke.radius, (x, y, size) => {
+                ctx.fillRect(x, y, size, size);
+            });
+        });
+    }
+
+    private canRetouch() : boolean {
+        return this.props.mode === "retouch" && this.props.robotStatus.value === "docked" && this.props.retouch?.usable === true;
+    }
+
+    private getRetouchMapPoint(x: number, y: number) : {x: number, y: number} {
+        const canvasPoint = this.relativeCoordinatesToCanvas(x, y);
+        const mapPoint = this.ctxWrapper.mapPointToCurrentTransform(canvasPoint.x, canvasPoint.y);
+
+        return {x: Math.floor(mapPoint.x), y: Math.floor(mapPoint.y)};
+    }
+
+    private addStrokePoint(x: number, y: number) : void {
+        const stroke = this.activeStroke;
+
+        if (stroke === undefined) {
+            return;
+        }
+
+        const point = this.getRetouchMapPoint(x, y);
+
+        if (stroke.points[stroke.points.length - 2] !== point.x || stroke.points[stroke.points.length - 1] !== point.y) {
+            stroke.points.push(point.x, point.y);
+            this.drawRetouchOverlay();
+            this.draw();
+        }
+    }
+
+    private finishStroke() : void {
+        const stroke = this.activeStroke;
+
+        if (stroke !== undefined) {
+            this.activeStroke = undefined;
+            this.sentStrokes.push(stroke);
+            this.props.onRetouchAction?.({type: "paint", ...stroke});
+        }
+    }
+
+    private startStroke() : void {
+        const tool = this.state.retouchTool;
+
+        if (tool !== "islands") {
+            this.activeStroke = {value: tool, radius: this.state.retouchBrushRadius, points: []};
+        }
+    }
+
+    private isBrushActive() : boolean {
+        return this.canRetouch() && this.state.retouchTool !== "islands";
+    }
+
+    private tapIsland(x: number, y: number) : boolean {
+        const retouch = this.props.retouch;
+
+        if (retouch === undefined) {
+            return false;
+        }
+
+        const point = this.getRetouchMapPoint(x, y);
+        const tolerance = Math.max(1, Math.ceil(considerHiDPI(ISLAND_TAP_TOLERANCE) / this.currentScaleFactor));
+        const isNear = (island: MotaMapRetouchStatus["islands"][number]) => {
+            return island.cells.some(cell => {
+                return (
+                    Math.abs(cell % retouch.width - point.x) <= tolerance &&
+                    Math.abs(Math.floor(cell / retouch.width) - point.y) <= tolerance
+                );
+            });
+        };
+        const island = retouch.islands.find(isNear);
+        const hidden = island === undefined ? retouch.hidden.find(isNear) : undefined;
+
+        if (island !== undefined) {
+            this.props.onRetouchAction?.({type: "hide", ids: [island.id]});
+        } else if (hidden !== undefined) {
+            this.props.onRetouchAction?.({type: "show", ids: [hidden.id]});
+        }
+
+        return island !== undefined || hidden !== undefined;
+    }
+
+    protected startTranslate(evt: PanStartTouchHandlerEvent) : void {
+        if (this.isBrushActive()) {
+            this.activeTouchEvent = true;
+            this.startStroke();
+            this.addStrokePoint(evt.x0, evt.y0);
+        } else {
+            super.startTranslate(evt);
+        }
+    }
+
+    protected moveTranslate(evt: PanMoveTouchHandlerEvent) : void {
+        if (this.activeStroke !== undefined) {
+            this.addStrokePoint(evt.x1, evt.y1);
+        } else if (!this.isBrushActive()) {
+            super.moveTranslate(evt);
+        }
+    }
+
+    protected endTranslate(evt: PanEndTouchHandlerEvent | PinchEndTouchHandlerEvent) : void {
+        this.finishStroke();
+
+        super.endTranslate(evt);
+    }
+
+    protected startPinch(evt: PinchStartTouchHandlerEvent) : void {
+        // Dos dedos son para mover el mapa: lo pintado con el primero no era un trazo
+        this.activeStroke = undefined;
+        this.drawRetouchOverlay();
+
+        super.startPinch(evt);
+    }
+
+    componentDidUpdate(prevProps: Readonly<EditMapProps>, prevState: Readonly<EditMapState>): void {
+        super.componentDidUpdate(prevProps, prevState);
+
+        if (
+            this.props.mode === "retouch" &&
+            (prevProps.retouch !== this.props.retouch || prevState.retouchTool !== this.state.retouchTool)
+        ) {
+            this.drawRetouchOverlay();
+            this.draw();
+        }
+    }
+
     protected onMapUpdate() : void {
+        this.sentStrokes = [];
+
         if (this.pendingVirtualRestrictionsStructuresUpdate) {
             this.updateVirtualRestrictionClientStructures(true);
             this.updateVirtualRestrictionClientStructures(false);
@@ -416,6 +645,18 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
         // Only allow map interaction while the robot is docked
         if (this.props.robotStatus.value === "docked") {
             if (super.onTap(evt)) {
+                return true;
+            }
+
+            if (this.canRetouch()) {
+                if (this.state.retouchTool === "islands") {
+                    return this.tapIsland(evt.x0, evt.y0);
+                }
+
+                this.startStroke();
+                this.addStrokePoint(evt.x0, evt.y0);
+                this.finishStroke();
+
                 return true;
             }
 
@@ -711,6 +952,26 @@ class EditMap extends BaseMap<EditMapProps, EditMapState> {
                                     variant: "info",
                                     autoHideDuration: 1000,
                                 });
+                            }}
+                        />
+                    }
+                    {
+                        this.props.mode === "retouch" &&
+
+                        <RetouchActions
+                            robotStatus={this.props.robotStatus}
+                            retouch={this.props.retouch}
+                            busy={this.props.retouchBusy === true}
+                            tool={this.state.retouchTool}
+                            brushRadius={this.state.retouchBrushRadius}
+                            onToolChange={(tool) => {
+                                this.setState({retouchTool: tool});
+                            }}
+                            onBrushRadiusChange={(radius) => {
+                                this.setState({retouchBrushRadius: radius});
+                            }}
+                            onAction={(action) => {
+                                this.props.onRetouchAction?.(action);
                             }}
                         />
                     }

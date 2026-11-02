@@ -20,6 +20,7 @@ import {
     EditNote as MapAnnotationsIcon,
     Videocam as SpectatorIcon,
     Flip as MirrorsIcon,
+    Brush as RetouchIcon,
     History as MapVersionsIcon,
 } from "@mui/icons-material";
 import React from "react";
@@ -270,6 +271,13 @@ const MapManagement = (): React.ReactElement => {
                     primaryLabel={t("options.map.mirrors.title")}
                     secondaryLabel={t("options.map.mirrors.description")}
                     icon={<MirrorsIcon/>}
+                />,
+                <LinkListMenuItem
+                    key="mapRetouch"
+                    url="/options/map_management/retouch"
+                    primaryLabel={t("options.map.retouch.title")}
+                    secondaryLabel={t("options.map.retouch.description")}
+                    icon={<RetouchIcon/>}
                 />
             );
         }

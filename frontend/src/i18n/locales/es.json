@@ -44,6 +44,7 @@
             "welcomeDialog": "la pantalla de bienvenida",
             "updaterCommand": "actualizaciones",
             "mirrors": "las zonas de espejo",
+            "mapRetouch": "los retoques del mapa",
             "resegment": "la división en habitaciones",
             "mapRecovery": "la recuperación del mapa",
             "roomColor": "el color de la habitación",
@@ -395,6 +396,35 @@
             "explanation": "Marca la zona del espejo (a ras de suelo). Funciona como una pared: lo que el LiDAR ve detrás del espejo y solo se alcanza cruzando la zona se oculta del mapa y no cuenta para las habitaciones. Al guardar, cada zona nueva se añade también como zona prohibida para que el robot no intente entrar en el reflejo.",
             "limitReached": "Has llegado al máximo de {{max}} zonas de espejo.",
             "loadError": "No se han podido cargar las zonas de espejo. Esta función solo está disponible en robots con Mota."
+        },
+        "retouch": {
+            "visualOnly": "Solo cambia el dibujo: el robot no se entera. Para que no entre en un sitio, usa una zona prohibida.",
+            "islandsHint": "En naranja, los trozos sueltos. Toca uno para ocultarlo; los ocultos, en gris, se recuperan igual.",
+            "paintHint": "Dibuja con el dedo o el ratón. Con dos dedos se mueve el mapa; para moverlo con el ratón, vuelve a Islas.",
+            "requiresDocked": "Para retocar el mapa, el robot tiene que estar en la base. Girarlo se puede siempre.",
+            "otherMap": "Ahora mismo hay otro mapa en el robot: los retoques se guardan para cuando vuelva.",
+            "loadError": "No se han podido cargar los retoques. Esta función solo está disponible en robots con Mota.",
+            "rotateLeft": "Girar a la izquierda",
+            "rotateRight": "Girar a la derecha",
+            "undo": "Deshacer",
+            "hideAll": "Ocultar todas ({{count}})",
+            "showAll": "Mostrar ocultas ({{count}})",
+            "clear": "Quitar retoques",
+            "clearConfirmTitle": "¿Quitar todos los retoques?",
+            "clearConfirmText": "El mapa vuelve a verse como lo detecta el robot. El giro se mantiene y puedes deshacerlo.",
+            "tool": "Herramienta",
+            "brush": "Tamaño del pincel",
+            "brushSize": [
+                "Fino",
+                "Medio",
+                "Grueso"
+            ],
+            "tools": {
+                "islands": "Islas",
+                "floor": "Suelo",
+                "wall": "Pared",
+                "void": "Borrar"
+            }
         }
     },
     "app": {
@@ -504,6 +534,7 @@
         "donate": "Donar a Valetudo",
         "motaRepository": "Repositorio de Mota",
         "mirrorManagement": "Espejos",
+        "mapRetouch": "Retocar el mapa",
         "system": "Sistema"
     },
     "options": {
@@ -606,6 +637,10 @@
             "mirrors": {
                 "title": "Espejos",
                 "description": "Marcar el reflejo que el LiDAR ve detrás de los espejos a ras de suelo"
+            },
+            "retouch": {
+                "title": "Retocar el mapa",
+                "description": "Quitar trozos sueltos, girar el mapa y repintarlo a tu gusto"
             },
             "versions": {
                 "title": "Versiones del mapa",
@@ -1289,7 +1324,8 @@
         "updater": "## Actualizaciones\n\nEl actualizador de Mota es una función de comodidad que pretende hacerte la vida un poco más fácil.\n\nComo está pensado respetando la privacidad, tienes que pulsar un botón a mano para que busque versiones nuevas de Mota.\nSin comprobación diaria de actualizaciones no hay conexiones diarias a ningún servidor externo.\n\nPor defecto consulta la API de GitHub, así que los desarrolladores no pueden recopilar ningún dato sobre ti.\n\n**Nota: el actualizador siempre intenta actualizar a la siguiente versión en orden cronológico. Si vas varias versiones por detrás,\ntendrás que actualizar varias veces seguidas.**\n\nComo es solo una función de comodidad, puede haber situaciones en las que no funcione. En esos casos\ntendrás que actualizar a mano, lo que normalmente implica acceder al robot por SSH.\n\nA veces, un cambio de configuración puede permitirte usar el actualizador. En otros casos, puede que tu modelo de robot no\npueda usarlo en absoluto porque no tiene suficiente almacenamiento. No es un fallo: es lo que hay.\n\nTambién conviene saber que el actualizador no actualiza el firmware del robot. Solo actualiza el binario de Mota.\n",
         "virtualRestrictionEdit": "## Restricciones virtuales\n\nLas restricciones virtuales son cosas como paredes virtuales, zonas prohibidas o zonas sin fregado, que impiden que el robot pase por un sitio\nsiempre o solo en ciertas condiciones (por ejemplo, cuando lleva puesto un accesorio concreto, como la mopa).\n\nPuedes usarlas para proteger tus muebles delicados del robot, o a tu delicado robot de los muebles.\n\nNo todos los firmwares admiten todos los tipos. Además, normalmente el firmware limita cuántas restricciones virtuales\npuedes tener.\n\n\nTen en cuenta que, aunque funcionan muy bien casi siempre, a veces los robots se pierden y empiezan a moverse\nsin saber nada de las restricciones virtuales que habías configurado.\nAsegúrate de que no sean lo único que evita un desastre.\n\n\nMientras editas no verás actualizaciones del mapa a menos que pulses «Actualizar».\nPor eso, no olvides pulsar «Guardar» antes de actualizar o de salir de esta página para que se apliquen los cambios.\n",
         "voicepack": "## Paquetes de voz\n\nLos paquetes de voz personalizados son algo más complicados, porque el formato exacto cambia según el robot.\n\nComo al autor de Valetudo no le interesan mucho, esta función está un poco a medio pulir.\nPara él, estos aparatos son ante todo herramientas que simplemente deben funcionar, y hacerlo de forma fiable.\nPor eso le basta con que hablen en inglés, que para una herramienta es perfectamente válido.\n\nSi aun así quieres instalar uno personalizado, necesitarás un paquete de voz en el formato que exija tu\nrobot, alojado en algún servidor HTTP. Ten en cuenta que el firmware del robot suele bloquear la CDN oficial, así que\nusar la URL oficial probablemente no funcione.\n\nSegún el modelo, también necesitarás un hash del archivo del paquete de voz.\nEl tipo de hash depende del firmware.\n\nAdemás, tendrás que indicar un código de idioma. Ese valor apenas importa, salvo que uses un código reservado.\n«EN», «CN», etc. suelen ser códigos reservados para los paquetes de voz que trae el firmware.\n\nNormalmente se puede volver al paquete de voz original indicando uno de esos códigos integrados durante la instalación.\n",
-        "mirrorEdit": "## Espejos\n\nUn espejo a ras de suelo engaña al LiDAR: el robot \"ve\" a través de él una habitación que no existe y la añade al mapa.\n\nAquí puedes marcar ese área fantasma con zonas de espejo. Lo que quede dentro de una zona de espejo se oculta del mapa\n(y no cuenta para dividirlo en habitaciones).\n\nAl guardar, cada zona de espejo nueva se añade también como zona prohibida en el mismo rectángulo, para que el robot no intente\nentrar en el reflejo. Las restricciones que ya existían no se tocan; si quitas una zona de espejo, su zona prohibida se\nconserva y puedes borrarla en \"Restricciones virtuales\".\n\nPuede haber como máximo 20 zonas de espejo. Recuerda guardar antes de salir de esta página."
+        "mirrorEdit": "## Espejos\n\nUn espejo a ras de suelo engaña al LiDAR: el robot \"ve\" a través de él una habitación que no existe y la añade al mapa.\n\nAquí puedes marcar ese área fantasma con zonas de espejo. Lo que quede dentro de una zona de espejo se oculta del mapa\n(y no cuenta para dividirlo en habitaciones).\n\nAl guardar, cada zona de espejo nueva se añade también como zona prohibida en el mismo rectángulo, para que el robot no intente\nentrar en el reflejo. Las restricciones que ya existían no se tocan; si quitas una zona de espejo, su zona prohibida se\nconserva y puedes borrarla en \"Restricciones virtuales\".\n\nPuede haber como máximo 20 zonas de espejo. Recuerda guardar antes de salir de esta página.",
+        "retouchEdit": "## Retocar el mapa\n\nAquí cambias cómo se ve el mapa, no el mapa del robot. Nada de esto llega al firmware: el robot sigue navegando con lo que detecta, y las habitaciones y las zonas de limpieza se calculan con el mapa real.\n\n**Si quieres que el robot no entre en un sitio, usa una zona prohibida en \"Restricciones virtuales\".** Borrar un trozo o pintar una pared no se lo impide.\n\n### Islas\n\nUna isla es un trozo suelto: no está unido a la zona principal, a ninguna habitación, a la base ni al robot. Salen en naranja. Toca una para ocultarla u oculta todas de golpe. Las ocultas salen en gris y se recuperan tocándolas.\n\n- Si el robot vuelve a detectar ese trozo y sigue suelto, sigue oculto aunque crezca.\n- Si se une a la casa o el robot entra en él, vuelve a verse solo, porque es suelo real.\n\n### Girar\n\nGira la vista de cuartos de vuelta y se guarda para todos los mapas de Mota. Las zonas, el ir a un punto y las habitaciones se siguen enviando con las coordenadas reales.\n\n### Repintar\n\nAñade suelo o pared, o borra lo que sobre. Lo pintado se queda aunque el robot detecte otra cosa, hasta que lo deshagas.\n\n### Deshacer y versiones\n\nCada retoque se deshace uno a uno, en orden inverso. Los retoques son de este mapa: si el robot cambia a otro, dejan de aplicarse hasta que vuelva. Las versiones del mapa los guardan, y al recuperar una versión vuelven con sus habitaciones. Borrar el mapa los borra también."
     },
     "history": {
         "listTitle": "Limpiezas",
@@ -1409,7 +1445,7 @@
         "restoreRooms": "Recuperar habitaciones",
         "delete": "Borrar",
         "restoreConfirmTitle": "¿Recuperar las habitaciones de esta versión?",
-        "restoreConfirmText": "Las habitaciones actuales se sustituyen por las de esta versión y se ajustan al suelo del mapa actual.",
+        "restoreConfirmText": "Las habitaciones actuales se sustituyen por las de esta versión y se ajustan al suelo del mapa actual. Si la versión tiene retoques del mapa, también se recuperan (se pueden deshacer en Retocar el mapa).",
         "deleteConfirmTitle": "¿Borrar esta versión del mapa?"
     }
 }

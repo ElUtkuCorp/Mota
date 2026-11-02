@@ -1,6 +1,8 @@
 import {Box, Button, CircularProgress, styled, Typography, useTheme} from "@mui/material";
 import {
     Capability,
+    useMotaMapRetouchMutation,
+    useMotaMapRetouchQuery,
     useMotaMirrorsQuery,
     useRobotMapQuery,
     useRobotStatusQuery
@@ -63,6 +65,27 @@ const EditMapPage = (props: {
     } = useMotaMirrorsQuery();
     const motaApiAvailable = mirrorZones !== undefined;
 
+    // Mota: retoques del mapa. Las islas se recalculan con cada mapa que llega
+    const {
+        data: retouch,
+        isPending: retouchPending,
+        isError: retouchLoadError,
+        refetch: refetchRetouch
+    } = useMotaMapRetouchQuery(props.mode === "retouch");
+    const {
+        mutate: sendRetouchAction,
+        isPending: retouchActionPending
+    } = useMotaMapRetouchMutation();
+    const mapNonce = mapData?.metaData.nonce;
+
+    React.useEffect(() => {
+        if (props.mode === "retouch" && mapNonce !== undefined) {
+            refetchRetouch().catch(() => {
+                /* intentional: el error ya lo muestra la consulta */
+            });
+        }
+    }, [props.mode, mapNonce, refetchRetouch]);
+
     const theme = useTheme();
     const {enqueueSnackbar} = useSnackbar();
 
@@ -76,6 +99,8 @@ const EditMapPage = (props: {
         helpText = t("help.mapAnnotations");
     } else if (props.mode === "mirrors") {
         helpText = t("help.mirrorEdit");
+    } else if (props.mode === "retouch") {
+        helpText = t("help.retouchEdit");
     }
 
     if (props.mode === "mirrors" && mirrorZonesLoadError) {
@@ -85,6 +110,20 @@ const EditMapPage = (props: {
                 <Box m={1}/>
                 <Button color="primary" variant="contained" onClick={() => {
                     return refetchMirrorZones();
+                }}>
+                    {t("common.retry")}
+                </Button>
+            </Container>
+        );
+    }
+
+    if (props.mode === "retouch" && retouchLoadError && !retouch) {
+        return (
+            <Container>
+                <Typography color="error">{t("map.retouch.loadError")}</Typography>
+                <Box m={1}/>
+                <Button color="primary" variant="contained" onClick={() => {
+                    return refetchRetouch();
                 }}>
                     {t("common.retry")}
                 </Button>
@@ -109,7 +148,8 @@ const EditMapPage = (props: {
     if (
         (!mapData && mapIsPending) ||
         (!robotStatus && robotStatusPending) ||
-        (props.mode === "mirrors" && !mirrorZones && mirrorZonesPending)
+        (props.mode === "mirrors" && !mirrorZones && mirrorZonesPending) ||
+        (props.mode === "retouch" && !retouch && retouchPending)
     ) {
         return (
             <Container>
@@ -142,6 +182,9 @@ const EditMapPage = (props: {
         robotStatus={robotStatus}
         mirrorZones={mirrorZones}
         motaApiAvailable={motaApiAvailable}
+        retouch={retouch}
+        retouchBusy={retouchActionPending}
+        onRetouchAction={sendRetouchAction}
         enqueueSnackbar={enqueueSnackbar}
 
         supportedCapabilities={{

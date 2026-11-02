@@ -48,7 +48,7 @@ class CecotecMotaRouter {
                 const map = this.robot.cleanHistory?.getMotaMap(Number(req.params.cleanId));
 
                 if (map) {
-                    res.json(map);
+                    res.json(this.robot.withMapRotation(map));
                 } else {
                     res.sendStatus(404);
                 }
@@ -104,7 +104,7 @@ class CecotecMotaRouter {
                 const version = this.robot.mapVersions?.get(Number(req.params.id));
 
                 if (version?.map) {
-                    res.json(version.map);
+                    res.json(this.robot.withMapRotation(version.map));
                 } else {
                     res.sendStatus(404);
                 }
@@ -208,6 +208,69 @@ class CecotecMotaRouter {
             res.sendStatus(200);
         });
 
+        this.router.get("/map-retouch", (req, res) => {
+            const map = this.robot.robot?.device.map;
+
+            if (map) {
+                res.json(this.robot.mapRetouch.getStatus(this.robot.getRetouchContext(map)));
+            } else {
+                res.status(400).json("There is no map");
+            }
+        });
+
+        this.router.put("/map-retouch/rotation", express.json(), (req, res) => {
+            try {
+                this.robot.setMapRotation(req.body?.rotation);
+                res.sendStatus(200);
+            } catch (e) {
+                res.status(400).json(e.message);
+            }
+        });
+
+        const retouchRoute = (route, getChange) => {
+            this.router.post(route, express.json(), (req, res) => {
+                try {
+                    res.json(this.robot.changeMapRetouch(getChange(req.body ?? {})));
+                } catch (e) {
+                    res.status(400).json(e.message);
+                }
+            });
+        };
+
+        retouchRoute("/map-retouch/islands/hide", ({ids}) => {
+            return (context) => {
+                this.robot.mapRetouch.hideIslands(context, CecotecMotaRouter.PARSE_ISLAND_IDS(ids));
+            };
+        });
+        retouchRoute("/map-retouch/islands/show", ({ids}) => {
+            return (context) => {
+                this.robot.mapRetouch.showIslands(context, CecotecMotaRouter.PARSE_ISLAND_IDS(ids));
+            };
+        });
+        retouchRoute("/map-retouch/paint", ({value, radius, points}) => {
+            return (context) => {
+                if (
+                    !Number.isInteger(radius) || radius < 0 || radius > CecotecMotaRouter.MAX_BRUSH_RADIUS ||
+                    !Array.isArray(points) || points.length < 2 || points.length % 2 !== 0 ||
+                    points.length > CecotecMotaRouter.MAX_STROKE_COORDINATES || !points.every(Number.isInteger)
+                ) {
+                    throw new Error("Invalid stroke");
+                }
+
+                this.robot.mapRetouch.paint(context, value, radius, points);
+            };
+        });
+        retouchRoute("/map-retouch/undo", () => {
+            return () => {
+                this.robot.mapRetouch.undo();
+            };
+        });
+        retouchRoute("/map-retouch/clear", () => {
+            return () => {
+                this.robot.mapRetouch.clear();
+            };
+        });
+
         this.router.get("/diagnostics", (req, res) => {
             res.json(CecotecMotaRouter.COLLECT_DIAGNOSTICS(this.robot));
         });
@@ -215,6 +278,18 @@ class CecotecMotaRouter {
 
     getRouter() {
         return this.router;
+    }
+
+    /**
+     * @param {unknown} ids
+     * @returns {Array<number>|undefined} sin ids, todas las islas
+     */
+    static PARSE_ISLAND_IDS(ids) {
+        if (ids !== undefined && !(Array.isArray(ids) && ids.every(Number.isInteger))) {
+            throw new Error("Invalid island ids");
+        }
+
+        return ids;
     }
 
     /**
@@ -321,5 +396,8 @@ class CecotecMotaRouter {
         };
     }
 }
+
+CecotecMotaRouter.MAX_BRUSH_RADIUS = 10;
+CecotecMotaRouter.MAX_STROKE_COORDINATES = 10000;
 
 module.exports = CecotecMotaRouter;

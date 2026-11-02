@@ -44,6 +44,7 @@
             "welcomeDialog": "Welcome Dialog",
             "updaterCommand": "Updater",
             "mirrors": "the mirror zones",
+            "mapRetouch": "the map retouches",
             "resegment": "the room division",
             "mapRecovery": "map recovery",
             "roomColor": "the room color",
@@ -395,6 +396,35 @@
             "explanation": "Mark the mirror area (at floor level). It works like a wall: whatever the LiDAR sees behind the mirror and can only be reached by crossing the area is hidden from the map and does not count for the rooms. When saving, every new area is also added as a no-go zone so the robot does not try to enter the reflection.",
             "limitReached": "You have reached the maximum of {{max}} mirror zones.",
             "loadError": "The mirror zones could not be loaded. This feature is only available on robots running Mota."
+        },
+        "retouch": {
+            "visualOnly": "This only changes the drawing: the robot does not notice. To keep it out of a place, use a no-go area.",
+            "islandsHint": "Loose pieces are orange. Tap one to hide it; hidden ones, in grey, come back the same way.",
+            "paintHint": "Draw with a finger or the mouse. Two fingers move the map; to move it with the mouse, go back to Islands.",
+            "requiresDocked": "To retouch the map, the robot has to be docked. Rotating is always possible.",
+            "otherMap": "The robot has a different map right now: the retouches are kept for when it comes back.",
+            "loadError": "The retouches could not be loaded. This feature is only available on robots with Mota.",
+            "rotateLeft": "Rotate left",
+            "rotateRight": "Rotate right",
+            "undo": "Undo",
+            "hideAll": "Hide all ({{count}})",
+            "showAll": "Show hidden ({{count}})",
+            "clear": "Remove retouches",
+            "clearConfirmTitle": "Remove all retouches?",
+            "clearConfirmText": "The map looks again as the robot detects it. The rotation stays and you can undo this.",
+            "tool": "Tool",
+            "brush": "Brush size",
+            "brushSize": [
+                "Fine",
+                "Medium",
+                "Thick"
+            ],
+            "tools": {
+                "islands": "Islands",
+                "floor": "Floor",
+                "wall": "Wall",
+                "void": "Erase"
+            }
         }
     },
     "app": {
@@ -504,6 +534,7 @@
         "donate": "Donate to Valetudo",
         "motaRepository": "Mota repository",
         "mirrorManagement": "Mirrors",
+        "mapRetouch": "Retouch the map",
         "system": "System"
     },
     "options": {
@@ -606,6 +637,10 @@
             "mirrors": {
                 "title": "Mirrors",
                 "description": "Mark the reflection the LiDAR sees behind floor-level mirrors"
+            },
+            "retouch": {
+                "title": "Retouch the map",
+                "description": "Remove loose pieces, rotate the map and repaint it to your liking"
             },
             "versions": {
                 "title": "Map versions",
@@ -1289,7 +1324,8 @@
         "updater": "## Updater\n\nThe Mota updater is a convenience feature aiming to make life with Mota a bit easier.\n\nAs it is built with privacy in mind, you will have to manually click a button to make it search for newer versions of Mota.\nNo daily update check means no daily pings to some external server.\n\nBy default, it's polling the GitHub API, meaning that the developers are not able to collect any data about you.\n\n**Note: The updater will always try to update you to the next chronological release. If you're multiple releases behind,\nyou will have to update multiple times in a row.**\n\nAs the updater is just a convenience feature, there might be situations in which it doesn't work. In those situations,\nyou will have to do a manual update, which usually involves SSH access to the robot.\n\nSometimes, a configuration change might enable you to use the updater. In other instances, your model of robot might not\nbe able to use the updater at all as there's not enough storage built in. This is not a bug. That's just how it is.\n\nIt is also worth noting that the updater won't update the robots firmware. It only updates the Mota binary.\n",
         "virtualRestrictionEdit": "## Virtual Restriction Management\n\nVirtual restrictions are things such as virtual walls, no go areas or no mop areas, that either stop your robot\nfrom driving somewhere all the time or just conditionally (e.g. when there's a specific attachment such as the mop attached to it).\n\nYou can use virtual restrictions to protect your fragile furniture from your robot or your fragile robot from your furniture.\n\nNot all firmwares support all of those. Also, usually, there's a firmware-determined limit on how many virtual\nrestrictions you can have.\n\n\nKeep in mind that while these work great most of the time, robots may sometimes forget where they are and then start\ndriving around not knowing anything about any of the previously configured virtual restrictions.\nMake sure that they're not the only thing preventing a disaster.\n\n\nNote that you won't see any map updates while editing unless you press refresh.\nTherefore, don't forget to click save before refreshing and/or leaving this page to commit your changes.\n",
         "voicepack": "## Voice packs\n\nCustom voice packs are a bit more complicated as the exact format differs depending on your choice of robot.\n\nAs I personally don't really care about them, this feature is a bit rough around the edges.\nFor me, these things are first and foremost tools that should simply work and do so reliably.\nThus, I'm fine with it just talking english as that's perfectly serviceable for a tool.\n\nIf you want to install a custom one anyways, you will need a voicepack in the correct format as required by your\nrobot hosted on some http server. Note that the official CDN is often blocked in the robots firmware meaning that just\nusing the official URL likely won't work.\n\nDepending on the model of robot, you will also need a hash of that voice pack file.\nThe type of hash differs depending on the firmware.\n\nFurthermore, you'll also need to specify a language code. That value largely doesn't matter much unless you use a reserved code.\n\"EN\", \"CN\" etc are often codes reserved for the inbuilt voice packs of the firmware.\n\nUsually it's possible to revert to the initially installed voice pack by specifying one of those inbuilt voicepack codes during the install.\n",
-        "mirrorEdit": "## Mirrors\n\nA floor-level mirror fools the LiDAR: through it, the robot \"sees\" a room that does not exist and adds it to the map.\n\nHere you can mark that ghost area with mirror zones. Everything inside a mirror zone is hidden from the map\n(and is ignored when splitting it into rooms).\n\nWhen saving, every new mirror zone is also added as a no-go area with the same rectangle, so the robot does not try\nto drive into the reflection. Existing restrictions are left untouched; if you remove a mirror zone, its no-go area\nis kept and you can delete it in \"Virtual Restrictions\".\n\nThere can be at most 20 mirror zones. Remember to save before leaving this page."
+        "mirrorEdit": "## Mirrors\n\nA floor-level mirror fools the LiDAR: through it, the robot \"sees\" a room that does not exist and adds it to the map.\n\nHere you can mark that ghost area with mirror zones. Everything inside a mirror zone is hidden from the map\n(and is ignored when splitting it into rooms).\n\nWhen saving, every new mirror zone is also added as a no-go area with the same rectangle, so the robot does not try\nto drive into the reflection. Existing restrictions are left untouched; if you remove a mirror zone, its no-go area\nis kept and you can delete it in \"Virtual Restrictions\".\n\nThere can be at most 20 mirror zones. Remember to save before leaving this page.",
+        "retouchEdit": "## Retouch the map\n\nHere you change how the map looks, not the robot's map. None of this reaches the firmware: the robot keeps navigating with what it detects, and rooms and cleaning zones are calculated from the real map.\n\n**To keep the robot out of a place, use a no-go area in \"Virtual Restrictions\".** Erasing a piece or painting a wall does not stop it.\n\n### Islands\n\nAn island is a loose piece: not joined to the main area, a room, the dock or the robot. They are orange. Tap one to hide it, or hide them all at once. Hidden ones are grey and come back when tapped.\n\n- If the robot detects that piece again and it is still loose, it stays hidden even if it grows.\n- If it joins the house or the robot enters it, it shows up again on its own, because it is real floor.\n\n### Rotate\n\nRotates the view by quarter turns and is kept for every Mota map. Zones, go-to and rooms are still sent with the real coordinates.\n\n### Repaint\n\nAdd floor or wall, or erase what is left over. What you paint stays even if the robot detects something else, until you undo it.\n\n### Undo and versions\n\nRetouches are undone one by one, last first. They belong to this map: if the robot changes to another one, they stop applying until it comes back. Map versions keep them, and recovering a version brings them back with its rooms. Deleting the map deletes them too."
     },
     "history": {
         "listTitle": "Cleanups",
@@ -1409,7 +1445,7 @@
         "restoreRooms": "Recover rooms",
         "delete": "Delete",
         "restoreConfirmTitle": "Recover the rooms of this version?",
-        "restoreConfirmText": "The current rooms are replaced by the ones of this version and fitted to the floor of the current map.",
+        "restoreConfirmText": "The current rooms are replaced by the ones of this version and fitted to the floor of the current map. If the version has map retouches, they are recovered too (you can undo that in Retouch the map).",
         "deleteConfirmTitle": "Delete this map version?"
     }
 }

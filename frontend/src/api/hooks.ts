@@ -165,6 +165,9 @@ import {
     fetchMotaMapVersionMap,
     fetchMotaMapRecovery,
     sendMotaMapRecovery,
+    fetchMotaMapRetouch,
+    sendMotaMapRetouchAction,
+    sendMotaMapRotation,
     sendMotaMapVersionsThreshold,
     sendMotaMapVersionSave,
     sendMotaMapVersionRestoreRooms,
@@ -189,6 +192,8 @@ import {
     CarpetSensorMode,
     CleanRoute,
     CombinedVirtualRestrictionsUpdateRequestParameters,
+    MotaMapRetouchAction,
+    MotaMapRetouchStatus,
     MotaMirrorsSaveRequest,
     MotaMirrorZone,
     MotaRoomColorRequest,
@@ -311,6 +316,7 @@ enum QueryKey {
     MotaMapVersions = "mota_map_versions",
     MotaMapVersionMap = "mota_map_version_map",
     MotaMapRecovery = "mota_map_recovery",
+    MotaMapRetouch = "mota_map_retouch",
 }
 
 // "capability" is either a capability name or an i18n key
@@ -2141,6 +2147,46 @@ export const useMotaResegmentMutation = (
         onSuccess: async (data, ...args) => {
             await queryClient.invalidateQueries({queryKey: [QueryKey.Map]});
             await options?.onSuccess?.(data, ...args);
+        },
+    });
+};
+
+// Mota: retoques del mapa
+
+export const useMotaMapRetouchQuery = (enabled: boolean) => {
+    return useQuery({
+        queryKey: [QueryKey.MotaMapRetouch],
+        queryFn: fetchMotaMapRetouch,
+        enabled: enabled,
+
+        retry: 1
+    });
+};
+
+export const useMotaMapRetouchMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (action: MotaMapRetouchAction) => {
+            return sendMotaMapRetouchAction(action);
+        },
+        onError: useOnCommandError("api.settings.mapRetouch"),
+        onSuccess: async (data: MotaMapRetouchStatus) => {
+            queryClient.setQueryData<MotaMapRetouchStatus>([QueryKey.MotaMapRetouch], data);
+            await queryClient.invalidateQueries({queryKey: [QueryKey.Map]});
+        },
+    });
+};
+
+export const useMotaMapRotationMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: sendMotaMapRotation,
+        onError: useOnCommandError("api.settings.mapRetouch"),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({queryKey: [QueryKey.MotaMapRetouch]});
+            await queryClient.invalidateQueries({queryKey: [QueryKey.Map]});
         },
     });
 };

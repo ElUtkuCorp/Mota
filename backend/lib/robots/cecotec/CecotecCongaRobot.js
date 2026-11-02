@@ -1,6 +1,7 @@
 const capabilities = require("./capabilities");
 const CecotecCleanHistory = require("./CecotecCleanHistory");
 const CecotecMapRecovery = require("./CecotecMapRecovery");
+const CecotecMapRetouch = require("./CecotecMapRetouch");
 const CecotecMapVersions = require("./CecotecMapVersions");
 const CecotecMotaRouter = require("./CecotecMotaRouter");
 const CecotecQuirkFactory = require("./CecotecQuirkFactory");
@@ -153,6 +154,9 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         this.mapRecovery = new CecotecMapRecovery({robot: this});
         this.virtualRooms = new CecotecVirtualRooms({
             path: this.config.get("embedded") === true ? path.join(path.dirname(this.config.location), "habitaciones.json") : undefined
+        });
+        this.mapRetouch = new CecotecMapRetouch({
+            path: this.config.get("embedded") === true ? path.join(path.dirname(this.config.location), "retoques.json") : undefined
         });
         this.server = new CloudServer();
         this.emitStateUpdated = throttle(this.emitStateUpdated.bind(this));
@@ -377,12 +381,13 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
      */
     onUserMapReset() {
         this.virtualRooms.clear();
+        this.mapRetouch.forgetMap();
         this.setMirrorZones([]);
         this.mapResetPending = true;
         this.pathPoints = [];
         this.livePathTail = [];
         this.lastPathPoints = [];
-        Logger.info("Map reset by the user: rooms and mirror zones cleared");
+        Logger.info("Map reset by the user: rooms, retouches and mirror zones cleared");
     }
 
     /**
@@ -392,6 +397,78 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         if (this.robot) {
             this.onUpdateMap(this.robot);
         }
+    }
+
+    /**
+     * Mota: datos del mapa real con los que trabajan los retoques
+     *
+     * @param {import("@agnoc/core").DeviceMap} map
+     * @param {{floor: Array<number>, walls: Array<number>}} [pixels] las capas reales, si ya se tienen
+     * @returns {import("./CecotecMapRetouch").RetouchContext}
+     */
+    getRetouchContext(map, pixels) {
+        const { floor, walls } = pixels ?? this.getMapPixels(map);
+        const anchors = [this.getHomePixel(map)];
+
+        if (CecotecCongaRobot.IS_POSE_ON_MAP(map, map.robot)) {
+            const { x, y } = map.toPixel(map.robot.toCoordinates());
+
+            anchors.push({ x: Math.round(x), y: Math.round(map.size.y - y) });
+        }
+
+        return {
+            width: map.size.x,
+            height: map.size.y,
+            floor: floor,
+            walls: walls,
+            rooms: this.virtualRooms.getRooms(),
+            anchors: anchors.filter(Boolean),
+            stale: this.virtualRooms.stale,
+        };
+    }
+
+    /**
+     * Mota: ejecuta un cambio en los retoques y actualiza el mapa
+     *
+     * @param {(context: import("./CecotecMapRetouch").RetouchContext) => void} change
+     * @returns {import("./CecotecMapRetouch").RetouchStatus}
+     */
+    changeMapRetouch(change) {
+        const map = this.robot?.device.map;
+
+        if (!map) {
+            throw new Error("There is no map in connected robot");
+        }
+
+        change(this.getRetouchContext(map));
+        this.refreshMap();
+
+        return this.mapRetouch.getStatus(this.getRetouchContext(map));
+    }
+
+    /**
+     * Mota: el giro es de la vista. Llega en los metadatos del mapa y no cambia ninguna coordenada
+     *
+     * @param {number} rotation
+     */
+    setMapRotation(rotation) {
+        this.mapRetouch.setRotation(rotation);
+
+        if (this.state.map) {
+            this.state.map.metaData.motaRotation = rotation;
+            this.bumpEntitiesNonce();
+            this.emitMapUpdated();
+        }
+    }
+
+    /**
+     * Mota: los mapas guardados se ven con el giro actual, que es de la vista y no de cada foto
+     *
+     * @param {any} map
+     * @returns {any}
+     */
+    withMapRotation(map) {
+        return Object.assign({}, map, {metaData: Object.assign({}, map.metaData, {motaRotation: this.mapRetouch.getRotation()})});
     }
 
     /**
@@ -849,6 +926,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             createdAt: Date.now(),
             map: this.getMapWithoutPath(),
             rooms: this.virtualRooms.exportData(),
+            retouch: this.mapRetouch.exportEdits(),
         });
     }
 
@@ -1251,17 +1329,20 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
      *
      * @param {import("@agnoc/core").DeviceMap} map
      * @param {Array<Array<number|string>>} fullMap
+     * @param {Map<number, Array<number>>} [retouchedRooms] Mota: celdas que se muestran de cada habitación
      * @returns {Array<import("../../entities/map/MapLayer")>}
      */
-    getSegmentEntities(map, fullMap) {
+    getSegmentEntities(map, fullMap, retouchedRooms) {
         // Mota: habitaciones virtuales (la 3090 no informa de habitaciones)
         if (this.virtualRooms?.hasRooms()) {
             const width = this.virtualRooms.getWidth();
 
             return this.virtualRooms.getRooms().map(room => {
                 const pixels = [];
+                const shown = retouchedRooms?.get(room.id);
 
-                room.pixels.forEach(i => {
+                // Una habitación borrada del dibujo sigue siendo una habitación: se puede limpiar
+                (shown?.length > 0 ? shown : room.pixels).forEach(i => {
                     pixels.push(i % width, Math.floor(i / width));
                 });
 
@@ -1420,6 +1501,9 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
 
         this.updatePathPoints(map, robot);
 
+        // Mota: lo de arriba usa el mapa real; solo lo que se muestra lleva los retoques
+        const retouched = this.mapRetouch.apply(this.getRetouchContext(map, { floor: floor, walls: walls }));
+
         this.state.map = new ValetudoMap({
             pixelSize: 1, // ?
             entities: [
@@ -1430,11 +1514,11 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
                 ...this.getRestrictedZoneEntities(map),
             ].filter(Boolean),
             layers: [
-                this.buildMapLayer(MapLayer.TYPE.FLOOR, floor),
-                this.buildMapLayer(MapLayer.TYPE.WALL, walls),
-                ...this.getSegmentEntities(map, this.mapArrayToMatrix(walls, floor)),
+                this.buildMapLayer(MapLayer.TYPE.FLOOR, retouched.floor),
+                this.buildMapLayer(MapLayer.TYPE.WALL, retouched.walls),
+                ...this.getSegmentEntities(map, this.mapArrayToMatrix(walls, floor), retouched.rooms),
             ].filter(Boolean),
-            metaData: {},
+            metaData: {motaRotation: this.mapRetouch.getRotation()},
             size: {
                 x: map.size.x,
                 y: map.size.y,

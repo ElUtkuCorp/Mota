@@ -15,6 +15,8 @@ const zlib = require("zlib");
  *
  * El firmware de la 3090 no acepta que se le cargue un mapa por el protocolo de nube, así que restaurar
  * una versión recupera las habitaciones de Mota (divisiones, nombres y colores), no el mapa del robot.
+ * Los retoques del mapa van con sus habitaciones: se recuperan con ellas y se puede deshacer. Las versiones anteriores
+ * a los retoques no los guardan y dejan los actuales como están. El giro es de la vista y no se guarda en la versión.
  */
 class CecotecMapVersions {
     /**
@@ -136,7 +138,7 @@ class CecotecMapVersions {
 
     /**
      * @param {number} id
-     * @returns {{map: any, rooms: any} | undefined}
+     * @returns {{map: any, rooms: any, retouch?: any} | undefined}
      */
     get(id) {
         const dataPath = this.getDataPath(id);
@@ -165,6 +167,9 @@ class CecotecMapVersions {
         }
 
         this.robot.virtualRooms.importData(version.rooms);
+        if (version.retouch) {
+            this.robot.mapRetouch.importEdits(version.retouch);
+        }
         Logger.info(`Map versions: restored the rooms of version ${id}`);
     }
 
@@ -235,7 +240,7 @@ class CecotecMapVersions {
 
         fs.writeFileSync(
             path.join(this.directory, `${id}.json.gz`),
-            zlib.gzipSync(JSON.stringify({map: snapshot.map, rooms: snapshot.rooms}))
+            zlib.gzipSync(JSON.stringify({map: snapshot.map, rooms: snapshot.rooms, retouch: snapshot.retouch}))
         );
         fs.writeFileSync(path.join(this.directory, `${id}.meta.json`), JSON.stringify(info));
         Logger.info(`Map versions: stored version ${id} (${reason}, ${snapshot.floor.length} floor cells)`);
@@ -314,6 +319,7 @@ CecotecMapVersions.MAX_VERSIONS = 15;
  * @property {Array<number>} floor índices y * width + x de las celdas de suelo
  * @property {any} map el mapa de Mota (ValetudoMap) tal como lo devuelve la API
  * @property {any} rooms las habitaciones virtuales (CecotecVirtualRooms.exportData())
+ * @property {any} retouch los retoques del mapa (CecotecMapRetouch.exportEdits())
  */
 
 /**

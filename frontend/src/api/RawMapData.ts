@@ -89,4 +89,6 @@ export interface RawMapDataMetaData {
     nonce: string;
     /** Mota: cambia cuando se mueven el robot, el recorrido o la base sin que llegue un mapa nuevo */
     motaEntitiesNonce?: number;
+    /** Mota: giro de la vista en grados, en el sentido de las agujas del reloj. No cambia ninguna coordenada */
+    motaRotation?: number;
 }

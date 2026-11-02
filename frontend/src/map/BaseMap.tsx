@@ -21,6 +21,7 @@ import { create } from "zustand";
 import {clampMapScalingFactorFactor, considerHiDPI} from "./utils/helpers";
 import {prefersReducedMotion, ROBOT_ANIMATION_MAX_JUMP, RobotMovementAnimator, RobotPose} from "./utils/RobotMovementAnimator";
 import RobotPositionMapStructure from "./structures/map_structures/RobotPositionMapStructure";
+import {getMapRotationMatrix, getRotatedSize, normalizeMapRotation} from "./utils/mapRotation";
 
 export interface MapProps {
     rawMap: RawMapData;
@@ -152,6 +153,18 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
         window.addEventListener("resize", this.resizeListener);
         document.addEventListener("visibilitychange", this.visibilityStateChangeListener);
 
+        this.fitMapToView();
+
+        this.updateInternalDrawableState();
+
+        usePendingMapAction.setState({hasPendingMapAction: false});
+    }
+
+    /**
+     * Centra el mapa en el lienzo con el giro guardado. Mota: el giro forma parte de la transformación del lienzo, de la
+     * que sale también la conversión de la pantalla al mapa (ver mapRotation.ts)
+     */
+    private fitMapToView(): void {
         const boundingBox = {
             minX: this.props.rawMap.size.x / this.props.rawMap.pixelSize,
             minY: this.props.rawMap.size.y / this.props.rawMap.pixelSize,
@@ -175,28 +188,32 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
         });
 
 
+        const rotation = normalizeMapRotation(this.props.rawMap.metaData.motaRotation);
+        const {a, b, c, d} = getMapRotationMatrix(rotation);
+        const rotatedSize = getRotatedSize(boundingBox.maxX - boundingBox.minX, boundingBox.maxY - boundingBox.minY, rotation);
+
         const initialScalingFactor = Math.min(
-            this.canvas.width / ((boundingBox.maxX - boundingBox.minX)*1.1),
-            this.canvas.height / ((boundingBox.maxY - boundingBox.minY)*1.1)
+            this.canvas.width / (rotatedSize.width*1.1),
+            this.canvas.height / (rotatedSize.height*1.1)
         );
 
-        const initialxOffset = (this.canvas.width - (boundingBox.maxX - boundingBox.minX)*initialScalingFactor) / 2;
-        const initialyOffset = (this.canvas.height - (boundingBox.maxY - boundingBox.minY)*initialScalingFactor) / 2;
-        this.ctxWrapper.translate(initialxOffset, initialyOffset);
+        this.ctxWrapper.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctxWrapper.translate(this.canvas.width / 2, this.canvas.height / 2);
+        this.ctxWrapper.transform(a, b, c, d, 0, 0);
 
 
         this.currentScaleFactor = initialScalingFactor;
 
         this.ctxWrapper.scale(initialScalingFactor, initialScalingFactor);
-        this.ctxWrapper.translate(-boundingBox.minX, -boundingBox.minY);
-
-
-        this.updateInternalDrawableState();
-
-        usePendingMapAction.setState({hasPendingMapAction: false});
+        this.ctxWrapper.translate(-(boundingBox.minX + boundingBox.maxX) / 2, -(boundingBox.minY + boundingBox.maxY) / 2);
     }
 
     componentDidUpdate(prevProps: Readonly<MapProps>, prevState: Readonly<MapState>): void {
+        if (normalizeMapRotation(prevProps.rawMap.metaData.motaRotation) !== normalizeMapRotation(this.props.rawMap.metaData.motaRotation)) {
+            this.fitMapToView();
+            this.draw();
+        }
+
         if (prevProps.rawMap.metaData.nonce !== this.props.rawMap.metaData.nonce) {
             this.onMapUpdate();
 

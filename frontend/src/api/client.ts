@@ -41,6 +41,8 @@ import {
     MotaMapRecoveryStatus,
     MotaMapVersion,
     MotaMapVersionsResponse,
+    MotaMapRetouchAction,
+    MotaMapRetouchStatus,
     MotaMirrorZone,
     MotaRoom,
     MopDockMopDryingTimeControlProperties,
@@ -1546,6 +1548,45 @@ export const sendMotaMapVersionRestoreRooms = async (id: number): Promise<void> 
 
 export const deleteMotaMapVersion = async (id: number): Promise<void> => {
     await valetudoAPI.delete(`/mota/map-versions/${encodeURIComponent(String(id))}`);
+};
+
+// Mota: retoques del mapa
+
+export const fetchMotaMapRetouch = async (): Promise<MotaMapRetouchStatus> => {
+    return valetudoAPI
+        .get<MotaMapRetouchStatus>("/mota/map-retouch")
+        .then(({ data }) => {
+            return data;
+        });
+};
+
+export const sendMotaMapRotation = async (rotation: number): Promise<void> => {
+    await valetudoAPI.put("/mota/map-retouch/rotation", {rotation: rotation});
+};
+
+export const sendMotaMapRetouchAction = async (action: MotaMapRetouchAction): Promise<MotaMapRetouchStatus> => {
+    let route: string;
+    let body: unknown = {};
+
+    switch (action.type) {
+        case "hide":
+        case "show":
+            route = `islands/${action.type}`;
+            body = {ids: action.ids};
+            break;
+        case "paint":
+            route = "paint";
+            body = {value: action.value, radius: action.radius, points: action.points};
+            break;
+        default:
+            route = action.type;
+    }
+
+    return valetudoAPI
+        .post<MotaMapRetouchStatus>(`/mota/map-retouch/${route}`, body)
+        .then(({ data }) => {
+            return data;
+        });
 };
 
 // Mota: recuperar el mapa guardado del firmware

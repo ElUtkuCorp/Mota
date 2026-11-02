@@ -821,6 +821,33 @@ export interface MotaRoomColorRequest {
     color: string;
 }
 
+// Mota: trozo de mapa suelto (celdas como y * ancho + x)
+export interface MotaMapRetouchIsland {
+    id: number;
+    cells: Array<number>;
+    floorCells: number;
+}
+
+// Mota: retoques del mapa (GET /api/v2/mota/map-retouch). Son solo visuales
+export interface MotaMapRetouchStatus {
+    rotation: number;
+    // false si las habitaciones, y con ellas los retoques, son de otro mapa
+    usable: boolean;
+    width: number;
+    editCount: number;
+    canUndo: boolean;
+    islands: Array<MotaMapRetouchIsland>;
+    hidden: Array<MotaMapRetouchIsland>;
+}
+
+export type MotaMapPaintValue = "floor" | "wall" | "void";
+
+export type MotaMapRetouchAction =
+    // Sin ids, todas las islas
+    {type: "hide" | "show", ids?: Array<number>} |
+    {type: "paint", value: MotaMapPaintValue, radius: number, points: Array<number>} |
+    {type: "undo" | "clear"};
+
 export interface MotaMirrorsSaveRequest {
     zones: Array<MotaMirrorZone>;
     // Zonas prohibidas que hay que añadir a las restricciones actuales (una por zona de espejo nueva)

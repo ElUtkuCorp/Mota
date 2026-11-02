@@ -83,6 +83,15 @@ const OptionsRouter = (): React.ReactElement => {
                 }
             />
 
+            <Route
+                path={"retouch"}
+                element={
+                    <EditMapPage
+                        mode={"retouch"}
+                    />
+                }
+            />
+
             <Route path={"robot_coverage"} element={<RobotCoverageMapPage/>}/>
 
             {/* Mota: versiones del mapa (sin la API propia, la página muestra el error de carga) */}

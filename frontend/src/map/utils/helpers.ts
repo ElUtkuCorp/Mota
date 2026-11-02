@@ -46,12 +46,13 @@ type Box = {
     }
 }
 
+// Mota: con el mapa girado, las esquinas de una zona pueden llegar cambiadas de sitio en la pantalla
 export function isInsideBox(point: PointCoordinates, box: Box) {
     return (
-        point.x >= box.topLeftBound.x &&
-        point.x <= box.bottomRightBound.x &&
-        point.y >= box.topLeftBound.y &&
-        point.y <= box.bottomRightBound.y
+        point.x >= Math.min(box.topLeftBound.x, box.bottomRightBound.x) &&
+        point.x <= Math.max(box.topLeftBound.x, box.bottomRightBound.x) &&
+        point.y >= Math.min(box.topLeftBound.y, box.bottomRightBound.y) &&
+        point.y <= Math.max(box.topLeftBound.y, box.bottomRightBound.y)
     );
 }
 
