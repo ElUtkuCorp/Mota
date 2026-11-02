@@ -55,13 +55,17 @@ function getDomainValue(state) {
   if ([2].includes(workMode)) {
     return VALUE.MANUAL_CONTROL;
   }
+  // Mota: 11 (GLOBAL_BROKEN) es volver a cargar a media limpieza. Sigue en 11 en la base mientras carga para reanudar
+  if (workMode === 11) {
+    return chargeStatus ? VALUE.DOCKED : VALUE.RETURNING;
+  }
   if ([5, 10, 12, 27, 32, 38].includes(workMode)) {
     return VALUE.RETURNING;
   }
   if ([4, 9, 26, 31, 37].includes(workMode)) {
     return VALUE.PAUSED;
   }
-  if ([1, 6, 7, 11, 20, 25, 30, 36].includes(workMode)) {
+  if ([1, 6, 7, 20, 25, 30, 36].includes(workMode)) {
     return VALUE.CLEANING;
   }
   if (chargeStatus) {

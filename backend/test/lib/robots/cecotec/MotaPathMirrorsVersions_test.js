@@ -4,6 +4,7 @@ const os = require("os");
 const path = require("path");
 const { describe, it } = require("node:test");
 
+const CecotecCombinedVirtualRestrictionsCapability = require("../../../../lib/robots/cecotec/capabilities/CecotecCombinedVirtualRestrictionsCapability");
 const CecotecCongaRobot = require("../../../../lib/robots/cecotec/CecotecCongaRobot");
 const CecotecMapVersions = require("../../../../lib/robots/cecotec/CecotecMapVersions");
 
@@ -25,6 +26,56 @@ function rect(x0, y0, x1, y1) {
 
     return result;
 }
+
+describe("Mota: zonas prohibidas", () => {
+    const buildMap = (coordinates) => {
+        return {
+            size: { x: 800, y: 800 },
+            min: { x: -20, y: -20 },
+            max: { x: 20, y: 20 },
+            restrictedZones: [{ coordinates: coordinates }]
+        };
+    };
+
+    it("no pierde un píxel cuando la coordenada llega como float", () => {
+        const map = buildMap([
+            { x: Math.fround(326 / 800 * 40 - 20), y: Math.fround(406 / 800 * 40 - 20) },
+            { x: Math.fround(326 / 800 * 40 - 20), y: Math.fround(400 / 800 * 40 - 20) },
+            { x: Math.fround(381 / 800 * 40 - 20), y: Math.fround(400 / 800 * 40 - 20) },
+            { x: Math.fround(381 / 800 * 40 - 20), y: Math.fround(406 / 800 * 40 - 20) }
+        ]);
+        const [zone] = CecotecCongaRobot.prototype.getRestrictedZoneEntities(map);
+
+        assert.deepStrictEqual(zone.points, [326, 394, 381, 394, 381, 400, 326, 400]);
+    });
+
+    it("vuelve a consultar las zonas después de guardarlas", async () => {
+        const calls = [];
+        const capability = Object.create(CecotecCombinedVirtualRestrictionsCapability.prototype);
+        const delay = CecotecCombinedVirtualRestrictionsCapability.REFRESH_DELAY_MS;
+
+        capability.robot = {
+            robot: {
+                device: { map: { size: { x: 800, y: 800 }, toCoordinate: (pixel) => pixel } },
+                setRestrictedZones: async () => {
+                    calls.push("set");
+                },
+                updateMap: async () => {
+                    calls.push("update");
+                }
+            }
+        };
+        CecotecCombinedVirtualRestrictionsCapability.REFRESH_DELAY_MS = 0;
+
+        try {
+            await capability.setVirtualRestrictions({ virtualWalls: [], restrictedZones: [] });
+        } finally {
+            CecotecCombinedVirtualRestrictionsCapability.REFRESH_DELAY_MS = delay;
+        }
+
+        assert.deepStrictEqual(calls, ["set", "update"]);
+    });
+});
 
 describe("Mota: recorrido en tramos", () => {
     it("parte el recorrido en los saltos y descarta los tramos de un solo punto", () => {
@@ -109,7 +160,7 @@ describe("Mota: versiones del mapa", () => {
             width: 100,
             floor: floor,
             map: { layers: [], entities: [] },
-            rooms: { width: 100, rooms: [{ id: 1, name: "Salón", pixels: floor }] }
+            rooms: { width: 100, rooms: [{ id: 1, name: "Salón", pixels: [1, 2, 3] }] }
         };
     };
     const cells = (from, to) => {
@@ -187,9 +238,99 @@ describe("Mota: borrar el mapa", () => {
             calls.push(["mirrors", zones.length]);
         };
 
+        robot.saveMapBeforeReset();
         robot.onUserMapReset();
 
         assert.deepStrictEqual(calls, [["version", 3], ["rooms"], ["mirrors", 0]]);
+    });
+
+    it("no enseña el recorrido desde que se borra hasta la siguiente limpieza", () => {
+        const robot = Object.create(CecotecCongaRobot.prototype);
+
+        Object.defineProperty(robot, "robot", { value: undefined });
+        robot.virtualRooms = { clear: () => {} };
+        robot.setMirrorZones = () => {};
+        robot.pathPoints = [1, 1, 2, 2];
+        robot.livePathTail = [3, 3];
+        robot.lastPathPoints = [4, 4, 5, 5];
+
+        robot.onUserMapReset();
+
+        assert.strictEqual(robot.mapResetPending, true);
+        assert.deepStrictEqual(robot.pathPoints, []);
+        assert.deepStrictEqual(robot.lastPathPoints, []);
+        assert.deepStrictEqual(robot.getPathEntities({}), []);
+    });
+
+    it("mantiene el recorrido cuando el firmware deja de enviarlo y lo cambia por el de la limpieza nueva", () => {
+        const robot = Object.create(CecotecCongaRobot.prototype);
+        const buildMap = (robotPath) => {
+            return {
+                size: { x: 100, y: 100 },
+                robotPath: robotPath,
+                robot: { toCoordinates: () => {
+                    return { x: 7, y: 7 };
+                } },
+                toPixel: (coordinate) => coordinate
+            };
+        };
+
+        robot.pathPoints = [];
+        robot.lastPathPoints = [];
+
+        assert.deepStrictEqual(robot.getPathPoints(buildMap([{ x: 1, y: 90 }, { x: 2, y: 90 }])), [1, 10, 2, 10]);
+
+        const emptyMap = buildMap([]);
+
+        robot.updatePathPoints(emptyMap);
+
+        assert.deepStrictEqual(robot.getPathPoints(emptyMap), [1, 10, 2, 10]);
+        assert.deepStrictEqual(robot.pathPoints, []);
+
+        assert.deepStrictEqual(robot.getPathPoints(buildMap([{ x: 5, y: 95 }])), [5, 5]);
+    });
+
+    it("guarda la limpieza al fallar, solo una vez y solo si estaba limpiando", () => {
+        const robot = Object.create(CecotecCongaRobot.prototype);
+        const calls = [];
+        const status = (value) => {
+            return { value: value };
+        };
+
+        robot.cleanHistory = {
+            storeInterrupted: (...args) => {
+                calls.push(args);
+            }
+        };
+        Object.defineProperty(robot, "state", { value: { map: "mapa" } });
+        robot.lastCleanStatistics = { time: 60 };
+
+        robot.trackInterruptedClean(status("docked"), status("error"));
+        assert.strictEqual(calls.length, 0);
+
+        robot.trackInterruptedClean(status("docked"), status("moving"));
+        robot.trackInterruptedClean(status("moving"), status("error"));
+        assert.strictEqual(calls.length, 0);
+
+        robot.trackInterruptedClean(status("error"), status("cleaning"));
+        const startedAt = robot.cleanStartedAt;
+
+        robot.trackInterruptedClean(status("cleaning"), status("docked"));
+        robot.trackInterruptedClean(status("docked"), status("cleaning"));
+        assert.strictEqual(robot.cleanStartedAt, startedAt);
+
+        robot.trackInterruptedClean(status("cleaning"), status("error"));
+        robot.trackInterruptedClean(status("error"), status("error"));
+
+        assert.deepStrictEqual(calls, [[startedAt, { time: 60 }, "mapa"]]);
+    });
+
+    it("sin suelo no hay recorrido", () => {
+        const robot = Object.create(CecotecCongaRobot.prototype);
+
+        robot.floorCells = new Set();
+
+        assert.deepStrictEqual(robot.getPathEntities({}), []);
     });
 });
 

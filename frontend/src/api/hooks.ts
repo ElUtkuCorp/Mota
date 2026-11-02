@@ -163,6 +163,8 @@ import {
     fetchMotaCleanHistoryMap,
     fetchMotaMapVersions,
     fetchMotaMapVersionMap,
+    fetchMotaMapRecovery,
+    sendMotaMapRecovery,
     sendMotaMapVersionsThreshold,
     sendMotaMapVersionSave,
     sendMotaMapVersionRestoreRooms,
@@ -308,6 +310,7 @@ enum QueryKey {
     MotaCleanHistoryMap = "mota_clean_history_map",
     MotaMapVersions = "mota_map_versions",
     MotaMapVersionMap = "mota_map_version_map",
+    MotaMapRecovery = "mota_map_recovery",
 }
 
 // "capability" is either a capability name or an i18n key
@@ -2100,6 +2103,31 @@ export const useMotaRoomColorMutation = (
 };
 
 // Mota: repetir la división automática en habitaciones
+
+// Mota: en el robot simulado no existe esta API: sin datos no hay aviso
+export const useMotaMapRecoveryQuery = () => {
+    return useQuery({
+        queryKey: [QueryKey.MotaMapRecovery],
+        queryFn: fetchMotaMapRecovery,
+
+        retry: false,
+        refetchInterval: (query) => {
+            return query.state.data?.state === "idle" ? 10_000 : 1_000;
+        }
+    });
+};
+
+export const useMotaMapRecoveryMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: sendMotaMapRecovery,
+        onError: useOnCommandError("api.settings.mapRecovery"),
+        onSettled: async () => {
+            await queryClient.invalidateQueries({queryKey: [QueryKey.MotaMapRecovery]});
+        },
+    });
+};
 
 export const useMotaResegmentMutation = (
     options?: UseMutationOptions<void, unknown, void>

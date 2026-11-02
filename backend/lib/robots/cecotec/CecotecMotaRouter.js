@@ -132,6 +132,19 @@ class CecotecMotaRouter {
             }
         });
 
+        this.router.get("/map-recovery", (req, res) => {
+            res.json(this.robot.mapRecovery.getStatus());
+        });
+
+        this.router.post("/map-recovery", async (req, res) => {
+            try {
+                await this.robot.mapRecovery.start();
+                res.json(this.robot.mapRecovery.getStatus());
+            } catch (e) {
+                res.status(409).json(e.message);
+            }
+        });
+
         // Reinicia el sistema del robot (botón de Información del sistema). Se responde antes de reiniciar.
         this.router.post("/system/reboot", (req, res) => {
             Logger.info("Rebooting the robot on request");

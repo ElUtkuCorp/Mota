@@ -38,6 +38,7 @@ import {
     MotaCleanHistoryEntry,
     MotaCleanHistoryTotals,
     MotaDiagnostics,
+    MotaMapRecoveryStatus,
     MotaMapVersion,
     MotaMapVersionsResponse,
     MotaMirrorZone,
@@ -1545,6 +1546,20 @@ export const sendMotaMapVersionRestoreRooms = async (id: number): Promise<void> 
 
 export const deleteMotaMapVersion = async (id: number): Promise<void> => {
     await valetudoAPI.delete(`/mota/map-versions/${encodeURIComponent(String(id))}`);
+};
+
+// Mota: recuperar el mapa guardado del firmware
+
+export const fetchMotaMapRecovery = async (): Promise<MotaMapRecoveryStatus> => {
+    return valetudoAPI
+        .get<MotaMapRecoveryStatus>("/mota/map-recovery")
+        .then(({ data }) => {
+            return data;
+        });
+};
+
+export const sendMotaMapRecovery = async (): Promise<void> => {
+    await valetudoAPI.post("/mota/map-recovery");
 };
 
 // Mota: reiniciar el robot y borrar el registro

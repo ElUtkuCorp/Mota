@@ -711,7 +711,7 @@ export interface MotaCleanHistoryEntry {
     rawTask: Record<string, unknown>;
     /** Mota (opcional, aún no lo envía el backend): modo de la limpieza (preajuste de OperationModeControl) */
     mode?: string;
-    /** Mota (opcional, aún no lo envía el backend): cómo terminó la limpieza */
+    /** Mota: cómo terminó la limpieza. El backend solo envía "interrupted", cuando un fallo la paró sin informe */
     result?: "completed" | "interrupted" | "error";
 }
 
@@ -719,8 +719,8 @@ export interface MotaCleanHistoryEntry {
 export interface MotaMapVersion {
     id: number;
     createdAt: string;
-    /** first: la primera foto; changed: el mapa cambió mucho en una limpieza; manual: la guardó el usuario; reset: antes de borrar el mapa */
-    reason: "first" | "changed" | "manual" | "reset";
+    /** first: la primera foto; changed: el mapa cambió mucho en una limpieza; manual: la guardó el usuario; reset: antes de borrar el mapa; rooms: habitaciones que no tenían versión */
+    reason: "first" | "changed" | "manual" | "reset" | "rooms";
     /** % de parecido con el mapa de después de la limpieza (solo en changed) */
     similarity: number | null;
     floorCells: number;
@@ -731,6 +731,14 @@ export interface MotaMapVersionsResponse {
     /** % de parecido por debajo del cual se guarda una versión (0 = desactivado) */
     threshold: number;
     versions: Array<MotaMapVersion>;
+}
+
+export interface MotaMapRecoveryStatus {
+    /** el firmware ha sustituido el mapa: las habitaciones no encajan */
+    temporaryMap: boolean;
+    docked: boolean;
+    state: "idle" | "starting" | "returning";
+    result: "recovered" | "not_recovered" | "home_failed" | null;
 }
 
 export interface MotaCleanHistoryTotals {

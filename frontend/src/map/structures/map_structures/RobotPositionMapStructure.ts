@@ -9,7 +9,7 @@ img.src = robotIconSVG;
 class RobotPositionMapStructure extends MapStructure {
     public static readonly TYPE = "RobotPositionMapStructure";
 
-    // Mota: modificable para poder animar el giro (F21). En grados; 0 = el frente del icono hacia arriba
+    // Mota: no se dibuja. El icono es una bola porque el rumbo del firmware no se ha podido verificar
     public angle: number;
 
     constructor(x0 : number ,y0 : number, angle: number) {
@@ -31,19 +31,13 @@ class RobotPositionMapStructure extends MapStructure {
         const ctx = ctxWrapper.getContext();
         const p0 = new DOMPoint(this.x0, this.y0).matrixTransform(transformationMatrixToScreenSpace);
 
-        // Mota: se gira directamente en el contexto en lugar de crear un canvas nuevo en cada dibujo,
-        // porque con la animación se dibuja en cada fotograma
-        ctxWrapper.save();
-        ctxWrapper.translate(p0.x, p0.y);
-        ctxWrapper.rotate(this.angle * Math.PI / 180);
         ctx.drawImage(
             this.getOptimizedImage(img, scaledSize.width, scaledSize.height),
-            -scaledSize.width / 2,
-            -scaledSize.height / 2,
+            p0.x - scaledSize.width / 2,
+            p0.y - scaledSize.height / 2,
             scaledSize.width,
             scaledSize.height
         );
-        ctxWrapper.restore();
     }
 }
 

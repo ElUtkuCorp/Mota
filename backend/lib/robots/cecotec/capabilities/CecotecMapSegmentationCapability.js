@@ -47,8 +47,6 @@ class CecotecMapSegmentationCapability extends MapSegmentationCapability {
             throw new Error("The selected rooms are empty");
         }
 
-        // Mota: para poder reanudar tras cargar
-        this.robot.lastCleaningRequest = {type: "segments", segments: segments};
         await this.robot.robot.cleanAreas(areas.slice(0, CecotecMapSegmentationCapability.MAX_ZONES));
     }
 

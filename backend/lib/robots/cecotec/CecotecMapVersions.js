@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const fs = require("fs");
 const Logger = require("../../Logger");
 const path = require("path");
@@ -9,7 +10,8 @@ const zlib = require("zlib");
  * Al empezar cada limpieza se toma en memoria una foto del mapa (el mapa de Mota tal como se ve y las
  * habitaciones). Al terminar se compara el suelo de antes y el de después (intersección / unión): si ha
  * cambiado más de lo permitido, la foto de antes se guarda en disco como versión, para poder verla y
- * recuperar sus habitaciones. Si todavía no hay ninguna versión, la primera foto se guarda siempre.
+ * recuperar sus habitaciones. Si todavía no hay ninguna versión, la primera foto se guarda siempre, y también
+ * si ninguna versión tiene esas habitaciones: si no, una división nueva se perdería aunque el mapa no cambie.
  *
  * El firmware de la 3090 no acepta que se le cargue un mapa por el protocolo de nube, así que restaurar
  * una versión recupera las habitaciones de Mota (divisiones, nombres y colores), no el mapa del robot.
@@ -25,6 +27,8 @@ class CecotecMapVersions {
         this.directory = options.directory;
         /** @type {Snapshot | undefined} foto tomada al empezar la limpieza en curso */
         this.pending = undefined;
+        /** Esa foto ya es una versión */
+        this.pendingSaved = false;
     }
 
     /**
@@ -60,7 +64,20 @@ class CecotecMapVersions {
 
         if (this.list().length === 0) {
             this.save(snapshot, null, "first");
+            this.pendingSaved = true;
+        } else if (snapshot.rooms?.rooms?.length > 0 && !this.hasRoomLayout(snapshot.rooms)) {
+            this.save(snapshot, null, "rooms");
+            this.pendingSaved = true;
+        } else {
+            this.pendingSaved = false;
         }
+    }
+
+    /**
+     * La limpieza en curso no cuenta para las versiones
+     */
+    discardPending() {
+        this.pending = undefined;
     }
 
     /**
@@ -78,9 +95,23 @@ class CecotecMapVersions {
 
         Logger.info(`Map versions: similarity to the map before the cleaning ${similarity} % (threshold ${this.getThreshold()} %)`);
 
-        if (similarity < this.getThreshold()) {
+        if (similarity < this.getThreshold() && !this.pendingSaved) {
             this.save(before, similarity, "changed");
         }
+    }
+
+    /**
+     * @private
+     * @param {{width: number, rooms: Array<any>}} rooms
+     * @returns {boolean} si alguna versión tiene estas habitaciones
+     */
+    hasRoomLayout(rooms) {
+        const hash = CecotecMapVersions.ROOMS_HASH(rooms);
+
+        return this.list().some(v => {
+            // Las versiones antiguas no guardan el hash
+            return (v.roomsHash ?? CecotecMapVersions.ROOMS_HASH(this.get(v.id)?.rooms)) === hash;
+        });
     }
 
     /**
@@ -180,7 +211,7 @@ class CecotecMapVersions {
      * @private
      * @param {Snapshot} snapshot
      * @param {number|null} similarity
-     * @param {"first"|"changed"|"manual"|"reset"} reason
+     * @param {"first"|"changed"|"manual"|"reset"|"rooms"} reason
      * @returns {VersionInfo}
      */
     save(snapshot, similarity, reason) {
@@ -199,6 +230,7 @@ class CecotecMapVersions {
             similarity: similarity,
             floorCells: snapshot.floor.length,
             roomCount: snapshot.rooms?.rooms?.length ?? 0,
+            roomsHash: CecotecMapVersions.ROOMS_HASH(snapshot.rooms),
         };
 
         fs.writeFileSync(
@@ -229,6 +261,20 @@ class CecotecMapVersions {
         this.list().slice(CecotecMapVersions.MAX_VERSIONS).forEach(v => {
             this.delete(v.id);
         });
+    }
+
+    /**
+     * @param {{width: number, rooms: Array<{id: number, name: string, color?: string, pixels: Array<number>}>}} [rooms]
+     * @returns {string} huella de la disposición de habitaciones (celdas, nombres y colores)
+     */
+    static ROOMS_HASH(rooms) {
+        const layout = [...(rooms?.rooms ?? [])].sort((a, b) => {
+            return a.id - b.id;
+        }).map(room => {
+            return [room.id, room.name, room.color ?? null, room.pixels];
+        });
+
+        return crypto.createHash("sha1").update(JSON.stringify([rooms?.width, layout])).digest("hex");
     }
 
     /**
@@ -274,10 +320,11 @@ CecotecMapVersions.MAX_VERSIONS = 15;
  * @typedef {object} VersionInfo
  * @property {number} id
  * @property {string} createdAt
- * @property {"first"|"changed"|"manual"|"reset"} reason
+ * @property {"first"|"changed"|"manual"|"reset"|"rooms"} reason
  * @property {number|null} similarity parecido con el mapa de después de la limpieza, en %
  * @property {number} floorCells
  * @property {number} roomCount
+ * @property {string} [roomsHash] ver ROOMS_HASH; falta en las versiones antiguas
  */
 
 module.exports = CecotecMapVersions;

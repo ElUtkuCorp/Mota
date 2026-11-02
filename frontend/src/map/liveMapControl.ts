@@ -9,6 +9,7 @@ import type {LiveMapMode} from "./LiveMap";
  * - El panel pide un cambio de modo con requestLiveMapMode(); el mapa lo aplica con su lógica de siempre.
  * - Las acciones del mapa (habitaciones, zonas, punto) publican su acción principal para que el botón
  *   grande del panel la pueda lanzar sin reimplementarla.
+ * - El botón de la pantalla de inicio oculta o muestra el recorrido.
  */
 export interface LiveMapPrimaryAction {
     label: string;
@@ -23,7 +24,18 @@ interface LiveMapControlState {
     supportedModes: Array<LiveMapMode>;
     requestedMode: { mode: LiveMapMode, seq: number } | null;
     primaryAction: LiveMapPrimaryAction | null;
+    pathsHidden: boolean;
 }
+
+const PATHS_HIDDEN_LOCAL_STORAGE_KEY = "live-map-paths-hidden";
+
+const readPathsHidden = (): boolean => {
+    try {
+        return window.localStorage.getItem(PATHS_HIDDEN_LOCAL_STORAGE_KEY) === "true";
+    } catch (e) {
+        return false;
+    }
+};
 
 export const useLiveMapControl = create<LiveMapControlState>()(() => {
     return {
@@ -31,8 +43,19 @@ export const useLiveMapControl = create<LiveMapControlState>()(() => {
         supportedModes: [],
         requestedMode: null,
         primaryAction: null,
+        pathsHidden: readPathsHidden(),
     };
 });
+
+export const setLiveMapPathsHidden = (pathsHidden: boolean): void => {
+    useLiveMapControl.setState({pathsHidden: pathsHidden});
+
+    try {
+        window.localStorage.setItem(PATHS_HIDDEN_LOCAL_STORAGE_KEY, String(pathsHidden));
+    } catch (e) {
+        /* intentional */
+    }
+};
 
 export const requestLiveMapMode = (mode: LiveMapMode): void => {
     const previous = useLiveMapControl.getState().requestedMode;

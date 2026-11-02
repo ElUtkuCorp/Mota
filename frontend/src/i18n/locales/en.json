@@ -45,6 +45,7 @@
             "updaterCommand": "Updater",
             "mirrors": "the mirror zones",
             "resegment": "the room division",
+            "mapRecovery": "map recovery",
             "roomColor": "the room color",
             "mapVersions": "the map versions",
             "reboot": "the robot reboot",
@@ -400,6 +401,22 @@
         "name": "Mota"
     },
     "home": {
+        "mapRecovery": {
+            "title": "Temporary map",
+            "button": "Recover map",
+            "body": "The robot replaced the map with a temporary one and the rooms no longer fit. The good map is still stored, but finishing a cleanup on this temporary map overwrites it. Recover it before cleaning.",
+            "needsDock": "The robot must be on the dock to recover it.",
+            "running": "Recovering the map. The robot returns to the dock as soon as it relocalizes.",
+            "recovered": "Map recovered. The rooms fit again and the robot is returning to the dock.",
+            "notRecovered": "The map was not recovered and the robot went back to the dock.",
+            "homeFailed": "The robot could not be sent to the dock. Do it yourself now: if the cleanup finishes on the temporary map, the good one is lost.",
+            "confirmTitle": "Recover the map?",
+            "confirmBody": "The robot leaves the dock with a full cleanup to load the stored map, and Mota sends it back as soon as it relocalizes, a few seconds later.\n\nIf the map does not come back, it also sends it to the dock and tells you."
+        },
+        "path": {
+            "hide": "Hide path",
+            "show": "Show path"
+        },
         "header": {
             "robotFallback": "Your robot"
         },
@@ -549,10 +566,10 @@
             },
             "reset": {
                 "title": "Map Reset",
-                "description": "Delete the current map",
+                "description": "Delete the Mota map and the map stored on the robot",
                 "button": "Go",
-                "confirmTitle": "Reset map?",
-                "confirmBody": "This deletes the Mota map and the one stored on the robot: the next cleanup starts from zero, without a map. Let it finish a full uninterrupted cleanup afterwards. Rooms and mirror zones are deleted too; the current map is kept in «Map versions». Are you sure?"
+                "confirmTitle": "Delete the map from the robot too?",
+                "confirmBody": "This also deletes the map stored on the robot and cannot be undone: the robot does not accept a map being loaded back.\n\nThe next cleanup starts from zero, without a map. Let it finish a full uninterrupted cleanup afterwards.\n\nBefore deleting, Mota saves a version in «Map versions». You can view that map and recover its rooms, but not give it back to the robot. The current rooms and mirror zones are deleted.\n\nIf you are looking at a temporary map, do not delete it: use «Recover map» on Home.\n\nAre you sure?"
             },
             "persistent": {
                 "title": "Persistent maps",
@@ -1119,20 +1136,22 @@
         "hostname": "Hostname",
         "arch": "Arch",
         "uptime": "Uptime",
-        "memory": "System Memory (RAM)",
+        "memory": "RAM",
         "memorySystem": "System",
         "memoryMota": "Mota",
         "memoryMotaMax": "Mota (Max)",
         "memoryFree": "Free",
-        "cpuUsage": "CPU Usage",
+        "cpuUsage": "CPU",
         "cpuIdle": "idle",
         "robot": "Robot",
         "mota": "Mota",
         "hostInformation": "System Host Information",
-        "ramUsage": "RAM in use",
-        "ramUsageDetail": "{{used}} of {{total}}",
-        "cpuUsageNow": "CPU in use",
-        "cpuUsageDetail": "average of {{count}} cores",
+        "ramUsage": "RAM",
+        "ramUsageDetail": "{{used}} / {{total}}",
+        "processMota": "Mota process",
+        "processMotaDetail": "max. {{max}}",
+        "cpuUsageNow": "CPU",
+        "cpuUsageDetail": "{{count}} cores",
         "reboot": {
             "title": "Reboot the robot",
             "description": "Reboots the robot system (like turning it off and on). It takes about a minute; Mota does not respond meanwhile.",
@@ -1258,7 +1277,7 @@
     "help": {
         "about": "Valetudo is made, managed, maintained and more by me,\n<a href=\"https://hypfer.de\" rel=\"noopener\" target=\"_blank\">Sören Beye</a>, with occasional contributions by\n<a href=\"https://github.com/Hypfer/Valetudo/graphs/contributors\" rel=\"noopener\" target=\"_blank\">these awesome people</a>.\nIt would not exist without the foundational work of <a href=\"https://dontvacuum.me/\" rel=\"noopener\" target=\"_blank\">Dennis Giese</a>,\nwhose ideas, work and expertise created the environmental conditions for Valetudo to form.\n\nInitially, the idea was to have a list of all open-source libraries and tools used in the making of Valetudo here,\nhowever, it was quickly discovered that that would not be viable, as an exhaustive list including all transitive\ndependencies contains thousands of projects.\n\nWe're all standing on the shoulders of giants. (<a href=\"https://xkcd.com/2347/\" rel=\"noopener\" target=\"_blank\">XKCD 2347</a>)\n\n### License\n\nValetudo is licensed under <a href=\"https://github.com/Hypfer/Valetudo/blob/master/LICENSE\" rel=\"noopener\" target=\"_blank\">the Apache-2.0 license</a>,\nbut I will spare you the boring wall of text that you won't read anyways, as honestly, the license doesn't really matter that much.\nAll relevant open-source licenses basically boil down to \"no warranty/no liability\" and \"don't act in bad faith\" with various ways of trying to enforce the latter.\n\nUnfortunately though, reality has shown us that actually doing so often isn't a feasible task.\nPeople still either ignore the license agreement entirely or slyly try to find some way of working around it in a legally\nacceptable but obviously incorrect way.\n\nThus, I might as well paste ten pages of lorem ipsum here.\n\nJust be nice, please. Thank you :)\n",
         "consumables": "## Consumables\n\nConsumables are components of the robot that need periodic cleaning, replacement or other maintenance work.\n\nThey come in two flavours, which are basically the same\n- operating hours left\n- percent left\n\nAt some point, they will become depleted, requiring you to do maintenance and reset them in the Mota UI.\nThis will restore them to either their manufacturer-dependent design operating hours or 100%.\n\nNot maintaining your consumables may lead to performance degradation.<br/>\nStill, it is recommended to do a manual inspection of the part in question. You _may_ be able to use it longer than the manufacturer recommends.\n\n\n### Types of consumables\n\nThere are various types of consumables that require different treatment.\n\n#### Brushes\n\nBrushes come in different types such as main or side.\nAt some point, they are worn out and have to be replaced.\n\nThey often also require removal of tangled hair or similar for optimal performance, so you should keep an eye on them.\n\n#### Filters\n\nVacuum-robots usually have some kind of filter, which needs periodic cleaning and replacing when it is worn out.\n\n#### Sensors\n\nYour robot has a few sensors such as cliff- or wall-distance-sensors, which are used for navigation and might get obstructed by dirt, debris, cobwebs or similar.\nCleaning them can usually be done with a soft cloth. Make sure to not scratch the sensors as they are vital to the robot's operation.\n\n#### Wheels\n\nSimilarly to the sensors, it also makes sense to check the wheels from time to time and remove any dirt and debris.\n\n#### Mops\n\nWhile replacing mop pads might not always be necessary, it is strongly recommended to properly wash them from time to time.\n",
-        "doNotDisturb": "## Do not disturb\n\nSome firmwares allow you to define a do not disturb period where certain features of the robot are disabled.\nWhat exactly changes may differ based on robot vendor, model and firmware version.\n\nFor example, the robot might not continue a partially finished task which has been interrupted due to the\nrobot having to charge.\nAs charging back up to 100% battery may take a few hours, it could happen that the robot attempts to continue cleaning\nat 3am, which is often considered undesirable.\n\nAnother thing that can be affected by the DND setting is the auto empty dock as those are usually pretty loud.\n\n\n**Please note that DND times are evaluated and stored as UTC. They are only displayed in your current browser timezone\nfor your convenience.**\n",
+        "doNotDisturb": "## Do not disturb\n\nSome firmwares allow you to define a do not disturb period where certain features of the robot are disabled.\nWhat exactly changes may differ based on robot vendor, model and firmware version.\n\nFor example, the robot might not continue a partially finished task which has been interrupted due to the\nrobot having to charge.\nAs charging back up to 100% battery may take a few hours, it could happen that the robot attempts to continue cleaning\nat 3am, which is often considered undesirable.\n\nAnother thing that can be affected by the DND setting is the auto empty dock as those are usually pretty loud.\n\n\n**Please note that DND times are evaluated and stored as UTC. They are only displayed in your current browser timezone\nfor your convenience.**\n\n**This robot's firmware only supports periods that cross its midnight, which is 22:00 UTC. A period that does not include it\ncannot be saved.**\n",
         "general": "Please note that this is just the general help section for answers that didn't fit elsewhere.\nLook out for question mark buttons for more context-specific help.\n\n### What are those triangles on the map?\n\nThose are segment labels.\nIf a segment is considered active by the robot - meaning that it is part of the robots current task - the triangle will\npoint down. Otherwise, it will point up.\n\nIf you zoom in on a segment label, it will display the segment ID and its size in m².\n\n\n### How do I open the controls of the home page on mobile?\n\nJust tap on the bar at the bottom of the screen.\n\n### How do I get the coordinates/parameters of segments/zones/go-to locations to trigger them via MQTT/REST?\n\nSimply configure/select the segments/zones/go-to locations like you'd normally do and then long-press the button that would start the action.\nThis will bring up a dialog providing you with everything you'll need.\n\n### What's up with the AI Assistant?\n\nThe \"AI Assistant\" feature is a joke about the joke that is our industry, featuring a JavaScript implementation of ELIZA.\nCreated in 1966 by Joseph Weizenbaum, ELIZA was one of the very first chatbots and is famous for being one of the earliest programs to fool people into thinking that it passed the Turing test.\n\nFittingly, Weizenbaum himself also had some opinions about this industry.<br/>\nQuoting Wikipedia:<br/>\n> His belief was that the computer, at its most base level, is a fundamentally conservative force and that despite being a technological innovation, it would end up hindering social progress.\n> Weizenbaum used his experience working with Bank of America as justification for his reasoning, saying that the computer allowed banks to deal with an ever-expanding number of checks in play that otherwise would have forced drastic changes to banking organization such as decentralization.\n> As such, although the computer allowed the industry to become more efficient, it prevented a fundamental re-haul of the system.\n>\n> Weizenbaum also worried about the negative effects computers would have with regards to the military, calling the computer \"a child of the military.\"\n\nYou can read more about ELIZA here: <a href=\"https://en.wikipedia.org/wiki/ELIZA\" rel=\"noopener\" target=\"_blank\">https://en.wikipedia.org/wiki/ELIZA</a>\n",
         "mapAnnotations": "## Map Annotations\n\nMap annotations are the generic concept to house any kind of \"there is something on the map the robot needs to be aware of, which might not be reliably auto-determined\".\nFor example, depending on firmware support, that could be a passable threshold, a curtain, a ramp or similar.\n\nThese things existing in the map make the firmware behave differently in some way relating to the location they're at.\nIt might then take a specific path or trust its obstacle avoidance less or really anything like that.\n\nSpecifically:\n\n#### Thresholds\n\nThresholds hint the firmware that the obstacle it is seeing is actually something it can cross if it just tries harder.\nWithout the annotation, it might not realize that it can.\n\n#### Ramps\n\nRamps hint the firmware that there is a working dedicated path to take to reach a specific area.\nWithout the annotation, it might not realize that it exists.\n\n#### Curtains\n\nCurtains hint the firmware that the obstacle it is looking at actually isn't one and that it can just drive into it.\nWithout the annotation, it doesn't realize that that is the case.\n",
         "mapManagement": "## Map Management\n\nThis page allows you to do map-related tasks. What exactly can be done here depends on your model of robot as well\nas its firmware.<br/>If you don't see something on this page, it is likely not supported by your robot.\n\nSome robots may require you to manually enable persistent maps before you can do most map-related things.\nOthers may not even allow disabling of persistent maps because why would you.\n\nThere are also some legacy robots, which don't feature persistent maps at all.\n\nSome robots may require a full cleanup task including them returning to the dock on their own for a new map to be saved.\nOthers may either optionally allow for fast mapping via a mapping pass or even require a mapping pass before they can be used.\n\n### Terminology\n\nPlease note that all these concepts need firmware support by your robot.\nNot everything might be available on every robot. \n\n#### Segments\n\nA segment is a partition of the map as decided by the robots' firmware.\nSegments enable you to just clean one or more predefined areas. Most firmwares also allow naming them.\n\nYou may know them as rooms, however they don't necessarily have to be actual rooms.\nThere could for example be a segment, which is just the area around your dining table.\n\nOn most firmwares, the robot uses the segment data to optimize its navigation and drive the most efficient path.\n\n#### Zones\n\nZones are just rectangles that you can draw on the map to send the robot there.\nDepending on the firmware of your robot, it might accept just one or multiple zones as an input.\n",
@@ -1381,7 +1400,8 @@
             "first": "First version",
             "changed": "Before a cleanup that changed the map ({{similarity}} % similar)",
             "manual": "Saved manually",
-            "reset": "Before the map was deleted"
+            "reset": "Before the map was deleted",
+            "rooms": "New rooms"
         },
         "rooms_one": "{{count}} room",
         "rooms_other": "{{count}} rooms",

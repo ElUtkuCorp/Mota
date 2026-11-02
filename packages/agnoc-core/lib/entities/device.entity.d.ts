@@ -53,6 +53,10 @@ export declare class Device extends Entity<DeviceProps> {
     get hasWaitingMap(): boolean | undefined;
     /** Mota: código de fallo o evento tal y como lo envía el firmware */
     motaRawFaultCode?: number;
+    /** Mota: modo de trabajo tal y como lo envía el firmware */
+    motaRawWorkMode?: number;
+    /** Mota: si la última posición del firmware pertenece al recorrido (no, por ejemplo, en la vuelta a la base) */
+    motaPoseDrawn?: boolean;
     updateSystem(system: DeviceSystem): void;
     updateVersion(version: DeviceVersion): void;
     updateConfig(config: DeviceConfig): void;

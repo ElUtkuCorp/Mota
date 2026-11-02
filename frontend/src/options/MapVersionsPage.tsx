@@ -98,6 +98,8 @@ const VersionRow: React.FunctionComponent<{
         reason = t("mapVersions.reason.first");
     } else if (version.reason === "reset") {
         reason = t("mapVersions.reason.reset");
+    } else if (version.reason === "rooms") {
+        reason = t("mapVersions.reason.rooms");
     } else if (version.reason === "changed") {
         reason = t("mapVersions.reason.changed", {similarity: version.similarity ?? "?"});
     }

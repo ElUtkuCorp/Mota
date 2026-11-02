@@ -19,8 +19,6 @@ module.exports = class CecotecBasicControlCapability extends BasicControlCapabil
             return;
         }
 
-        // Mota: para poder reanudar tras cargar
-        this.robot.lastCleaningRequest = {type: "mode", mode: this.robot.selectedOperationMode};
         Logger.info(`Start requested: ${this.robot.selectedOperationMode}, battery ${this.robot.robot.device.battery?.value} %`);
 
         switch (this.robot.selectedOperationMode) {

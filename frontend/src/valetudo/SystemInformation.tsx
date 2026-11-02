@@ -45,7 +45,7 @@ import {useTranslation} from "react-i18next";
 import {formatNumber} from "../i18n";
 
 const formatMiB = (bytes: number): string => {
-    return formatNumber(bytes / 1024 / 1024, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " MiB";
+    return formatNumber(bytes / 1024 / 1024, {maximumFractionDigits: 0}) + " MiB";
 };
 
 // Mota: uso de RAM y CPU en números (además de las barras)
@@ -456,8 +456,9 @@ const SystemInformation = (): React.ReactElement => {
                             detail={t("systemInformation.cpuUsageDetail", {count: systemHostInfo.cpus.length})}
                         />
                         <UsageTile
-                            label={t("systemInformation.memoryMota")}
+                            label={t("systemInformation.processMota")}
                             value={formatMiB(systemHostInfo.mem.valetudo_current)}
+                            detail={t("systemInformation.processMotaDetail", {max: formatMiB(systemHostInfo.mem.valetudo_max)})}
                         />
                     </Stack>
                 </Grid2>

@@ -8,6 +8,12 @@ const zlib = require("zlib");
  * (DEVICE_EVENT_REPORT_CLEANTASK + DEVICE_EVENT_REPORT_CLEANMAP). Se guardan en disco un JSON con
  * el resumen, el mapa de Mota al terminar (comprimido, con el recorrido) y el PNG del firmware, y se
  * conservan las últimas MAX_ENTRIES para no llenar UDISK.
+ *
+ * Si la limpieza se interrumpe por un fallo (p. ej. atasco) el robot no envía informe. Se guarda entonces una entrada
+ * "interrupted" con lo que Mota sabe, que no suma en los totales y que se sustituye si al final llega el informe.
+ *
+ * Unos segundos sin superficie no son una limpieza (p. ej. la de recuperar el mapa, que se manda a casa enseguida): no
+ * se guardan ni suman.
  */
 class CecotecCleanHistory {
     /**
@@ -16,6 +22,8 @@ class CecotecCleanHistory {
      */
     constructor(options) {
         this.directory = options.directory;
+
+        this.removeTrivial();
     }
 
     /**
@@ -28,6 +36,9 @@ class CecotecCleanHistory {
             fs.mkdirSync(this.directory, { recursive: true });
 
             const task = report.task ?? {};
+
+            this.removeInterrupted(task);
+
             const entry = {
                 cleanId: report.cleanId,
                 startTime: typeof task.startTime === "number" ? new Date(task.startTime * 1000).toISOString() : undefined,
@@ -38,6 +49,12 @@ class CecotecCleanHistory {
                 hasMotaMap: motaMap !== undefined && motaMap !== null,
                 rawTask: task
             };
+
+            if (CecotecCleanHistory.IS_TRIVIAL(entry)) {
+                Logger.info(`Ignored clean report ${report.cleanId} (${entry.durationSeconds} s, no area)`);
+
+                return;
+            }
 
             fs.writeFileSync(path.join(this.directory, `${report.cleanId}.json`), JSON.stringify(entry, null, 2));
             if (entry.hasMap) {
@@ -52,6 +69,39 @@ class CecotecCleanHistory {
             this.prune();
         } catch (e) {
             Logger.warn("Error while storing clean report", e);
+        }
+    }
+
+    /**
+     * @param {number} cleanId inicio de la limpieza en segundos, como los ids del firmware
+     * @param {{time?: number, area?: number}} [lastStatistics] últimos valores de la limpieza en curso
+     * @param {any} [motaMap] el mapa de Mota en el momento del fallo
+     */
+    storeInterrupted(cleanId, lastStatistics, motaMap) {
+        try {
+            fs.mkdirSync(this.directory, { recursive: true });
+
+            const entry = {
+                cleanId: cleanId,
+                startTime: new Date(cleanId * 1000).toISOString(),
+                endTime: new Date().toISOString(),
+                durationSeconds: lastStatistics?.time,
+                area: lastStatistics?.area,
+                hasMap: false,
+                hasMotaMap: motaMap !== undefined && motaMap !== null,
+                result: "interrupted",
+                rawTask: {}
+            };
+
+            fs.writeFileSync(path.join(this.directory, `${cleanId}.json`), JSON.stringify(entry, null, 2));
+            if (entry.hasMotaMap) {
+                fs.writeFileSync(path.join(this.directory, `${cleanId}.map.json.gz`), zlib.gzipSync(JSON.stringify(motaMap)));
+            }
+
+            Logger.info(`Stored interrupted clean ${cleanId} (${entry.durationSeconds ?? "?"} s)`);
+            this.prune();
+        } catch (e) {
+            Logger.warn("Error while storing interrupted clean", e);
         }
     }
 
@@ -135,13 +185,71 @@ class CecotecCleanHistory {
         });
 
         ids.slice(CecotecCleanHistory.MAX_ENTRIES).forEach(id => {
-            for (const ext of [".json", ".png", ".map.json.gz"]) {
-                fs.rmSync(path.join(this.directory, `${id}${ext}`), { force: true });
-            }
+            this.remove(id);
         });
+    }
+
+    /**
+     * Quita las entradas de unos segundos guardadas antes de ignorarlas, también de los totales
+     *
+     * @private
+     */
+    removeTrivial() {
+        this.list().filter(CecotecCleanHistory.IS_TRIVIAL).forEach(entry => {
+            const totals = this.getTotals();
+
+            this.remove(entry.cleanId);
+
+            if (entry.result !== "interrupted" && totals.count > 0) {
+                totals.count -= 1;
+                totals.timeSeconds = Math.max(0, totals.timeSeconds - entry.durationSeconds);
+                fs.writeFileSync(path.join(this.directory, "totales.json"), JSON.stringify(totals));
+            }
+            Logger.info(`Removed clean ${entry.cleanId} from the history (${entry.durationSeconds} s, no area)`);
+        });
+    }
+
+    /**
+     * @param {{durationSeconds?: number, area?: number}} entry
+     * @returns {boolean} si son unos segundos sin superficie
+     */
+    static IS_TRIVIAL(entry) {
+        return typeof entry.durationSeconds === "number" &&
+            entry.durationSeconds < CecotecCleanHistory.MIN_CLEAN_SECONDS &&
+            !(entry.area > 0);
+    }
+
+    /**
+     * @private
+     * @param {{startTime?: number, endTime?: number}} task resumen del informe del firmware
+     */
+    removeInterrupted(task) {
+        if (typeof task.startTime !== "number" || typeof task.endTime !== "number") {
+            return;
+        }
+
+        this.list().filter(e => {
+            return e.result === "interrupted" &&
+                e.cleanId >= task.startTime - CecotecCleanHistory.START_MARGIN_SECONDS &&
+                e.cleanId <= task.endTime;
+        }).forEach(e => {
+            this.remove(e.cleanId);
+        });
+    }
+
+    /**
+     * @private
+     * @param {number} cleanId
+     */
+    remove(cleanId) {
+        for (const ext of [".json", ".png", ".map.json.gz"]) {
+            fs.rmSync(path.join(this.directory, `${cleanId}${ext}`), { force: true });
+        }
     }
 }
 
 CecotecCleanHistory.MAX_ENTRIES = 50;
+CecotecCleanHistory.START_MARGIN_SECONDS = 60;
+CecotecCleanHistory.MIN_CLEAN_SECONDS = 60;
 
 module.exports = CecotecCleanHistory;

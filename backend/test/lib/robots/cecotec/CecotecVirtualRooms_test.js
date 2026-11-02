@@ -96,20 +96,5 @@ describe("CecotecVirtualRooms", () => {
             return sum + r.pixels.length;
         }, 0);
         assert.strictEqual(total, floor.length / 2);
-
-        // recorrido que solo pasa por la habitación de la izquierda
-        const path = [];
-        for (let y = 12; y < 70; y += 6) {
-            for (let x = 12; x < 88; x += 6) {
-                path.push(x, y);
-            }
-        }
-        const leftRoom = rooms.getRooms().find(r => {
-            return r.pixels.includes(40 * 200 + 40);
-        });
-        const uncovered = rooms.getUncoveredRoomIds(path, RESOLUTION);
-
-        assert.strictEqual(uncovered.length, 1);
-        assert.notStrictEqual(uncovered[0], leftRoom.id);
     });
 });

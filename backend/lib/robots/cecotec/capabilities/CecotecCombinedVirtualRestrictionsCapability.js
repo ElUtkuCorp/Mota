@@ -69,8 +69,15 @@ class CecotecCombinedVirtualRestrictionsCapability extends CombinedVirtualRestri
         ];
 
         await this.robot.robot.setRestrictedZones(areas);
+
+        // Mota: consultar justo al guardar puede traer las zonas anteriores
+        await new Promise(resolve => {
+            setTimeout(resolve, CecotecCombinedVirtualRestrictionsCapability.REFRESH_DELAY_MS);
+        });
         await this.robot.robot.updateMap();
     }
 }
+
+CecotecCombinedVirtualRestrictionsCapability.REFRESH_DELAY_MS = 1000;
 
 module.exports = CecotecCombinedVirtualRestrictionsCapability;

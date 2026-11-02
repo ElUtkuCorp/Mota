@@ -206,7 +206,7 @@ class CecotecVirtualRooms {
         });
 
         if (sideA.length === 0 || sideB.length === 0) {
-            throw new Error("The line does not split the room");
+            throw new Error("La línea no divide la habitación: debe cruzarla de borde a borde.");
         }
 
         room.pixels = sideA;
@@ -251,37 +251,6 @@ class CecotecVirtualRooms {
      */
     getCleaningRects(id, maxRects, resolution) {
         return CecotecVirtualRooms.COVER(this.fitted?.get(Number(id)) ?? this.getRoom(id).pixels, this.data.width, maxRects, resolution);
-    }
-
-    /**
-     * Mota: habitaciones que el recorrido aún no ha cubierto (para reanudar tras cargar)
-     *
-     * @param {Array<number>} path pares x, y planos del recorrido
-     * @param {number} resolution metros por celda
-     * @returns {Array<number>} ids de las habitaciones con menos del 60 % de sus celdas a menos de 30 cm del recorrido
-     */
-    getUncoveredRoomIds(path, resolution) {
-        const width = this.data.width;
-        const radius = Math.max(1, Math.round(0.3 / resolution));
-        const near = new Set();
-
-        for (let i = 0; i < path.length; i += 2) {
-            for (let dy = -radius; dy <= radius; dy++) {
-                for (let dx = -radius; dx <= radius; dx++) {
-                    near.add((path[i + 1] + dy) * width + path[i] + dx);
-                }
-            }
-        }
-
-        return this.getRooms().filter(room => {
-            const covered = room.pixels.filter(cell => {
-                return near.has(cell);
-            }).length;
-
-            return room.pixels.length > 0 && covered / room.pixels.length < 0.6;
-        }).map(room => {
-            return room.id;
-        });
     }
 
     /**
@@ -335,6 +304,26 @@ class CecotecVirtualRooms {
         });
 
         return roomCells === 0 || overlap / Math.min(roomCells, floorCount) >= CecotecVirtualRooms.MIN_MAP_OVERLAP;
+    }
+
+    /**
+     * @param {Array<number>} floor pares x, y planos
+     * @param {number} width
+     * @returns {number} parte de las celdas de las habitaciones (0 a 1) que es suelo en este mapa
+     */
+    getCoverage(floor, width) {
+        const floorCells = new Set();
+        for (let i = 0; i < floor.length; i += 2) {
+            floorCells.add(floor[i + 1] * width + floor[i]);
+        }
+
+        const cells = this.data.rooms.flatMap(room => {
+            return room.pixels;
+        });
+
+        return cells.length === 0 ? 0 : cells.filter(cell => {
+            return floorCells.has(cell);
+        }).length / cells.length;
     }
 
     /**

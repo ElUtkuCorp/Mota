@@ -84,6 +84,8 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
 
     // Mota: movimiento animado del robot (F21). Solo lo activa el mapa en vivo
     protected robotAnimationEnabled = false;
+    // Mota: el mapa en vivo permite ocultar el recorrido
+    protected pathsHidden = false;
     private readonly robotAnimator = new RobotMovementAnimator();
     // Inicio (en píxeles del mapa) del último tramo del recorrido, que se dibuja hasta la posición animada
     private pathTailStart: PointCoordinates | undefined;
@@ -244,9 +246,7 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
         try {
             if (this.drawableComponents.length >= 2) {
                 this.drawableComponents[1] = await PathDrawer.drawPaths({
-                    pathMapEntities: this.updateRobotAnimation(this.props.rawMap.entities.filter(e => {
-                        return e.type === RawMapEntityType.Path || e.type === RawMapEntityType.PredictedPath;
-                    })),
+                    pathMapEntities: this.updateRobotAnimation(this.getPathEntities()),
                     mapWidth: this.props.rawMap.size.x,
                     mapHeight: this.props.rawMap.size.y,
                     pixelSize: this.props.rawMap.pixelSize,
@@ -304,9 +304,7 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
         this.drawableComponents.push(this.mapLayerManager.getCanvas());
 
         const pathsImage = await PathDrawer.drawPaths( {
-            pathMapEntities: this.updateRobotAnimation(this.props.rawMap.entities.filter(e => {
-                return e.type === RawMapEntityType.Path || e.type === RawMapEntityType.PredictedPath;
-            })),
+            pathMapEntities: this.updateRobotAnimation(this.getPathEntities()),
             mapWidth: this.props.rawMap.size.x,
             mapHeight: this.props.rawMap.size.y,
             pixelSize: this.props.rawMap.pixelSize,
@@ -320,6 +318,16 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
         this.updateState();
 
         this.drawableComponentsMutex.leave();
+    }
+
+    private getPathEntities(): Array<RawMapEntity> {
+        if (this.pathsHidden) {
+            return [];
+        }
+
+        return this.props.rawMap.entities.filter(e => {
+            return e.type === RawMapEntityType.Path || e.type === RawMapEntityType.PredictedPath;
+        });
     }
 
     /**

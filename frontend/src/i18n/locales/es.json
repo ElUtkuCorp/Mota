@@ -45,6 +45,7 @@
             "updaterCommand": "actualizaciones",
             "mirrors": "las zonas de espejo",
             "resegment": "la división en habitaciones",
+            "mapRecovery": "la recuperación del mapa",
             "roomColor": "el color de la habitación",
             "mapVersions": "las versiones del mapa",
             "reboot": "el reinicio del robot",
@@ -400,6 +401,22 @@
         "name": "Mota"
     },
     "home": {
+        "mapRecovery": {
+            "title": "Mapa temporal",
+            "button": "Recuperar mapa",
+            "body": "El robot ha sustituido el mapa por uno temporal y las habitaciones no encajan. El mapa bueno sigue guardado, pero terminar una limpieza con este mapa temporal lo sobrescribe. Recupéralo antes de limpiar.",
+            "needsDock": "Para recuperarlo, el robot tiene que estar en la base.",
+            "running": "Recuperando el mapa. El robot volverá a la base en cuanto se relocalice.",
+            "recovered": "Mapa recuperado. Las habitaciones vuelven a encajar y el robot regresa a la base.",
+            "notRecovered": "El mapa no se ha recuperado y el robot ha vuelto a la base.",
+            "homeFailed": "No se ha podido mandar el robot a la base. Hazlo tú ahora: si termina la limpieza con el mapa temporal, el bueno se pierde.",
+            "confirmTitle": "¿Recuperar el mapa?",
+            "confirmBody": "El robot saldrá de la base con una limpieza general para cargar el mapa guardado, y Mota lo mandará de vuelta en cuanto se relocalice, unos segundos después.\n\nSi el mapa no vuelve, también lo mandará a la base y te avisará."
+        },
+        "path": {
+            "hide": "Ocultar recorrido",
+            "show": "Mostrar recorrido"
+        },
         "header": {
             "robotFallback": "Tu robot"
         },
@@ -549,10 +566,10 @@
             },
             "reset": {
                 "title": "Restablecer el mapa",
-                "description": "Borrar el mapa actual",
+                "description": "Borrar el mapa de Mota y el mapa guardado en el robot",
                 "button": "Borrar",
-                "confirmTitle": "¿Restablecer el mapa?",
-                "confirmBody": "Borra el mapa de Mota y el que el robot tiene guardado: la próxima limpieza empezará desde cero, sin mapa. Conviene dejarle hacer después una limpieza general completa sin interrumpirla. También se borran las habitaciones y las zonas de espejo; el mapa actual queda guardado en «Versiones del mapa». ¿Seguro que quieres continuar?"
+                "confirmTitle": "¿Borrar el mapa también del robot?",
+                "confirmBody": "Esto borra también el mapa guardado en el robot y no se puede deshacer: el robot no admite que se le vuelva a cargar un mapa.\n\nLa próxima limpieza empezará desde cero, sin mapa. Conviene dejarle hacer después una limpieza general completa sin interrumpirla.\n\nAntes de borrar, Mota guarda una versión en «Versiones del mapa». Con ella podrás ver el mapa y recuperar las habitaciones, pero no devolvérselo al robot. Las habitaciones y las zonas de espejo actuales se borran.\n\nSi lo que ves es un mapa temporal, no lo borres: usa «Recuperar mapa» en Inicio.\n\n¿Seguro que quieres continuar?"
             },
             "persistent": {
                 "title": "Mapa persistente",
@@ -1116,23 +1133,25 @@
         "implementation": "Implementación",
         "firmwareVersion": "Versión del firmware",
         "noHostInformation": "No hay información del sistema anfitrión",
-        "hostname": "Nombre del equipo",
+        "hostname": "Equipo",
         "arch": "Arquitectura",
         "uptime": "Tiempo en marcha",
-        "memory": "Memoria del sistema (RAM)",
+        "memory": "RAM",
         "memorySystem": "Sistema",
         "memoryMota": "Mota",
         "memoryMotaMax": "Mota (máx.)",
         "memoryFree": "Libre",
-        "cpuUsage": "Uso de CPU",
+        "cpuUsage": "CPU",
         "cpuIdle": "inactiva",
         "robot": "Robot",
         "mota": "Mota",
         "hostInformation": "Información del sistema anfitrión",
-        "ramUsage": "RAM en uso",
-        "ramUsageDetail": "{{used}} de {{total}}",
-        "cpuUsageNow": "CPU en uso",
-        "cpuUsageDetail": "media de {{count}} núcleos",
+        "ramUsage": "RAM",
+        "ramUsageDetail": "{{used}} / {{total}}",
+        "processMota": "Proceso Mota",
+        "processMotaDetail": "máx. {{max}}",
+        "cpuUsageNow": "CPU",
+        "cpuUsageDetail": "{{count}} núcleos",
         "reboot": {
             "title": "Reiniciar el robot",
             "description": "Reinicia el sistema del robot (como apagarlo y encenderlo). Tarda alrededor de un minuto; mientras tanto Mota no responde.",
@@ -1258,7 +1277,7 @@
     "help": {
         "about": "Mota es una interfaz local y libre para controlar el robot sin nube. Es un fork de\n<a href=\"https://github.com/Hypfer/Valetudo\" rel=\"noopener\" target=\"_blank\">Valetudo</a> y no existiría sin él.\n\n### Créditos de Valetudo\n\nValetudo lo crea, gestiona y mantiene\n<a href=\"https://hypfer.de\" rel=\"noopener\" target=\"_blank\">Sören Beye</a>, con contribuciones ocasionales de\n<a href=\"https://github.com/Hypfer/Valetudo/graphs/contributors\" rel=\"noopener\" target=\"_blank\">esta gente estupenda</a>.\nValetudo no existiría sin el trabajo fundamental de <a href=\"https://dontvacuum.me/\" rel=\"noopener\" target=\"_blank\">Dennis Giese</a>,\ncuyas ideas, trabajo y experiencia crearon las condiciones para que naciera.\n\nAl principio, la idea era incluir aquí una lista de todas las bibliotecas y herramientas libres usadas para crear Valetudo,\npero enseguida quedó claro que no era viable: una lista exhaustiva con todas las dependencias transitivas\nincluye miles de proyectos.\n\nTodos vamos a hombros de gigantes. (<a href=\"https://xkcd.com/2347/\" rel=\"noopener\" target=\"_blank\">XKCD 2347</a>)\n\n### Licencia\n\nValetudo, y por tanto Mota, se distribuye con <a href=\"https://github.com/Hypfer/Valetudo/blob/master/LICENSE\" rel=\"noopener\" target=\"_blank\">la licencia Apache-2.0</a>.\nEn palabras de su autor, te ahorra el aburrido muro de texto que no vas a leer de todas formas, porque, sinceramente, la licencia no importa tanto.\nTodas las licencias libres relevantes se reducen básicamente a «sin garantía ni responsabilidad» y «no actúes de mala fe», con distintas formas de intentar hacer cumplir lo segundo.\n\nPor desgracia, la realidad ha demostrado que hacerlo a menudo no es viable.\nHay gente que ignora por completo la licencia o que intenta, con picardía, encontrar alguna forma de esquivarla que sea legalmente\naceptable, pero claramente incorrecta.\n\nAsí que bien podría pegar aquí diez páginas de lorem ipsum.\n\nSimplemente, sé buena persona, por favor. ¡Gracias! :)\n",
         "consumables": "## Mantenimiento y consumibles\n\nLos consumibles son piezas del robot que necesitan limpieza, sustitución u otro mantenimiento cada cierto tiempo.\n\nHay dos variantes, que en el fondo son lo mismo:\n- horas de uso restantes\n- porcentaje restante\n\nEn algún momento se agotarán, y tendrás que hacer el mantenimiento y restablecerlos en Mota.\nAsí vuelven a las horas de uso previstas por el fabricante o al 100 %.\n\nNo hacer el mantenimiento de los consumibles puede empeorar el rendimiento.<br/>\nAun así, se recomienda revisar a mano la pieza en cuestión: _puede_ que aguante más de lo que recomienda el fabricante.\n\n\n### Tipos de consumibles\n\nHay varios tipos de consumibles que requieren un trato distinto.\n\n#### Cepillos\n\nHay cepillos de distintos tipos, como el principal o los laterales.\nCon el tiempo se desgastan y hay que cambiarlos.\n\nPara que rindan bien, también suele hacer falta quitarles pelos enredados o cosas parecidas, así que conviene vigilarlos.\n\n#### Filtros\n\nLos robots aspiradores suelen tener algún tipo de filtro que hay que limpiar cada cierto tiempo y cambiar cuando se desgasta.\n\n#### Sensores\n\nEl robot tiene varios sensores, como los de desnivel o de distancia a la pared, que usa para navegar y que pueden taparse con suciedad, restos, telarañas o similares.\nNormalmente se limpian con un paño suave. Ten cuidado de no rayarlos, porque son imprescindibles para que el robot funcione.\n\n#### Ruedas\n\nIgual que con los sensores, conviene revisar las ruedas de vez en cuando y quitarles la suciedad y los restos.\n\n#### Mopas\n\nAunque no siempre haga falta cambiar las mopas, se recomienda mucho lavarlas bien de vez en cuando.\n",
-        "doNotDisturb": "## No molestar\n\nAlgunos firmwares permiten definir un periodo de «No molestar» durante el que se desactivan ciertas funciones del robot.\nLo que cambia exactamente depende del fabricante, el modelo y la versión del firmware.\n\nPor ejemplo, puede que el robot no continúe una tarea a medias que se interrumpió porque tenía que\ncargar la batería.\nComo volver a cargar hasta el 100 % puede llevar unas horas, podría ocurrir que el robot intentara seguir limpiando\na las 3 de la madrugada, algo que normalmente no se quiere.\n\nOtra cosa a la que puede afectar este ajuste es el vaciado automático en la base, porque suele ser bastante ruidoso.\n\n\n**Ten en cuenta que las horas de «No molestar» se evalúan y se guardan en UTC. Solo se muestran en la zona horaria\nde tu navegador para tu comodidad.**\n",
+        "doNotDisturb": "## No molestar\n\nAlgunos firmwares permiten definir un periodo de «No molestar» durante el que se desactivan ciertas funciones del robot.\nLo que cambia exactamente depende del fabricante, el modelo y la versión del firmware.\n\nPor ejemplo, puede que el robot no continúe una tarea a medias que se interrumpió porque tenía que\ncargar la batería.\nComo volver a cargar hasta el 100 % puede llevar unas horas, podría ocurrir que el robot intentara seguir limpiando\na las 3 de la madrugada, algo que normalmente no se quiere.\n\nOtra cosa a la que puede afectar este ajuste es el vaciado automático en la base, porque suele ser bastante ruidoso.\n\n\n**Ten en cuenta que las horas de «No molestar» se evalúan y se guardan en UTC. Solo se muestran en la zona horaria\nde tu navegador para tu comodidad.**\n\n**El firmware de este robot solo admite periodos que crucen su medianoche, que son las 23:00 en España en invierno\ny las 00:00 en verano. Si el periodo no la incluye, no se podrá guardar.**\n",
         "general": "Esta es solo la sección de ayuda general, para las respuestas que no encajaban en otro sitio.\nBusca los botones con un signo de interrogación para ver ayuda más específica.\n\n### ¿Qué son esos triángulos del mapa?\n\nSon las etiquetas de las habitaciones.\nSi el robot considera activa una habitación (es decir, que forma parte de su tarea actual), el triángulo\napunta hacia abajo. Si no, apunta hacia arriba.\n\nSi haces zoom sobre la etiqueta de una habitación, verás su ID y su superficie en m².\n\n\n### ¿Cómo abro los controles de la página de inicio en el móvil?\n\nToca la barra de la parte inferior de la pantalla.\n\n### ¿Cómo obtengo las coordenadas o los parámetros de habitaciones, zonas o destinos para lanzarlos por MQTT o REST?\n\nConfigura o selecciona las habitaciones, zonas o destinos como siempre y mantén pulsado el botón que iniciaría la acción.\nSe abrirá un cuadro de diálogo con todo lo que necesitas.\n\n### ¿Qué pasa con el asistente de IA?\n\nEl «asistente de IA» es una broma sobre la broma que es nuestro sector, con una implementación en JavaScript de ELIZA.\nCreado en 1966 por Joseph Weizenbaum, ELIZA fue uno de los primeros chatbots y es famoso por ser uno de los primeros programas que hizo creer a la gente que superaba el test de Turing.\n\nMuy oportunamente, el propio Weizenbaum también tenía su opinión sobre este sector.<br/>\nSegún la Wikipedia:<br/>\n> Creía que el ordenador, en su nivel más básico, es una fuerza fundamentalmente conservadora y que, a pesar de ser una innovación tecnológica, acabaría frenando el progreso social.\n> Weizenbaum se basó en su experiencia trabajando con Bank of America para justificar su razonamiento: el ordenador permitió a los bancos gestionar un número cada vez mayor de cheques en circulación que, de otro modo, les habría obligado a cambios drásticos en su organización, como la descentralización.\n> Así, aunque el ordenador hizo el sector más eficiente, impidió una reforma de fondo del sistema.\n>\n> A Weizenbaum también le preocupaban los efectos negativos que tendrían los ordenadores en lo militar, y llamó al ordenador «un hijo del ejército».\n\nPuedes leer más sobre ELIZA aquí: <a href=\"https://es.wikipedia.org/wiki/ELIZA\" rel=\"noopener\" target=\"_blank\">https://es.wikipedia.org/wiki/ELIZA</a>\n",
         "mapAnnotations": "## Anotaciones del mapa\n\nLas anotaciones del mapa son el concepto genérico para todo lo que sea «hay algo en el mapa que el robot tiene que tener en cuenta y que quizá no detecte bien por sí solo».\nPor ejemplo, según lo que admita el firmware, puede ser un umbral franqueable, una cortina, una rampa o algo parecido.\n\nQue estas cosas estén en el mapa hace que el firmware se comporte de otra forma en el lugar donde se encuentran.\nPuede que siga un camino concreto, que se fíe menos de su sistema para esquivar obstáculos o cualquier cosa por el estilo.\n\nEn concreto:\n\n#### Umbrales\n\nLos umbrales le indican al firmware que el obstáculo que ve es en realidad algo que puede cruzar si se esfuerza un poco más.\nSin la anotación, puede que no se dé cuenta de que puede hacerlo.\n\n#### Rampas\n\nLas rampas le indican al firmware que hay un camino específico que funciona para llegar a una zona concreta.\nSin la anotación, puede que no sepa que existe.\n\n#### Cortinas\n\nLas cortinas le indican al firmware que lo que tiene delante en realidad no es un obstáculo y que puede atravesarlo sin más.\nSin la anotación, no se da cuenta de ello.\n",
         "mapManagement": "## Gestión del mapa\n\nEn esta página puedes hacer tareas relacionadas con el mapa. Lo que se puede hacer exactamente depende del modelo de robot y\nde su firmware.<br/>Si no ves algo en esta página, lo más probable es que tu robot no lo admita.\n\nAlgunos robots necesitan que actives a mano el mapa persistente antes de poder hacer casi nada con el mapa.\nOtros ni siquiera permiten desactivarlo, porque ¿para qué ibas a querer hacerlo?\n\nTambién hay robots antiguos que no tienen mapas persistentes.\n\nAlgunos robots necesitan una limpieza completa, incluida la vuelta a la base por sí solos, para guardar un mapa nuevo.\nOtros permiten opcionalmente un mapeo rápido mediante una pasada de mapeo, o incluso la exigen antes de poder usarse.\n\n### Terminología\n\nTen en cuenta que todos estos conceptos necesitan que el firmware del robot los admita.\nPuede que no todo esté disponible en todos los robots.\n\n#### Habitaciones\n\nUna habitación es una división del mapa decidida por el firmware del robot.\nLas habitaciones te permiten limpiar solo una o varias zonas predefinidas. La mayoría de los firmwares también permiten ponerles nombre.\n\nAunque las llamemos habitaciones, no tienen por qué corresponder a habitaciones reales.\nPor ejemplo, puede haber una que sea solo la zona alrededor de la mesa del comedor.\n\nEn la mayoría de los firmwares, el robot usa los datos de las habitaciones para optimizar su navegación y seguir el camino más eficiente.\n\n#### Zonas\n\nLas zonas son simplemente rectángulos que puedes dibujar en el mapa para mandar allí al robot.\nSegún el firmware, el robot puede aceptar una sola zona o varias.\n",
@@ -1381,7 +1400,8 @@
             "first": "Primera versión",
             "changed": "Antes de una limpieza que cambió el mapa (parecido {{similarity}} %)",
             "manual": "Guardada a mano",
-            "reset": "Antes de borrar el mapa"
+            "reset": "Antes de borrar el mapa",
+            "rooms": "Habitaciones nuevas"
         },
         "rooms_one": "{{count}} habitación",
         "rooms_other": "{{count}} habitaciones",

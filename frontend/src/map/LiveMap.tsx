@@ -39,6 +39,7 @@ class LiveMap extends BaseMap<LiveMapProps, LiveMapState> {
 
         // Mota: el robot se mueve de forma animada entre las posiciones recibidas (F21)
         this.robotAnimationEnabled = true;
+        this.pathsHidden = useLiveMapControl.getState().pathsHidden;
 
         this.supportedModes = [];
 
@@ -101,6 +102,15 @@ class LiveMap extends BaseMap<LiveMapProps, LiveMapState> {
                 if (requested === "none" || this.supportedModes.includes(requested)) {
                     this.setMode(requested);
                 }
+            }
+
+            if (state.pathsHidden !== prevState.pathsHidden) {
+                this.pathsHidden = state.pathsHidden;
+                this.updateEntityDrawables().then(() => {
+                    this.draw();
+                }).catch(() => {
+                    /* intentional */
+                });
             }
         });
     }

@@ -371,7 +371,8 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
   async updateMap() {
     let mask = 0x78ff;
     if (!this.device.system.supports(_deviceSystem.DEVICE_CAPABILITY.MAP_PLANS)) {
-      mask = 0xff;
+      // Mota: sin 0x400 la 3090 devuelve las zonas prohibidas del guardado anterior
+      mask = 0xff | 0x400;
     }
     await this.sendRecv('DEVICE_MAPID_GET_GLOBAL_INFO_REQ', 'DEVICE_MAPID_GET_GLOBAL_INFO_RSP', {
       mask
@@ -809,7 +810,8 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
       chargeStatus
     }));
     this.device.updateMode(_deviceMode.DeviceModeMapper.toDomain(workMode));
-    // Mota: se conserva el código original (los 2xxx son eventos del firmware, no errores)
+    // Mota: se conservan los valores originales (los 2xxx son eventos del firmware, no errores)
+    this.device.motaRawWorkMode = workMode;
     this.device.motaRawFaultCode = faultCode;
     this.device.updateError(_deviceError.DeviceErrorMapper.toDomain(faultCode));
     this.device.updateBattery(_deviceBattery.DeviceBatteryMapper.toDomain(battery));
@@ -858,7 +860,8 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
         workMode,
         chargeStatus
       }));
-      // Mota: se conserva el código original (los 2xxx son eventos del firmware, no errores)
+      // Mota: se conservan los valores originales (los 2xxx son eventos del firmware, no errores)
+      this.device.motaRawWorkMode = workMode;
       this.device.motaRawFaultCode = faultCode;
       this.device.updateError(_deviceError.DeviceErrorMapper.toDomain(faultCode));
       this.device.updateFanSpeed(_deviceFanSpeed.DeviceFanSpeedMapper.toDomain(cleanPreference));
@@ -973,7 +976,15 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
     const object = message.packet.payload.object;
     // Mota: para diagnosticar cambios de mapa del firmware
     this.device.motaPoseMapHeadId = object.mapHeadId;
-    if (object.update) {
+    // Mota: `update` no dice si la posición vale, sino si va al recorrido (getFitRealTimePoseWithDraw). Vale 0 en las
+    // tareas que no limpian, como la vuelta a la base, y la posición sigue siendo la real
+    this.device.motaPoseDrawn = Boolean(object.update);
+    const {
+      min,
+      max
+    } = this.device.map;
+    const isOnMap = object.poseX >= min.x && object.poseX <= max.x && object.poseY >= min.y && object.poseY <= max.y;
+    if (object.update || isOnMap) {
       this.device.map.updateRobot(new _position.Position({
         x: object.poseX,
         y: object.poseY,
