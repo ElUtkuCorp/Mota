@@ -40,6 +40,7 @@ import ReloadableCard from "../components/ReloadableCard";
 import PaperContainer from "../components/PaperContainer";
 import TextInformationGrid from "../components/TextInformationGrid";
 import MotaDiagnostics from "./MotaDiagnostics";
+import MotaStorage from "./MotaStorage";
 import {useValetudoColorsInverse} from "../hooks/useValetudoColors";
 import {useTranslation} from "react-i18next";
 import {formatNumber} from "../i18n";
@@ -608,6 +609,7 @@ const SystemInformation = (): React.ReactElement => {
                 >
                     <RebootCard/>
                 </Grid2>
+                <MotaStorage/>
                 <MotaDiagnostics/>
             </Grid2>
         </PaperContainer>

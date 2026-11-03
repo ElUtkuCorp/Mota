@@ -8,6 +8,7 @@ import React from "react";
 import RobotCoverageMapPage from "../map/RobotCoverageMapPage";
 import SpectatorMapPage from "../map/SpectatorMapPage";
 import MapVersionsPage from "./MapVersionsPage";
+import FirmwareMapBackupsPage from "./FirmwareMapBackupsPage";
 
 const OptionsRouter = (): React.ReactElement => {
     const [
@@ -96,6 +97,9 @@ const OptionsRouter = (): React.ReactElement => {
 
             {/* Mota: versiones del mapa (sin la API propia, la página muestra el error de carga) */}
             <Route path={"versions"} element={<MapVersionsPage/>}/>
+
+            {/* Mota: copias del mapa del robot (sin la API propia, la página muestra el error de carga) */}
+            <Route path={"robot_backups"} element={<FirmwareMapBackupsPage/>}/>
 
             <Route path={"spectator"} element={duststreamingPossible ? <SpectatorMapPage/> : <Navigate to="/" />}/>
 

@@ -1,10 +1,12 @@
 const capabilities = require("./capabilities");
 const CecotecCleanHistory = require("./CecotecCleanHistory");
+const CecotecFirmwareMapBackups = require("./CecotecFirmwareMapBackups");
 const CecotecMapRecovery = require("./CecotecMapRecovery");
 const CecotecMapRetouch = require("./CecotecMapRetouch");
 const CecotecMapVersions = require("./CecotecMapVersions");
 const CecotecMotaRouter = require("./CecotecMotaRouter");
 const CecotecQuirkFactory = require("./CecotecQuirkFactory");
+const CecotecStorage = require("./CecotecStorage");
 const CecotecVirtualRooms = require("./CecotecVirtualRooms");
 const fs = require("fs");
 const Logger = require("../../Logger");
@@ -296,6 +298,15 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
                 robot: this,
                 directory: path.join(path.dirname(this.config.location), "versiones")
             });
+            // Mota: copias del par del mapa del firmware y espacio en UDISK
+            this.firmwareMapBackups = new CecotecFirmwareMapBackups({
+                robot: this,
+                directory: path.join(path.dirname(this.config.location), "copias-mapa")
+            });
+            this.storage = new CecotecStorage({
+                motaDirectory: path.dirname(this.config.location),
+                backupsDirectory: path.join(path.dirname(this.config.location), "copias-mapa")
+            });
             // Mota: el guardián del mapa se sustituyó por las versiones; su referencia ya no se usa
             fs.rmSync(path.join(path.dirname(this.config.location), "mapa-referencia.json"), { force: true });
             this.registerCapability(
@@ -482,6 +493,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
 
     async shutdown() {
         this.mapRecovery.shutdown();
+        this.firmwareMapBackups?.shutdown();
         await this.server.close();
     }
 
@@ -526,6 +538,8 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             if (this.mapVersions && map && !this.isTemporaryMapMode(robot)) {
                 this.mapVersions.onCleaningFinished(this.getFloorSnapshot(map));
             }
+            // Mota: el firmware escribe el par del mapa al terminar; la copia se hace después
+            this.firmwareMapBackups?.onCleanReport(this.isTemporaryMapMode(robot));
         });
     }
 
@@ -557,6 +571,13 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             } catch (e) {
                 Logger.warn("Map versions: unable to take the snapshot", e);
             }
+        }
+
+        // Mota: copia del par del mapa antes de una limpieza nueva o después de una correcta (aún con el estado anterior)
+        try {
+            this.firmwareMapBackups?.onDeviceUpdate(oldStatus, newStatus);
+        } catch (e) {
+            Logger.warn("Firmware map backups: error while handling the robot state", e);
         }
 
         // Reset path points when robot goes from docked to another state.
@@ -1528,6 +1549,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         });
 
         this.mapRecovery.onMapUpdate();
+        this.firmwareMapBackups?.onMapUpdate();
         this.emitMapUpdated();
     }
 

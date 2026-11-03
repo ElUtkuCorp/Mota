@@ -187,6 +187,16 @@ class CecotecMapVersions {
     }
 
     /**
+     * Mota: versión que acompaña a una copia del par del mapa del firmware (ver CecotecFirmwareMapBackups)
+     *
+     * @param {Snapshot} snapshot
+     * @returns {VersionInfo}
+     */
+    saveForFirmwareBackup(snapshot) {
+        return this.save(snapshot, null, "firmware_backup");
+    }
+
+    /**
      * Guarda el mapa actual justo antes de que el usuario lo borre
      *
      * @param {Snapshot} snapshot
@@ -216,7 +226,7 @@ class CecotecMapVersions {
      * @private
      * @param {Snapshot} snapshot
      * @param {number|null} similarity
-     * @param {"first"|"changed"|"manual"|"reset"|"rooms"} reason
+     * @param {"first"|"changed"|"manual"|"reset"|"rooms"|"firmware_backup"} reason
      * @returns {VersionInfo}
      */
     save(snapshot, similarity, reason) {
@@ -326,7 +336,7 @@ CecotecMapVersions.MAX_VERSIONS = 15;
  * @typedef {object} VersionInfo
  * @property {number} id
  * @property {string} createdAt
- * @property {"first"|"changed"|"manual"|"reset"|"rooms"} reason
+ * @property {"first"|"changed"|"manual"|"reset"|"rooms"|"firmware_backup"} reason
  * @property {number|null} similarity parecido con el mapa de después de la limpieza, en %
  * @property {number} floorCells
  * @property {number} roomCount

@@ -5,6 +5,7 @@ module.exports = {
     ErrorStateValetudoEvent: require("./ErrorStateValetudoEvent"),
     MissingResourceValetudoEvent: require("./MissingResourceValetudoEvent"),
     MopAttachmentReminderValetudoEvent: require("./MopAttachmentReminderValetudoEvent"),
+    MotaSafeReturnValetudoEvent: require("./MotaSafeReturnValetudoEvent"),
     PendingMapChangeValetudoEvent: require("./PendingMapChangeValetudoEvent"),
     ValetudoRuntimeErrorValetudoEvent: require("./ValetudoRuntimeErrorValetudoEvent"),
     ValetudoUpdatedValetudoEvent: require("./ValetudoUpdatedValetudoEvent"),

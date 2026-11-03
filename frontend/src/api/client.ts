@@ -38,6 +38,8 @@ import {
     MotaCleanHistoryEntry,
     MotaCleanHistoryTotals,
     MotaDiagnostics,
+    MotaFirmwareMapBackupsStatus,
+    MotaFirmwareMapRestoreResponse,
     MotaMapRecoveryStatus,
     MotaMapVersion,
     MotaMapVersionsResponse,
@@ -45,6 +47,8 @@ import {
     MotaMapRetouchStatus,
     MotaMirrorZone,
     MotaRoom,
+    MotaStorageCleanupResult,
+    MotaStorageStatus,
     MopDockMopDryingTimeControlProperties,
     MopDockMopDryingTimePayload,
     MopDockMopWashTemperature,
@@ -1601,6 +1605,70 @@ export const fetchMotaMapRecovery = async (): Promise<MotaMapRecoveryStatus> => 
 
 export const sendMotaMapRecovery = async (): Promise<void> => {
     await valetudoAPI.post("/mota/map-recovery");
+};
+
+// Mota: copias del mapa del firmware
+
+export const fetchMotaFirmwareMapBackups = async (): Promise<MotaFirmwareMapBackupsStatus> => {
+    return valetudoAPI
+        .get<MotaFirmwareMapBackupsStatus>("/mota/firmware-map-backups")
+        .then(({ data }) => {
+            return data;
+        });
+};
+
+export const sendMotaFirmwareMapBackupsAuto = async (enabled: boolean): Promise<MotaFirmwareMapBackupsStatus> => {
+    return valetudoAPI
+        .put<MotaFirmwareMapBackupsStatus>("/mota/firmware-map-backups/auto", {enabled: enabled})
+        .then(({ data }) => {
+            return data;
+        });
+};
+
+export const sendMotaFirmwareMapBackupSave = async (): Promise<MotaFirmwareMapBackupsStatus> => {
+    return valetudoAPI
+        .post<MotaFirmwareMapBackupsStatus>("/mota/firmware-map-backups")
+        .then(({ data }) => {
+            return data;
+        });
+};
+
+export const sendMotaFirmwareMapBackupRestore = async (id: string): Promise<MotaFirmwareMapRestoreResponse> => {
+    return valetudoAPI
+        .post<MotaFirmwareMapRestoreResponse>(`/mota/firmware-map-backups/${encodeURIComponent(id)}/restore`)
+        .then(({ data }) => {
+            return data;
+        });
+};
+
+export const deleteMotaFirmwareMapBackup = async (id: string): Promise<MotaFirmwareMapBackupsStatus> => {
+    return valetudoAPI
+        .delete<MotaFirmwareMapBackupsStatus>(`/mota/firmware-map-backups/${encodeURIComponent(id)}`)
+        .then(({ data }) => {
+            return data;
+        });
+};
+
+export const getMotaFirmwareMapBackupDownloadUrl = (id: string): string => {
+    return `${valetudoAPIBaseURL}/mota/firmware-map-backups/${encodeURIComponent(id)}/download`;
+};
+
+// Mota: espacio en UDISK
+
+export const fetchMotaStorage = async (keep?: number): Promise<MotaStorageStatus> => {
+    return valetudoAPI
+        .get<MotaStorageStatus>("/mota/storage", keep !== undefined ? {params: {keep: keep}} : undefined)
+        .then(({ data }) => {
+            return data;
+        });
+};
+
+export const sendMotaStorageCleanup = async (keep: number): Promise<MotaStorageCleanupResult> => {
+    return valetudoAPI
+        .post<MotaStorageCleanupResult>("/mota/storage/cleanup", {keep: keep})
+        .then(({ data }) => {
+            return data;
+        });
 };
 
 // Mota: reiniciar el robot y borrar el registro

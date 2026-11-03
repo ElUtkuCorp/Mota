@@ -50,7 +50,10 @@
             "roomColor": "the room color",
             "mapVersions": "the map versions",
             "reboot": "the robot reboot",
-            "logDelete": "deleting the log"
+            "logDelete": "deleting the log",
+            "firmwareMapBackups": "the robot map backups",
+            "firmwareMapRestore": "restoring the robot map",
+            "storageCleanup": "cleaning up the vendor logs"
         },
         "errors": {
             "setSegmentMaterial": "Could not set segment material",
@@ -143,7 +146,8 @@
             "runtimeErrorReason": "Reason: {{reason}}",
             "unknownType": "Unknown event type: {{type}}",
             "dustBinFull": "The dust bin is full. Please empty it.",
-            "mopAttached": "The mop is still attached to the robot."
+            "mopAttached": "The mop is still attached to the robot.",
+            "motaSafeReturn": "Return to dock from pause: the robot resumed, but Mota did not see it relocalize and did not send it to the dock so as not to risk the map. It has been paused again. Check the map; if it was reset, restore a backup in Map settings → Robot map backups."
         }
     },
     "robot": {
@@ -441,7 +445,10 @@
             "notRecovered": "The map was not recovered and the robot went back to the dock.",
             "homeFailed": "The robot could not be sent to the dock. Do it yourself now: if the cleanup finishes on the temporary map, the good one is lost.",
             "confirmTitle": "Recover the map?",
-            "confirmBody": "The robot leaves the dock with a full cleanup to load the stored map, and Mota sends it back as soon as it relocalizes, a few seconds later.\n\nIf the map does not come back, it also sends it to the dock and tells you."
+            "confirmBody": "The robot leaves the dock with a full cleanup to load the stored map, and Mota sends it back as soon as it relocalizes, a few seconds later.\n\nIf the map does not come back, it also sends it to the dock and tells you.",
+            "restoreBackupButton": "Restore the latest backup",
+            "restoreBackupConfirmTitle": "Restore the latest robot map backup?",
+            "restoreRequested": "Restoring the map backup. The robot is rebooting completely and takes about 2 minutes to come back; Mota does not respond in the meantime."
         },
         "path": {
             "hide": "Hide path",
@@ -479,6 +486,7 @@
             "power": "Power",
             "pause": "Pause",
             "homeConfirm": "Are you sure you want to end the cleanup and return home?",
+            "homeFromPause": "From pause, Mota resumes the cleanup, waits for the robot to relocalize (about 35 seconds) and then sends it to the dock, so the map is not lost. If it does not see the relocalization, it pauses the robot again and lets you know.\n\nThe robot's physical button does not go through Mota: from pause it can make the robot reset the map. Better use the app.",
             "pick": {
                 "segments": "Choose rooms",
                 "zones": "Draw a zone",
@@ -645,6 +653,10 @@
             "versions": {
                 "title": "Map versions",
                 "description": "View previous maps and recover their rooms"
+            },
+            "firmwareBackups": {
+                "title": "Robot map backups",
+                "description": "Save, download and restore the map the firmware uses"
             }
         },
         "mota": {
@@ -1313,7 +1325,7 @@
         "about": "Valetudo is made, managed, maintained and more by me,\n<a href=\"https://hypfer.de\" rel=\"noopener\" target=\"_blank\">Sören Beye</a>, with occasional contributions by\n<a href=\"https://github.com/Hypfer/Valetudo/graphs/contributors\" rel=\"noopener\" target=\"_blank\">these awesome people</a>.\nIt would not exist without the foundational work of <a href=\"https://dontvacuum.me/\" rel=\"noopener\" target=\"_blank\">Dennis Giese</a>,\nwhose ideas, work and expertise created the environmental conditions for Valetudo to form.\n\nInitially, the idea was to have a list of all open-source libraries and tools used in the making of Valetudo here,\nhowever, it was quickly discovered that that would not be viable, as an exhaustive list including all transitive\ndependencies contains thousands of projects.\n\nWe're all standing on the shoulders of giants. (<a href=\"https://xkcd.com/2347/\" rel=\"noopener\" target=\"_blank\">XKCD 2347</a>)\n\n### License\n\nValetudo is licensed under <a href=\"https://github.com/Hypfer/Valetudo/blob/master/LICENSE\" rel=\"noopener\" target=\"_blank\">the Apache-2.0 license</a>,\nbut I will spare you the boring wall of text that you won't read anyways, as honestly, the license doesn't really matter that much.\nAll relevant open-source licenses basically boil down to \"no warranty/no liability\" and \"don't act in bad faith\" with various ways of trying to enforce the latter.\n\nUnfortunately though, reality has shown us that actually doing so often isn't a feasible task.\nPeople still either ignore the license agreement entirely or slyly try to find some way of working around it in a legally\nacceptable but obviously incorrect way.\n\nThus, I might as well paste ten pages of lorem ipsum here.\n\nJust be nice, please. Thank you :)\n",
         "consumables": "## Consumables\n\nConsumables are components of the robot that need periodic cleaning, replacement or other maintenance work.\n\nThey come in two flavours, which are basically the same\n- operating hours left\n- percent left\n\nAt some point, they will become depleted, requiring you to do maintenance and reset them in the Mota UI.\nThis will restore them to either their manufacturer-dependent design operating hours or 100%.\n\nNot maintaining your consumables may lead to performance degradation.<br/>\nStill, it is recommended to do a manual inspection of the part in question. You _may_ be able to use it longer than the manufacturer recommends.\n\n\n### Types of consumables\n\nThere are various types of consumables that require different treatment.\n\n#### Brushes\n\nBrushes come in different types such as main or side.\nAt some point, they are worn out and have to be replaced.\n\nThey often also require removal of tangled hair or similar for optimal performance, so you should keep an eye on them.\n\n#### Filters\n\nVacuum-robots usually have some kind of filter, which needs periodic cleaning and replacing when it is worn out.\n\n#### Sensors\n\nYour robot has a few sensors such as cliff- or wall-distance-sensors, which are used for navigation and might get obstructed by dirt, debris, cobwebs or similar.\nCleaning them can usually be done with a soft cloth. Make sure to not scratch the sensors as they are vital to the robot's operation.\n\n#### Wheels\n\nSimilarly to the sensors, it also makes sense to check the wheels from time to time and remove any dirt and debris.\n\n#### Mops\n\nWhile replacing mop pads might not always be necessary, it is strongly recommended to properly wash them from time to time.\n",
         "doNotDisturb": "## Do not disturb\n\nSome firmwares allow you to define a do not disturb period where certain features of the robot are disabled.\nWhat exactly changes may differ based on robot vendor, model and firmware version.\n\nFor example, the robot might not continue a partially finished task which has been interrupted due to the\nrobot having to charge.\nAs charging back up to 100% battery may take a few hours, it could happen that the robot attempts to continue cleaning\nat 3am, which is often considered undesirable.\n\nAnother thing that can be affected by the DND setting is the auto empty dock as those are usually pretty loud.\n\n\n**Please note that DND times are evaluated and stored as UTC. They are only displayed in your current browser timezone\nfor your convenience.**\n\n**This robot's firmware only supports periods that cross its midnight, which is 22:00 UTC. A period that does not include it\ncannot be saved.**\n",
-        "general": "Please note that this is just the general help section for answers that didn't fit elsewhere.\nLook out for question mark buttons for more context-specific help.\n\n### What are those triangles on the map?\n\nThose are segment labels.\nIf a segment is considered active by the robot - meaning that it is part of the robots current task - the triangle will\npoint down. Otherwise, it will point up.\n\nIf you zoom in on a segment label, it will display the segment ID and its size in m².\n\n\n### How do I open the controls of the home page on mobile?\n\nJust tap on the bar at the bottom of the screen.\n\n### How do I get the coordinates/parameters of segments/zones/go-to locations to trigger them via MQTT/REST?\n\nSimply configure/select the segments/zones/go-to locations like you'd normally do and then long-press the button that would start the action.\nThis will bring up a dialog providing you with everything you'll need.\n\n### What's up with the AI Assistant?\n\nThe \"AI Assistant\" feature is a joke about the joke that is our industry, featuring a JavaScript implementation of ELIZA.\nCreated in 1966 by Joseph Weizenbaum, ELIZA was one of the very first chatbots and is famous for being one of the earliest programs to fool people into thinking that it passed the Turing test.\n\nFittingly, Weizenbaum himself also had some opinions about this industry.<br/>\nQuoting Wikipedia:<br/>\n> His belief was that the computer, at its most base level, is a fundamentally conservative force and that despite being a technological innovation, it would end up hindering social progress.\n> Weizenbaum used his experience working with Bank of America as justification for his reasoning, saying that the computer allowed banks to deal with an ever-expanding number of checks in play that otherwise would have forced drastic changes to banking organization such as decentralization.\n> As such, although the computer allowed the industry to become more efficient, it prevented a fundamental re-haul of the system.\n>\n> Weizenbaum also worried about the negative effects computers would have with regards to the military, calling the computer \"a child of the military.\"\n\nYou can read more about ELIZA here: <a href=\"https://en.wikipedia.org/wiki/ELIZA\" rel=\"noopener\" target=\"_blank\">https://en.wikipedia.org/wiki/ELIZA</a>\n",
+        "general": "Please note that this is just the general help section for answers that didn't fit elsewhere.\nLook out for question mark buttons for more context-specific help.\n\n### What are those triangles on the map?\n\nThose are segment labels.\nIf a segment is considered active by the robot - meaning that it is part of the robots current task - the triangle will\npoint down. Otherwise, it will point up.\n\nIf you zoom in on a segment label, it will display the segment ID and its size in m².\n\n\n### How do I open the controls of the home page on mobile?\n\nJust tap on the bar at the bottom of the screen.\n\n### How do I get the coordinates/parameters of segments/zones/go-to locations to trigger them via MQTT/REST?\n\nSimply configure/select the segments/zones/go-to locations like you'd normally do and then long-press the button that would start the action.\nThis will bring up a dialog providing you with everything you'll need.\n\n### What does \"Return to dock\" do while the robot is paused?\n\nFrom pause, Mota resumes the cleanup, waits for the robot to relocalize (about 35 seconds) and then sends it to the dock. That way the robot does not lose the map. If Mota does not see the relocalization, it pauses the robot again and lets you know in the events.\n\nThe robot's physical button does not go through Mota: from pause it can make the robot reset the map. Better use the app.\n\n### What's up with the AI Assistant?\n\nThe \"AI Assistant\" feature is a joke about the joke that is our industry, featuring a JavaScript implementation of ELIZA.\nCreated in 1966 by Joseph Weizenbaum, ELIZA was one of the very first chatbots and is famous for being one of the earliest programs to fool people into thinking that it passed the Turing test.\n\nFittingly, Weizenbaum himself also had some opinions about this industry.<br/>\nQuoting Wikipedia:<br/>\n> His belief was that the computer, at its most base level, is a fundamentally conservative force and that despite being a technological innovation, it would end up hindering social progress.\n> Weizenbaum used his experience working with Bank of America as justification for his reasoning, saying that the computer allowed banks to deal with an ever-expanding number of checks in play that otherwise would have forced drastic changes to banking organization such as decentralization.\n> As such, although the computer allowed the industry to become more efficient, it prevented a fundamental re-haul of the system.\n>\n> Weizenbaum also worried about the negative effects computers would have with regards to the military, calling the computer \"a child of the military.\"\n\nYou can read more about ELIZA here: <a href=\"https://en.wikipedia.org/wiki/ELIZA\" rel=\"noopener\" target=\"_blank\">https://en.wikipedia.org/wiki/ELIZA</a>\n",
         "mapAnnotations": "## Map Annotations\n\nMap annotations are the generic concept to house any kind of \"there is something on the map the robot needs to be aware of, which might not be reliably auto-determined\".\nFor example, depending on firmware support, that could be a passable threshold, a curtain, a ramp or similar.\n\nThese things existing in the map make the firmware behave differently in some way relating to the location they're at.\nIt might then take a specific path or trust its obstacle avoidance less or really anything like that.\n\nSpecifically:\n\n#### Thresholds\n\nThresholds hint the firmware that the obstacle it is seeing is actually something it can cross if it just tries harder.\nWithout the annotation, it might not realize that it can.\n\n#### Ramps\n\nRamps hint the firmware that there is a working dedicated path to take to reach a specific area.\nWithout the annotation, it might not realize that it exists.\n\n#### Curtains\n\nCurtains hint the firmware that the obstacle it is looking at actually isn't one and that it can just drive into it.\nWithout the annotation, it doesn't realize that that is the case.\n",
         "mapManagement": "## Map Management\n\nThis page allows you to do map-related tasks. What exactly can be done here depends on your model of robot as well\nas its firmware.<br/>If you don't see something on this page, it is likely not supported by your robot.\n\nSome robots may require you to manually enable persistent maps before you can do most map-related things.\nOthers may not even allow disabling of persistent maps because why would you.\n\nThere are also some legacy robots, which don't feature persistent maps at all.\n\nSome robots may require a full cleanup task including them returning to the dock on their own for a new map to be saved.\nOthers may either optionally allow for fast mapping via a mapping pass or even require a mapping pass before they can be used.\n\n### Terminology\n\nPlease note that all these concepts need firmware support by your robot.\nNot everything might be available on every robot. \n\n#### Segments\n\nA segment is a partition of the map as decided by the robots' firmware.\nSegments enable you to just clean one or more predefined areas. Most firmwares also allow naming them.\n\nYou may know them as rooms, however they don't necessarily have to be actual rooms.\nThere could for example be a segment, which is just the area around your dining table.\n\nOn most firmwares, the robot uses the segment data to optimize its navigation and drive the most efficient path.\n\n#### Zones\n\nZones are just rectangles that you can draw on the map to send the robot there.\nDepending on the firmware of your robot, it might accept just one or multiple zones as an input.\n",
         "mapUtilities": "## Map Utilities\n\nIn this section, you will find useful things built on top of the map data provided by the robot.\n",
@@ -1424,7 +1436,7 @@
     "mapVersions": {
         "title": "Map versions",
         "explanation": "Before every cleanup, Mota takes a snapshot of the map. If the map changed more than allowed when the cleanup ends (for example because the robot lost it), the previous snapshot is stored here as a version. You can also save the current map at any time.",
-        "firmwareLimit": "The 3090 firmware does not accept a map from outside. Restoring a version recovers the Mota rooms (divisions, names and colours), but the robot map does not go back: that is left for the firmware phase.",
+        "firmwareLimit": "Restoring a version recovers the Mota rooms (divisions, names and colours), but not the robot map. To go back to an earlier firmware map, use Robot map backups.",
         "threshold": "Save a version if the similarity drops below",
         "thresholdOff": "Do not save versions",
         "thresholdValue": "{{value}} %",
@@ -1437,7 +1449,8 @@
             "changed": "Before a cleanup that changed the map ({{similarity}} % similar)",
             "manual": "Saved manually",
             "reset": "Before the map was deleted",
-            "rooms": "New rooms"
+            "rooms": "New rooms",
+            "firmwareBackup": "With a robot map backup"
         },
         "rooms_one": "{{count}} room",
         "rooms_other": "{{count}} rooms",
@@ -1447,5 +1460,74 @@
         "restoreConfirmTitle": "Recover the rooms of this version?",
         "restoreConfirmText": "The current rooms are replaced by the ones of this version and fitted to the floor of the current map. If the version has map retouches, they are recovered too (you can undo that in Retouch the map).",
         "deleteConfirmTitle": "Delete this map version?"
+    },
+    "firmwareMapBackups": {
+        "title": "Robot map backups",
+        "explanation_one": "These are backups of the map the robot firmware uses (not the Mota one). They are stored compressed on the robot and {{count}} is kept; saving another deletes the oldest.",
+        "explanation_other": "These are backups of the map the robot firmware uses (not the Mota one). They are stored compressed on the robot and {{count}} are kept; saving another deletes the oldest.",
+        "downloadHint": "Download the backups to your PC from time to time: if the robot storage fails or is wiped, backups that only live on the robot are lost with it.",
+        "auto": "Automatic backups",
+        "autoDescription": "Before each cleanup and after a successful cleanup, only if the map is good (the rooms fit). A temporary map is never saved.",
+        "saveNow": "Save a backup now",
+        "cannotRestore": "Restoring is not possible right now: {{reason}}",
+        "restoringNotice": "Restoring the backup. The robot is rebooting completely and takes about 2 minutes to come back; Mota does not respond in the meantime. Reload the page afterwards.",
+        "empty": "There are no backups yet. Save one now or turn on automatic backups.",
+        "loadError": "The robot map backups could not be loaded. This feature is only available on robots running Mota.",
+        "active": "In use",
+        "reason": {
+            "before_clean": "Before a cleanup",
+            "after_clean": "After a cleanup",
+            "manual": "Saved manually",
+            "before_restore": "Before restoring"
+        },
+        "rooms_one": "{{count}} room",
+        "rooms_other": "{{count}} rooms",
+        "download": "Download",
+        "restore": "Restore",
+        "delete": "Delete",
+        "autoConfirmTitle": "Turn on automatic backups?",
+        "autoConfirmText_one": "Mota will save a compressed backup (about 100 KB) of the firmware map on the robot before each cleanup and after a successful cleanup, only if the map is good (the rooms fit). It never saves a temporary map. {{count}} backup is kept; the oldest is deleted.\n\nTo revert, turn the switch off. Saved backups can be deleted here.",
+        "autoConfirmText_other": "Mota will save a compressed backup (about 100 KB) of the firmware map on the robot before each cleanup and after a successful cleanup, only if the map is good (the rooms fit). It never saves a temporary map. {{count}} backups are kept; the oldest is deleted.\n\nTo revert, turn the switch off. Saved backups can be deleted here.",
+        "saveConfirmTitle": "Save a backup of the robot map?",
+        "saveConfirmText_one": "A compressed backup (about 100 KB) of the map the firmware uses is saved on the robot. {{count}} is kept: if there already is one, it is deleted.\n\nTo revert, delete the backup.",
+        "saveConfirmText_other": "A compressed backup (about 100 KB) of the map the firmware uses is saved on the robot. {{count}} are kept: if there are already that many, the oldest is deleted.\n\nTo revert, delete the backup.",
+        "restoreConfirmTitle": "Restore this robot map backup?",
+        "restoreConfirmText": "Backup from {{date}}.\n\nThe robot must be on the dock. Mota first saves the current map as a \"Before restoring\" backup, replaces the firmware map and reboots the robot completely (it takes about 2 minutes to come back). If the backup has saved rooms, they are recovered too.\n\nTo revert, restore the \"Before restoring\" backup.",
+        "restoreConfirmTextLatest": "The robot must be on the dock. Mota first saves the current map as a \"Before restoring\" backup, replaces the firmware map with the one from the latest backup and reboots the robot completely (it takes about 2 minutes to come back). If the backup has saved rooms, they are recovered too.\n\nTo revert, restore the \"Before restoring\" backup in Map settings → Robot map backups.",
+        "deleteConfirmTitle": "Delete this robot map backup?",
+        "deleteConfirmText": "It is deleted from the robot. This cannot be undone unless you downloaded it first."
+    },
+    "storage": {
+        "title": "Robot storage",
+        "freeOfTotal": "{{free}} free of {{total}} on UDISK",
+        "free": "Free",
+        "reserveMark": "Reserve for updating Mota: {{reserve}}",
+        "reserveLegend": "The line marks the {{reserve}} reserve that must stay free so Mota can be updated.",
+        "lowSpace": "There is less free space than the {{reserve}} reserve: Mota cannot be updated. Free some space by cleaning up old vendor logs or deleting robot map backups.",
+        "parts": {
+            "motaBinaries": "Mota program (current and previous)",
+            "motaData": "Mota data",
+            "mapBackups": "Robot map backups",
+            "vendorLogs": "Vendor logs",
+            "vendorMap": "Firmware map",
+            "other": "Other"
+        },
+        "cleanup": {
+            "button": "Clean up old vendor logs",
+            "description_one": "There is {{count}} old vendor log that can be deleted ({{bytes}}).",
+            "description_other": "There are {{count}} old vendor logs that can be deleted ({{bytes}}).",
+            "title": "Clean up old vendor logs",
+            "explanation": "Only vendor logs that have already been rotated are deleted (.gz files and old update reports). The map and the active logs are never touched. Check the list before deleting.\n\nThis cannot be undone.",
+            "keep": "Keep per type",
+            "keepValue_one": "The most recent one",
+            "keepValue_other": "The {{count}} most recent",
+            "summary_one": "{{count}} file will be deleted, freeing {{bytes}}:",
+            "summary_other": "{{count}} files will be deleted, freeing {{bytes}}:",
+            "nothing": "With this setting there is nothing to delete.",
+            "loadError": "The file list could not be loaded.",
+            "confirm_one": "Delete {{count}} file",
+            "confirm_other": "Delete {{count}} files",
+            "done": "Cleanup done: {{bytes}} freed."
+        }
     }
 }

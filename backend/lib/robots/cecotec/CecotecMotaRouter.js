@@ -1,3 +1,5 @@
+const CecotecFirmwareMapBackups = require("./CecotecFirmwareMapBackups");
+const CecotecStorage = require("./CecotecStorage");
 const express = require("express");
 const fs = require("fs");
 const LinuxTools = require("../../utils/LinuxTools");
@@ -142,6 +144,157 @@ class CecotecMotaRouter {
                 res.json(this.robot.mapRecovery.getStatus());
             } catch (e) {
                 res.status(409).json(e.message);
+            }
+        });
+
+        // Mota: copias del par del mapa del firmware (solo en el robot)
+        this.router.get("/firmware-map-backups", (req, res) => {
+            if (!this.robot.firmwareMapBackups) {
+                res.sendStatus(404);
+
+                return;
+            }
+
+            res.json(this.robot.firmwareMapBackups.getStatus());
+        });
+
+        this.router.put("/firmware-map-backups/auto", express.json(), (req, res) => {
+            const enabled = req.body?.enabled;
+
+            if (!this.robot.firmwareMapBackups || typeof enabled !== "boolean") {
+                res.sendStatus(this.robot.firmwareMapBackups ? 400 : 404);
+
+                return;
+            }
+
+            try {
+                this.robot.firmwareMapBackups.setAutoEnabled(enabled);
+                res.json(this.robot.firmwareMapBackups.getStatus());
+            } catch (e) {
+                res.status(500).json(e.message);
+            }
+        });
+
+        this.router.post("/firmware-map-backups", async (req, res) => {
+            if (!this.robot.firmwareMapBackups) {
+                res.sendStatus(404);
+
+                return;
+            }
+
+            try {
+                await this.robot.firmwareMapBackups.backup("manual");
+                res.json(this.robot.firmwareMapBackups.getStatus());
+            } catch (e) {
+                res.status(409).json(e.message);
+            }
+        });
+
+        this.router.post("/firmware-map-backups/:id/restore", (req, res) => {
+            if (!this.robot.firmwareMapBackups) {
+                res.sendStatus(404);
+
+                return;
+            }
+            if (!CecotecFirmwareMapBackups.IS_VALID_ID(req.params.id)) {
+                res.sendStatus(400);
+
+                return;
+            }
+
+            try {
+                res.status(202).json(this.robot.firmwareMapBackups.restore(req.params.id));
+            } catch (e) {
+                res.status(409).json(e.message);
+            }
+        });
+
+        this.router.get("/firmware-map-backups/:id/download", (req, res) => {
+            const id = req.params.id;
+
+            if (!this.robot.firmwareMapBackups || !CecotecFirmwareMapBackups.IS_VALID_ID(id) || !this.robot.firmwareMapBackups.get(id)) {
+                res.sendStatus(404);
+
+                return;
+            }
+
+            try {
+                const archive = this.robot.firmwareMapBackups.getArchive(id);
+
+                res.type("application/gzip");
+                res.setHeader("Content-Disposition", `attachment; filename="mota-mapa-robot-${id}.tar.gz"`);
+                res.send(archive);
+            } catch (e) {
+                res.status(500).json(e.message);
+            }
+        });
+
+        this.router.delete("/firmware-map-backups/:id", (req, res) => {
+            if (!this.robot.firmwareMapBackups) {
+                res.sendStatus(404);
+
+                return;
+            }
+            if (!CecotecFirmwareMapBackups.IS_VALID_ID(req.params.id)) {
+                res.sendStatus(400);
+
+                return;
+            }
+
+            try {
+                this.robot.firmwareMapBackups.delete(req.params.id);
+                res.json(this.robot.firmwareMapBackups.getStatus());
+            } catch (e) {
+                res.status(409).json(e.message);
+            }
+        });
+
+        // Mota: espacio en UDISK y limpieza de logs rotados del fabricante (solo en el robot)
+        this.router.get("/storage", (req, res) => {
+            if (!this.robot.storage) {
+                res.sendStatus(404);
+
+                return;
+            }
+
+            const keep = req.query.keep === undefined ? CecotecStorage.DEFAULT_KEEP : Number(req.query.keep);
+
+            try {
+                CecotecStorage.ASSERT_KEEP(keep);
+            } catch (e) {
+                res.status(400).json(e.message);
+
+                return;
+            }
+
+            try {
+                res.json(this.robot.storage.getStatus(keep));
+            } catch (e) {
+                res.status(500).json(e.message);
+            }
+        });
+
+        this.router.post("/storage/cleanup", express.json(), (req, res) => {
+            if (!this.robot.storage) {
+                res.sendStatus(404);
+
+                return;
+            }
+
+            const keep = req.body?.keep ?? CecotecStorage.DEFAULT_KEEP;
+
+            try {
+                CecotecStorage.ASSERT_KEEP(keep);
+            } catch (e) {
+                res.status(400).json(e.message);
+
+                return;
+            }
+
+            try {
+                res.json(this.robot.storage.cleanup(keep));
+            } catch (e) {
+                res.status(500).json(e.message);
             }
         });
 

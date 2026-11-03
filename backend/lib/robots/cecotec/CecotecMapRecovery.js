@@ -32,7 +32,10 @@ class CecotecMapRecovery {
     }
 
     /**
-     * @returns {{temporaryMap: boolean, docked: boolean, state: string, result: string|null}}
+     * Mota: con un mapa temporal, `backupAvailable` es la copia del par del firmware que se puede restaurar en lugar de
+     * recuperar el mapa (ver CecotecFirmwareMapBackups)
+     *
+     * @returns {{temporaryMap: boolean, docked: boolean, state: string, result: string|null, backupAvailable: string|null}}
      */
     getStatus() {
         if (this.finishedAt !== undefined && Date.now() - this.finishedAt > CecotecMapRecovery.RESULT_TTL_MS) {
@@ -40,11 +43,14 @@ class CecotecMapRecovery {
             this.finishedAt = undefined;
         }
 
+        const temporaryMap = this.robot.hasTemporaryFirmwareMap();
+
         return {
-            temporaryMap: this.robot.hasTemporaryFirmwareMap(),
+            temporaryMap: temporaryMap,
             docked: this.isFreeAtDock(),
             state: this.state,
             result: this.result,
+            backupAvailable: temporaryMap ? (this.robot.firmwareMapBackups?.getRestorableId() ?? null) : null,
         };
     }
 

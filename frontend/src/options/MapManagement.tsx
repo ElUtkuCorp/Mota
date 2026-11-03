@@ -3,6 +3,7 @@ import {
     Capability,
     useDuststreamingConfigurationQuery,
     useMapResetMutation,
+    useMotaFirmwareMapBackupsQuery,
     useMotaMirrorsQuery,
     usePersistentMapMutation,
     usePersistentMapQuery,
@@ -22,6 +23,7 @@ import {
     Flip as MirrorsIcon,
     Brush as RetouchIcon,
     History as MapVersionsIcon,
+    SettingsBackupRestore as FirmwareMapBackupsIcon,
 } from "@mui/icons-material";
 import React from "react";
 import ConfirmationDialog from "../components/ConfirmationDialog";
@@ -203,6 +205,9 @@ const MapManagement = (): React.ReactElement => {
     // Mota: las zonas de espejo solo existen si responde la API propia
     const {data: mirrorZones} = useMotaMirrorsQuery();
     const mirrorsAvailable = mirrorZones !== undefined;
+    // Mota: las copias del mapa del robot, igual
+    const {data: firmwareMapBackups} = useMotaFirmwareMapBackupsQuery();
+    const firmwareMapBackupsAvailable = firmwareMapBackups !== undefined;
 
     const robotManagedListItems = React.useMemo(() => {
         const items = [];
@@ -210,7 +215,8 @@ const MapManagement = (): React.ReactElement => {
         if (
             persistentMapControlCapabilitySupported ||
             mappingPassCapabilitySupported ||
-            mapResetCapabilitySupported
+            mapResetCapabilitySupported ||
+            firmwareMapBackupsAvailable
         ) {
             if (persistentMapControlCapabilitySupported) {
                 items.push(
@@ -227,6 +233,18 @@ const MapManagement = (): React.ReactElement => {
             if (mapResetCapabilitySupported) {
                 items.push(
                     <MapResetButtonItem key="mapReset"/>
+                );
+            }
+
+            if (firmwareMapBackupsAvailable) {
+                items.push(
+                    <LinkListMenuItem
+                        key="firmwareMapBackups"
+                        url="/options/map_management/robot_backups"
+                        primaryLabel={t("options.map.firmwareBackups.title")}
+                        secondaryLabel={t("options.map.firmwareBackups.description")}
+                        icon={<FirmwareMapBackupsIcon/>}
+                    />
                 );
             }
 
@@ -305,6 +323,7 @@ const MapManagement = (): React.ReactElement => {
         mapSegmentEditCapabilitySupported,
         mapSegmentRenameCapabilitySupported,
         mirrorsAvailable,
+        firmwareMapBackupsAvailable,
         t
     ]);
 

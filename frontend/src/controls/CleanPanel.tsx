@@ -578,6 +578,7 @@ const CleanPanel: React.FunctionComponent<{
             }
             <ConfirmationDialog
                 title={t("home.clean.homeConfirm")}
+                text={state === "paused" ? t("home.clean.homeFromPause") : undefined}
                 open={homeConfirmOpen}
                 onClose={() => {
                     setHomeConfirmOpen(false);

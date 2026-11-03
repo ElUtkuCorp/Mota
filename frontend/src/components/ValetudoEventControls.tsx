@@ -291,6 +291,8 @@ export const eventControls: Record<string, React.ComponentType<ValetudoEventRend
     PendingMapChangeValetudoEvent: PendingMapChangeEventControl,
     DustBinFullValetudoEvent: CreateDismissableEventControl("components.events.dustBinFull"),
     MopAttachmentReminderValetudoEvent: CreateDismissableEventControl("components.events.mopAttached"),
+    // Mota: volver a la base desde pausa sin relocalización (el robot vuelve a quedar en pausa)
+    MotaSafeReturnValetudoEvent: CreateDismissableEventControl("components.events.motaSafeReturn"),
     MissingResourceValetudoEvent: MissingResourceEventControl,
     ValetudoUpdatedValetudoEvent: ValetudoUpdatedEventControl,
     ValetudoRuntimeErrorValetudoEvent: ValetudoRuntimeErrorEventControl,

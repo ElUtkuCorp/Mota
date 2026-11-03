@@ -173,6 +173,13 @@ import {
     sendMotaMapVersionRestoreRooms,
     deleteMotaMapVersion,
     sendMotaSystemReboot,
+    fetchMotaFirmwareMapBackups,
+    sendMotaFirmwareMapBackupsAuto,
+    sendMotaFirmwareMapBackupSave,
+    sendMotaFirmwareMapBackupRestore,
+    deleteMotaFirmwareMapBackup,
+    fetchMotaStorage,
+    sendMotaStorageCleanup,
     deleteValetudoLog,
     sendMotaRoomColor,
     fetchCombinedVirtualRestrictions,
@@ -192,6 +199,7 @@ import {
     CarpetSensorMode,
     CleanRoute,
     CombinedVirtualRestrictionsUpdateRequestParameters,
+    MotaFirmwareMapBackupsStatus,
     MotaMapRetouchAction,
     MotaMapRetouchStatus,
     MotaMirrorsSaveRequest,
@@ -317,6 +325,8 @@ enum QueryKey {
     MotaMapVersionMap = "mota_map_version_map",
     MotaMapRecovery = "mota_map_recovery",
     MotaMapRetouch = "mota_map_retouch",
+    MotaFirmwareMapBackups = "mota_firmware_map_backups",
+    MotaStorage = "mota_storage",
 }
 
 // "capability" is either a capability name or an i18n key
@@ -2278,6 +2288,109 @@ export const useMotaMapVersionRestoreRoomsMutation = () => {
         onSuccess: async () => {
             await queryClient.invalidateQueries({queryKey: [QueryKey.MotaRooms]});
             await queryClient.invalidateQueries({queryKey: [QueryKey.Map]});
+        },
+    });
+};
+
+// Mota: copias del mapa del firmware
+// En el robot simulado no existe esta API: sin datos no se muestra nada
+
+export const useMotaFirmwareMapBackupsQuery = () => {
+    return useQuery({
+        queryKey: [QueryKey.MotaFirmwareMapBackups],
+        queryFn: fetchMotaFirmwareMapBackups,
+
+        staleTime: 10_000,
+        retry: false,
+        refetchInterval: (query) => {
+            return query.state.data?.restoring === true ? 3_000 : false;
+        }
+    });
+};
+
+const useOnMotaFirmwareMapBackupsChanged = () => {
+    const queryClient = useQueryClient();
+
+    return React.useCallback(async (data?: MotaFirmwareMapBackupsStatus) => {
+        if (data !== undefined) {
+            queryClient.setQueryData<MotaFirmwareMapBackupsStatus>([QueryKey.MotaFirmwareMapBackups], data);
+        }
+
+        await queryClient.invalidateQueries({queryKey: [QueryKey.MotaFirmwareMapBackups]});
+        await queryClient.invalidateQueries({queryKey: [QueryKey.MotaMapRecovery]});
+        await queryClient.invalidateQueries({queryKey: [QueryKey.MotaStorage]});
+    }, [queryClient]);
+};
+
+export const useMotaFirmwareMapBackupsAutoMutation = () => {
+    const onChanged = useOnMotaFirmwareMapBackupsChanged();
+
+    return useMutation({
+        mutationFn: sendMotaFirmwareMapBackupsAuto,
+        onError: useOnCommandError("api.settings.firmwareMapBackups"),
+        onSuccess: onChanged,
+    });
+};
+
+export const useMotaFirmwareMapBackupSaveMutation = () => {
+    const onChanged = useOnMotaFirmwareMapBackupsChanged();
+
+    return useMutation({
+        mutationFn: sendMotaFirmwareMapBackupSave,
+        onError: useOnCommandError("api.settings.firmwareMapBackups"),
+        onSuccess: onChanged,
+    });
+};
+
+export const useMotaFirmwareMapBackupDeleteMutation = () => {
+    const onChanged = useOnMotaFirmwareMapBackupsChanged();
+
+    return useMutation({
+        mutationFn: deleteMotaFirmwareMapBackup,
+        onError: useOnCommandError("api.settings.firmwareMapBackups"),
+        onSuccess: onChanged,
+    });
+};
+
+// Devuelve { rebootInSeconds }: el robot se reinicia entero después
+export const useMotaFirmwareMapBackupRestoreMutation = () => {
+    const onChanged = useOnMotaFirmwareMapBackupsChanged();
+
+    return useMutation({
+        mutationFn: sendMotaFirmwareMapBackupRestore,
+        onError: useOnCommandError("api.settings.firmwareMapRestore"),
+        onSettled: async () => {
+            await onChanged();
+        },
+    });
+};
+
+// Mota: espacio en UDISK. keep: cuántos logs rotados del fabricante se conservan por tipo al limpiar
+// (si no se indica, el backend usa su valor por defecto)
+export const useMotaStorageQuery = (keep?: number) => {
+    return useQuery({
+        queryKey: [QueryKey.MotaStorage, keep ?? null],
+        queryFn: () => {
+            return fetchMotaStorage(keep);
+        },
+
+        staleTime: 15_000,
+        retry: false,
+        placeholderData: (previousData) => {
+            return previousData;
+        }
+    });
+};
+
+export const useMotaStorageCleanupMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: sendMotaStorageCleanup,
+        onError: useOnCommandError("api.settings.storageCleanup"),
+        onSettled: async () => {
+            await queryClient.invalidateQueries({queryKey: [QueryKey.MotaStorage]});
+            await queryClient.invalidateQueries({queryKey: [QueryKey.MotaDiagnostics]});
         },
     });
 };

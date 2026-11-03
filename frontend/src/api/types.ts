@@ -720,7 +720,7 @@ export interface MotaMapVersion {
     id: number;
     createdAt: string;
     /** first: la primera foto; changed: el mapa cambió mucho en una limpieza; manual: la guardó el usuario; reset: antes de borrar el mapa; rooms: habitaciones que no tenían versión */
-    reason: "first" | "changed" | "manual" | "reset" | "rooms";
+    reason: "first" | "changed" | "manual" | "reset" | "rooms" | "firmware_backup";
     /** % de parecido con el mapa de después de la limpieza (solo en changed) */
     similarity: number | null;
     floorCells: number;
@@ -739,6 +739,81 @@ export interface MotaMapRecoveryStatus {
     docked: boolean;
     state: "idle" | "starting" | "returning";
     result: "recovered" | "not_recovered" | "home_failed" | null;
+    /** Mota: id de la copia del mapa del robot que se puede restaurar, si la hay (puede faltar en backends antiguos) */
+    backupAvailable?: string | null;
+}
+
+// Mota: copias del mapa del firmware (GET /api/v2/mota/firmware-map-backups)
+export type MotaFirmwareMapBackupReason = "before_clean" | "after_clean" | "manual" | "before_restore";
+
+export interface MotaFirmwareMapBackup {
+    /** fecha local, por ejemplo "20261103-2019" */
+    id: string;
+    createdAt: string;
+    reason: MotaFirmwareMapBackupReason;
+    /** comprimida, en el robot */
+    sizeBytes: number;
+    cartoMd5: string;
+    resumeMd5: string;
+    floorCells: number | null;
+    roomCount: number | null;
+    /** versión del mapa de Mota guardada con ella, si la hay */
+    mapVersionId: number | null;
+    /** es el mapa que usa ahora el firmware */
+    isActive: boolean;
+}
+
+export interface MotaFirmwareMapBackupCheck {
+    ok: boolean;
+    /** en español, para mostrar tal cual */
+    reason?: string;
+}
+
+export interface MotaFirmwareMapBackupsStatus {
+    autoEnabled: boolean;
+    maxCopies: number;
+    active: { cartoMd5: string, resumeMd5: string } | null;
+    copies: Array<MotaFirmwareMapBackup>;
+    canBackup: MotaFirmwareMapBackupCheck;
+    canRestore: MotaFirmwareMapBackupCheck;
+    restoring: boolean;
+}
+
+export interface MotaFirmwareMapRestoreResponse {
+    rebootInSeconds: number;
+}
+
+// Mota: espacio en UDISK (GET /api/v2/mota/storage), en bytes
+export interface MotaStorageCleanupFile {
+    name: string;
+    sizeBytes: number;
+    modifiedAt: string;
+}
+
+export interface MotaStorageCleanupPlan {
+    keep: number;
+    bytes: number;
+    files: Array<MotaStorageCleanupFile>;
+}
+
+export interface MotaStorageStatus {
+    totalBytes: number;
+    freeBytes: number;
+    /** reserva para desplegar una versión nueva (10 MB) */
+    reserveBytes: number;
+    parts: {
+        motaBinaries: number;
+        motaData: number;
+        mapBackups: number;
+        vendorLogs: number;
+        vendorMap: number;
+    };
+    cleanup: MotaStorageCleanupPlan;
+}
+
+export interface MotaStorageCleanupResult {
+    deleted: Array<string>;
+    freedBytes: number;
 }
 
 export interface MotaCleanHistoryTotals {
