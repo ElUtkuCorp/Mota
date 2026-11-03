@@ -586,6 +586,43 @@ describe("Mota: vuelta por batería y carga para reanudar", () => {
         assert.strictEqual(snapshotsFrom(StatusStateAttribute.FLAG.NONE), 1);
     });
 
+    it("al reanudar tras cargar conserva el recorrido; una limpieza nueva lo empieza de cero", () => {
+        const { robot, agnoc } = buildConnected({ status: new StatusStateAttribute({ value: STATUS.DOCKED }) });
+        const step = (device) => {
+            Object.assign(agnoc.device, { motaRawFaultCode: 0, error: undefined }, device);
+            robot.onUpdateDevice(agnoc);
+        };
+
+        robot.virtualRooms = { stale: false };
+        robot.mapRecovery = { onDeviceUpdate: () => {} };
+        robot.emitStateAttributesUpdated = () => {};
+
+        step({ state: { value: DeviceState.VALUE.CLEANING }, motaRawWorkMode: 1, motaPoseDrawn: true });
+        robot.pathPoints = [1, 1, 2, 2];
+        robot.livePathTail = [3, 3];
+
+        // Limpieza programada del 3/11: vuelta por batería (2100), carga en modo 11 (2101) y reanudación
+        step({
+            state: { value: DeviceState.VALUE.RETURNING },
+            error: { value: DeviceError.VALUE.BROKEN_GO_HOME },
+            motaRawWorkMode: 11,
+            motaPoseDrawn: false,
+            motaRawFaultCode: 2100
+        });
+        step({ state: { value: DeviceState.VALUE.DOCKED }, motaRawWorkMode: 11, motaRawFaultCode: 2101, motaPoseDrawn: false });
+        assert.strictEqual(robot.state.getFirstMatchingAttributeByConstructor().flag, StatusStateAttribute.FLAG.RESUMABLE);
+
+        step({ state: { value: DeviceState.VALUE.CLEANING }, motaRawWorkMode: 1, motaRawFaultCode: 2110, motaPoseDrawn: true });
+        assert.deepStrictEqual(robot.pathPoints, [1, 1, 2, 2]);
+        assert.deepStrictEqual(robot.livePathTail, [3, 3]);
+
+        // Al terminar vuelve a la base sin nada por reanudar; la siguiente limpieza es otra
+        step({ state: { value: DeviceState.VALUE.DOCKED }, motaRawWorkMode: 0 });
+        step({ state: { value: DeviceState.VALUE.CLEANING }, motaRawWorkMode: 1, motaPoseDrawn: true });
+        assert.deepStrictEqual(robot.pathPoints, []);
+        assert.deepStrictEqual(robot.livePathTail, []);
+    });
+
     it("no recupera el mapa mientras carga para reanudar", async () => {
         const { robot, recovery, orders } = buildRobot();
 

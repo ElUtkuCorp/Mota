@@ -560,10 +560,12 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         }
 
         // Reset path points when robot goes from docked to another state.
+        // Mota: salvo al reanudar tras cargar, que sigue con la misma limpieza
         if (
             oldStatus &&
       oldStatus.value !== newStatus.value &&
-      oldStatus.value === StatusStateAttribute.VALUE.DOCKED
+      oldStatus.value === StatusStateAttribute.VALUE.DOCKED &&
+      oldStatus.flag !== StatusStateAttribute.FLAG.RESUMABLE
         ) {
             this.pathPoints = [];
             this.livePathTail = [];
