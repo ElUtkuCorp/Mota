@@ -93,8 +93,11 @@ class CecotecBasicControlCapability extends BasicControlCapability {
         }
 
         const status = this.robot.state.getFirstMatchingAttributeByConstructor(StatusStateAttribute);
+        // Mota: con un fallo (p. ej. 514) el estado es "error", pero el firmware puede seguir en una pausa (AUTO_PAUSE)
+        const pausedWithError = status?.value === StatusStateAttribute.VALUE.ERROR &&
+            CecotecBasicControlCapability.PAUSED_WORK_MODES.includes(this.robot.robot.device.motaRawWorkMode);
 
-        if (status?.value === StatusStateAttribute.VALUE.PAUSED) {
+        if (status?.value === StatusStateAttribute.VALUE.PAUSED || pausedWithError) {
             if (this.safeReturn) {
                 return;
             }
@@ -226,6 +229,8 @@ CecotecBasicControlCapability.RELOCALIZING_TIMEOUT_MS = 20_000;
 // Tiempo para que el estado deje de ser "en pausa" tras la orden
 CecotecBasicControlCapability.STATUS_GRACE_MS = 10_000;
 CecotecBasicControlCapability.CHECK_INTERVAL_MS = 1_000;
+// Modos de pausa del firmware (device-state.mapper de agnoc): 4 = AUTO_PAUSE
+CecotecBasicControlCapability.PAUSED_WORK_MODES = [4, 9, 26, 31, 37];
 CecotecBasicControlCapability.RESUMED_STATES = [StatusStateAttribute.VALUE.CLEANING, StatusStateAttribute.VALUE.MOVING];
 
 module.exports = CecotecBasicControlCapability;

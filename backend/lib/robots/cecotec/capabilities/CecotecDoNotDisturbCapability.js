@@ -1,44 +1,9 @@
 const DoNotDisturbCapability = require("../../../core/capabilities/DoNotDisturbCapability");
-const fs = require("fs");
 const ValetudoDNDConfiguration = require("../../../entities/core/ValetudoDNDConfiguration");
 const {DeviceQuietHours, DeviceTime} = require("@agnoc/core");
-
-const DEVICE_CONFIG_PATH = "/mnt/UDISK/config/device_config.ini";
-const DEFAULT_SYNC_TIME_DIFF_SECONDS = 7200;
-
-/**
- * Mota: Valetudo guarda el "no molestar" en UTC (la interfaz lo convierte a la hora del navegador). El firmware lo
- * evalúa en UTC + sync_time_diff (CQuietHourControl::update), que no es la hora CST del sistema.
- *
- * @returns {number} minutos que la hora de "no molestar" del firmware va por delante de UTC
- */
-function getQuietHoursUtcOffsetMinutes() {
-    let seconds = DEFAULT_SYNC_TIME_DIFF_SECONDS;
-
-    try {
-        const match = /^sync_time_diff=(-?\d+)/m.exec(fs.readFileSync(DEVICE_CONFIG_PATH, "utf8"));
-
-        if (match) {
-            seconds = parseInt(match[1]);
-        }
-    } catch (e) {
-        /* fuera del robot se usa el valor por defecto */
-    }
-
-    return Math.round(seconds / 60);
-}
-
-/**
- * @param {number} hour
- * @param {number} minute
- * @param {number} offsetMinutes minutos a sumar
- * @returns {{hour: number, minute: number}}
- */
-function shiftTime(hour, minute, offsetMinutes) {
-    const total = (((hour * 60 + minute + offsetMinutes) % 1440) + 1440) % 1440;
-
-    return {hour: Math.floor(total / 60), minute: total % 60};
-}
+// Mota: Valetudo guarda el "no molestar" en UTC (la interfaz lo convierte a la hora del navegador). El firmware lo
+// evalúa en UTC + sync_time_diff (CQuietHourControl::update)
+const {getFirmwareUtcOffsetMinutes, shiftTime} = require("../CecotecFirmwareTime");
 
 /**
  * @extends DoNotDisturbCapability<import("../CecotecCongaRobot")>
@@ -54,7 +19,7 @@ module.exports = class CecotecDoNotDisturbCapability extends DoNotDisturbCapabil
         }
 
         const quietHours = await this.robot.robot.getQuietHours();
-        const offset = -getQuietHoursUtcOffsetMinutes();
+        const offset = -getFirmwareUtcOffsetMinutes();
 
         return new ValetudoDNDConfiguration({
             enabled: quietHours.isEnabled,
@@ -76,7 +41,7 @@ module.exports = class CecotecDoNotDisturbCapability extends DoNotDisturbCapabil
             throw new Error("There is no robot connected to server");
         }
 
-        const offset = getQuietHoursUtcOffsetMinutes();
+        const offset = getFirmwareUtcOffsetMinutes();
         const begin = new DeviceTime(shiftTime(dndConfig.start.hour, dndConfig.start.minute, offset));
         const end = new DeviceTime(shiftTime(dndConfig.end.hour, dndConfig.end.minute, offset));
 

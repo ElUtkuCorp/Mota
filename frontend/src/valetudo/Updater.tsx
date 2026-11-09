@@ -37,6 +37,7 @@ import rehypeRaw from "rehype-raw";
 import PaperContainer from "../components/PaperContainer";
 import DetailPageHeaderRow from "../components/DetailPageHeaderRow";
 import {Trans, useTranslation} from "react-i18next";
+import MotaFileUpdate from "./MotaFileUpdate";
 
 const Updater = (): React.ReactElement => {
     const {t} = useTranslation();
@@ -69,6 +70,9 @@ const Updater = (): React.ReactElement => {
                         stateLoading={updaterStatePending}
                         stateError={updaterStateError}
                     />
+
+                    {/* Mota: el robot no tiene Internet; se actualiza subiendo el binario desde el navegador */}
+                    <MotaFileUpdate/>
                 </Box>
             </Grid2>
         </PaperContainer>

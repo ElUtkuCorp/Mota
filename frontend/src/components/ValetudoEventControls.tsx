@@ -177,6 +177,53 @@ const CreateDismissableEventControl =(messageKey: string) : FunctionComponent<Va
     };
 };
 
+// Mota: el robot se ha atascado. El texto depende de si Mota lo ha mandado volver a la base y por qué no
+const MotaEscapeReturnEventControl: FunctionComponent<ValetudoEventRenderProps> =
+    ({event, interact}) => {
+        const {t} = useTranslation();
+        const color = event.processed ? "textSecondary" : "textPrimary";
+        const textStyle = event.processed ? {textDecoration: "line-through"} : {};
+
+        const metaData = event.metaData ?? {};
+        const battery = typeof metaData.battery === "number" ? metaData.battery : null;
+        const batteryLabel = battery !== null ? String(Math.round(battery)) : t("common.unknown");
+
+        let message: string;
+        if (metaData.sent === true) {
+            message = t("components.events.motaEscapeReturn.sent", {battery: batteryLabel});
+        } else if (metaData.reason === "already_tried") {
+            message = t("components.events.motaEscapeReturn.alreadyTried");
+        } else if (metaData.reason === "low_battery") {
+            message = t("components.events.motaEscapeReturn.lowBattery", {battery: batteryLabel});
+        } else {
+            message = t("components.events.motaEscapeReturn.notSent");
+        }
+
+        return (
+            <EventRow>
+                <Stack>
+                    <EventTimestamp timestamp={event.timestamp}/>
+                    <Typography color={color} style={textStyle} sx={{mr: 1}}>
+                        {message}
+                    </Typography>
+                </Stack>
+                <Button
+                    size="small"
+                    variant={"contained"}
+                    disabled={event.processed}
+                    onClick={() => {
+                        interact({
+                            interaction: "ok"
+                        });
+                    }}
+                    color="warning"
+                >
+                    {t("components.events.dismiss")}
+                </Button>
+            </EventRow>
+        );
+    };
+
 const MissingResourceEventControl: FunctionComponent<ValetudoEventRenderProps> =
     ({event, interact}) => {
         const {t} = useTranslation();
@@ -293,6 +340,8 @@ export const eventControls: Record<string, React.ComponentType<ValetudoEventRend
     MopAttachmentReminderValetudoEvent: CreateDismissableEventControl("components.events.mopAttached"),
     // Mota: volver a la base desde pausa sin relocalización (el robot vuelve a quedar en pausa)
     MotaSafeReturnValetudoEvent: CreateDismissableEventControl("components.events.motaSafeReturn"),
+    // Mota: atasco (514); vuelta a la base automática como mucho una vez
+    MotaEscapeReturnValetudoEvent: MotaEscapeReturnEventControl,
     MissingResourceValetudoEvent: MissingResourceEventControl,
     ValetudoUpdatedValetudoEvent: ValetudoUpdatedEventControl,
     ValetudoRuntimeErrorValetudoEvent: ValetudoRuntimeErrorEventControl,

@@ -1,3 +1,4 @@
+import axios from "axios";
 import { RobotAttribute, RobotAttributeClass } from "./RawRobotState";
 
 export const isAttribute = <C extends RobotAttributeClass>(
@@ -47,4 +48,25 @@ export const setIn = (obj: Record<string, any>, value: unknown, path: Array<stri
     } else {
         setIn(obj[path[0]], value, path.slice(1));
     }
+};
+
+// Mota: estado HTTP y mensaje de un error de la API (el backend de Mota manda el mensaje como cadena JSON)
+export const getApiErrorStatus = (error: unknown): number | undefined => {
+    if (axios.isAxiosError(error)) {
+        return error.response?.status;
+    }
+
+    return undefined;
+};
+
+export const getApiErrorMessage = (error: unknown): string => {
+    if (axios.isAxiosError(error)) {
+        const data: unknown = error.response?.data;
+
+        if (typeof data === "string" && data.length > 0) {
+            return data;
+        }
+    }
+
+    return error instanceof Error ? error.message : String(error);
 };

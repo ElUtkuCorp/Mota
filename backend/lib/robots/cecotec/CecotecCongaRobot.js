@@ -1,6 +1,9 @@
 const capabilities = require("./capabilities");
 const CecotecCleanHistory = require("./CecotecCleanHistory");
+const CecotecEscapeReturn = require("./CecotecEscapeReturn");
+const CecotecFileUpdater = require("./CecotecFileUpdater");
 const CecotecFirmwareMapBackups = require("./CecotecFirmwareMapBackups");
+const CecotecFirmwareOrders = require("./CecotecFirmwareOrders");
 const CecotecMapRecovery = require("./CecotecMapRecovery");
 const CecotecMapRetouch = require("./CecotecMapRetouch");
 const CecotecMapVersions = require("./CecotecMapVersions");
@@ -154,6 +157,9 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         /** Mota: mapa borrado por el usuario; el firmware lo aplica en la siguiente limpieza */
         this.mapResetPending = false;
         this.mapRecovery = new CecotecMapRecovery({robot: this});
+        // Mota: programaciones del firmware (FW10) y vuelta a la base tras un atasco (FW4)
+        this.firmwareOrders = new CecotecFirmwareOrders({robot: this});
+        this.escapeReturn = new CecotecEscapeReturn({robot: this});
         this.virtualRooms = new CecotecVirtualRooms({
             path: this.config.get("embedded") === true ? path.join(path.dirname(this.config.location), "habitaciones.json") : undefined
         });
@@ -302,6 +308,13 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             this.firmwareMapBackups = new CecotecFirmwareMapBackups({
                 robot: this,
                 directory: path.join(path.dirname(this.config.location), "copias-mapa")
+            });
+            // Mota: actualizar desde archivo (F19)
+            this.fileUpdater = new CecotecFileUpdater({
+                robot: this,
+                binaryPath: process.argv0,
+                configPath: this.config.location,
+                port: this.config.get("webserver").port
             });
             this.storage = new CecotecStorage({
                 motaDirectory: path.dirname(this.config.location),
@@ -494,6 +507,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
     async shutdown() {
         this.mapRecovery.shutdown();
         this.firmwareMapBackups?.shutdown();
+        this.escapeReturn?.shutdown();
         await this.server.close();
     }
 
@@ -607,6 +621,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         this.trackInterruptedClean(oldStatus, newStatus);
         this.state.upsertFirstMatchingAttribute(newStatus);
         this.mapRecovery.onDeviceUpdate();
+        this.escapeReturn?.onDeviceUpdate(newStatus);
 
         // Mota: al llegar a la base, recolocar el robot sobre ella en el mapa
         if (

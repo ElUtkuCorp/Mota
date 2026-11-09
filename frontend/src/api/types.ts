@@ -392,6 +392,8 @@ export interface ValetudoEvent {
     previousVersion?: string;
     newVersion?: string;
     generation?: number;
+    // Mota: datos propios de algunos eventos (p. ej. MotaEscapeReturnValetudoEvent)
+    metaData?: Record<string, unknown>;
 }
 
 export interface ValetudoEventInteraction {
@@ -927,4 +929,75 @@ export interface MotaMirrorsSaveRequest {
     zones: Array<MotaMirrorZone>;
     // Zonas prohibidas que hay que añadir a las restricciones actuales (una por zona de espejo nueva)
     newRestrictedZones: Array<ValetudoRestrictedZone>;
+}
+
+// Mota: actualizar desde archivo (GET /api/v2/mota/update). Tamaños en bytes; at y startedAt en segundos Unix
+export interface MotaFileUpdateUploaded {
+    size: number;
+    md5: string;
+    sha256: string;
+    uploadedAt: string;
+}
+
+export type MotaFileUpdateAction = "apply" | "rollback";
+export type MotaFileUpdateResult = "running" | "ok" | "rolled_back" | "failed";
+
+export interface MotaFileUpdateLast {
+    action: MotaFileUpdateAction;
+    result: MotaFileUpdateResult;
+    message?: string;
+    at: number;
+    startedAt: number;
+}
+
+export interface MotaFileUpdateStatus {
+    current: {
+        release: string;
+        commit: string;
+        size: number | null;
+    };
+    previous: {
+        size: number;
+        release: string | null;
+        commit: string | null;
+    } | null;
+    uploaded: MotaFileUpdateUploaded | null;
+    uploading: boolean;
+    running: boolean;
+    last: MotaFileUpdateLast | null;
+    space: {
+        freeBytes: number | null;
+        reserveBytes: number;
+        afterBytes: number | null;
+    };
+    docked: boolean;
+    waitSeconds: number;
+}
+
+export interface MotaFileUpdateStartResponse {
+    waitSeconds: number;
+}
+
+// Mota: programaciones guardadas en el firmware (GET /api/v2/mota/firmware-orders)
+export interface MotaFirmwareOrderTime {
+    hour: number;
+    minute: number;
+}
+
+export interface MotaFirmwareOrder {
+    id: number;
+    enabled: boolean;
+    repeat: boolean;
+    weekDay: number;
+    firmwareTime: MotaFirmwareOrderTime;
+    // Una entrada por día, en UTC (dow: 0 = domingo)
+    utc: Array<MotaFirmwareOrderTime & { dow: number }>;
+    cleanMode: number | null;
+    fanSpeed: number | null;
+    twice: boolean;
+}
+
+export interface MotaFirmwareOrderDeleteResponse {
+    removed: boolean;
+    orders: Array<MotaFirmwareOrder>;
 }

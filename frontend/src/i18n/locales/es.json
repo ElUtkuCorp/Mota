@@ -53,7 +53,9 @@
             "logDelete": "el borrado del registro",
             "firmwareMapBackups": "las copias del mapa del robot",
             "firmwareMapRestore": "la restauración del mapa del robot",
-            "storageCleanup": "la limpieza de los logs del fabricante"
+            "storageCleanup": "la limpieza de los logs del fabricante",
+            "fileUpdate": "la actualización desde archivo",
+            "firmwareOrders": "las programaciones del robot"
         },
         "errors": {
             "setSegmentMaterial": "No se ha podido cambiar el tipo de suelo de la habitación",
@@ -147,7 +149,13 @@
             "unknownType": "Tipo de evento desconocido: {{type}}",
             "dustBinFull": "El depósito de polvo está lleno. Vacíalo, por favor.",
             "mopAttached": "La mopa sigue puesta en el robot.",
-            "motaSafeReturn": "Volver a la base desde pausa: el robot ha reanudado, pero Mota no ha visto que se relocalizara y no lo ha mandado a la base para no arriesgar el mapa. Se ha vuelto a pausar. Comprueba el mapa; si se ha reiniciado, restaura una copia en Ajustes del mapa → Copias del mapa del robot."
+            "motaSafeReturn": "Volver a la base desde pausa: el robot ha reanudado, pero Mota no ha visto que se relocalizara y no lo ha mandado a la base para no arriesgar el mapa. Se ha vuelto a pausar. Comprueba el mapa; si se ha reiniciado, restaura una copia en Ajustes del mapa → Copias del mapa del robot.",
+            "motaEscapeReturn": {
+                "sent": "El robot se ha atascado y no ha podido liberarse. Mota lo ha mandado volver a la base una vez (batería {{battery}} %). Si estaba en pausa, primero reanuda y espera a que se relocalice. Comprueba el mapa al llegar.",
+                "alreadyTried": "El robot se ha vuelto a atascar. Mota ya lo mandó volver una vez y no lo reintenta: llévalo a la base a mano.",
+                "lowBattery": "El robot se ha atascado con poca batería ({{battery}} %). Mota no lo manda volver: llévalo a la base a mano.",
+                "notSent": "El robot se ha atascado y no ha podido liberarse. Mota no lo ha mandado volver a la base: llévalo a la base a mano."
+            }
         }
     },
     "robot": {
@@ -1276,6 +1284,25 @@
             "operationMode": "Modo"
         }
     },
+    "firmwareOrders": {
+        "title": "Programaciones guardadas en el robot",
+        "explanation": "Son las programaciones del propio robot, creadas con la app del fabricante. No tienen nada que ver con las de Mota de arriba y pueden lanzar limpiezas sin que Mota lo sepa. Aquí solo se pueden ver y borrar.",
+        "localTimeHint": "Los días y las horas se muestran en la hora de este navegador.",
+        "rebootNote": "El robot carga su programación al arrancar. No está comprobado que borrarla surta efecto antes del próximo reinicio: para asegurarte, reinicia el robot desde Información del sistema.",
+        "loadError": "No se han podido leer las programaciones del robot: {{message}}",
+        "empty": "El robot no tiene programaciones propias.",
+        "orderTitle": "Programación n.º {{id}}",
+        "disabled": "Desactivada",
+        "once": "Una sola vez",
+        "twice": "Doble pasada",
+        "everyDay": "Todos los días",
+        "schedule": "{{days}} a las {{time}}",
+        "noDays": "Sin días marcados (hora del robot: {{time}})",
+        "delete": "Borrar",
+        "deleteConfirmTitle": "¿Borrar esta programación del robot?",
+        "deleteConfirmText": "Se borrará la programación n.º {{id}} de la memoria del robot. No se puede deshacer desde Mota: para recuperarla habría que crearla otra vez con la app del fabricante.",
+        "stillListed": "El robot sigue listando la programación n.º {{id}} después de borrarla. Reinicia el robot y vuelve a comprobarlo."
+    },
     "updater": {
         "title": "Actualizaciones",
         "loadError": "Error al cargar el estado del actualizador",
@@ -1295,6 +1322,71 @@
         "apply": "Aplicar la actualización",
         "applyConfirmTitle": "¿Aplicar la actualización?",
         "applyConfirmText": "¿Quieres aplicar la actualización descargada? Puede que el robot se reinicie durante el proceso."
+    },
+    "fileUpdate": {
+        "title": "Actualizar desde archivo",
+        "explanation": "El robot no tiene Internet, así que el actualizador de arriba no puede descargar versiones nuevas. Descarga en tu ordenador, desde la publicación de Mota, el binario que corresponda a tu robot (mota-armv7 o mota-armv7-lowmem) y el archivo SHA256SUMS, y sube aquí el binario.\nNo se instala nada hasta que confirmes que el SHA256 coincide y pulses «Instalar».",
+        "loadError": "No se ha podido cargar el estado de la actualización desde archivo: {{message}}",
+        "megabytes": "{{value}} MB",
+        "unknownVersion": "desconocida",
+        "current": "Versión instalada: {{release}} ({{commit}}), {{size}}.",
+        "running": "Hay una actualización en curso. Mota se reiniciará; espera a que termine.",
+        "choose": "Elegir archivo y subirlo",
+        "chooseAnother": "Subir otro archivo",
+        "uploading": "Subiendo {{name}}: {{loaded}} de {{total}}",
+        "cancelUpload": "Cancelar la subida",
+        "uploadingElsewhere": "Se está subiendo un archivo desde otra ventana.",
+        "uploadError": "No se ha podido subir el archivo: {{message}}",
+        "copy": "Copiar",
+        "copied": "Copiado",
+        "uploaded": {
+            "title": "Archivo subido",
+            "size": "Tamaño: {{size}} ({{bytes}} bytes)",
+            "at": "Subido el {{time}}",
+            "sha256": "SHA256",
+            "md5": "MD5",
+            "compare": "Compara el SHA256 completo con la línea del archivo en SHA256SUMS de la publicación. Si no coincide, no lo instales: descarta el archivo y vuelve a descargarlo.",
+            "verified": "He comprobado el SHA256"
+        },
+        "space": {
+            "after": "Espacio libre en el robot después de instalar: {{after}} (mínimo necesario: {{reserve}}).",
+            "unknown": "No se sabe cuánto espacio quedará libre en el robot (mínimo necesario: {{reserve}})."
+        },
+        "blocked": {
+            "busy": "Hay otra operación en curso. Espera a que termine.",
+            "notDocked": "El robot tiene que estar en la base para actualizar o volver a la versión anterior.",
+            "space": "No quedaría espacio suficiente en la memoria del robot. Libera espacio en Información del sistema → Almacenamiento del robot."
+        },
+        "install": "Instalar",
+        "discard": "Descartar el archivo",
+        "installConfirmTitle": "¿Instalar esta versión?",
+        "installConfirmText": "Se escribirá el archivo nuevo en la memoria del robot. La versión actual y su configuración se conservan como versión anterior.\n\nMota se reiniciará con la versión nueva. Si la web no responde en {{seconds}} s, volverá sola a la anterior.\n\nMientras tanto esta página no responderá; se recargará sola al terminar.",
+        "previous": {
+            "title": "Versión anterior",
+            "version": "Versión guardada: {{release}} ({{commit}}), {{size}}.",
+            "rollback": "Volver a la versión anterior",
+            "confirmTitle": "¿Volver a la versión anterior?",
+            "confirmText": "Se intercambian el binario y la configuración por los de la versión anterior; la actual queda guardada como anterior.\n\nMota se reiniciará. Si la web no responde en {{seconds}} s, volverá sola a la versión actual.\n\nMientras tanto esta página no responderá; se recargará sola al terminar."
+        },
+        "waiting": {
+            "apply": "Instalando la versión nueva. Mota se está reiniciando; si no responde en {{seconds}} s, volverá sola a la anterior. No cierres esta página.",
+            "rollback": "Volviendo a la versión anterior. Mota se está reiniciando; si no responde en {{seconds}} s, volverá sola a la de antes. No cierres esta página.",
+            "elapsed": "Esperando a Mota: {{elapsed}} s (como mucho {{limit}} s). Es normal que no responda durante el reinicio.",
+            "reloading": "Recargando la página…"
+        },
+        "last": {
+            "apply": {
+                "ok": "La última actualización se instaló correctamente ({{time}}).",
+                "rolled_back": "La última actualización no arrancó bien y Mota volvió sola a la versión anterior ({{time}}).",
+                "failed": "La última actualización falló ({{time}})."
+            },
+            "rollback": {
+                "ok": "Se volvió a la versión anterior correctamente ({{time}}).",
+                "rolled_back": "La versión anterior no arrancó bien y Mota volvió sola a la que estaba instalada ({{time}}).",
+                "failed": "La vuelta a la versión anterior falló ({{time}})."
+            },
+            "message": "Detalle: {{message}}"
+        }
     },
     "welcome": {
         "title": "Bienvenido a Mota",

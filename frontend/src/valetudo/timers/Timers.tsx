@@ -27,6 +27,7 @@ import HelpDialog from "../../components/HelpDialog";
 import {useTranslation} from "react-i18next";
 import PaperContainer from "../../components/PaperContainer";
 import {convertTimer} from "./TimerUtils";
+import FirmwareOrders from "./FirmwareOrders";
 
 const timerTemplate: Timer = {
     id: "",
@@ -176,6 +177,7 @@ const Timers = (): React.ReactElement => {
                     </Fab>
                 </Grid2>
             </Grid2>
+            <FirmwareOrders/>
             <HelpDialog
                 dialogOpen={helpDialogOpen}
                 setDialogOpen={(open: boolean) => {

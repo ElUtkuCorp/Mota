@@ -162,6 +162,23 @@ describe("Mota: vuelta segura desde pausa", () => {
         });
     });
 
+    it("con un error en pausa del firmware (514 en AUTO_PAUSE) también reanuda primero", async () => {
+        await withTimers(async () => {
+            const paused = build(STATUS.ERROR);
+            paused.capability.robot.robot.device.motaRawWorkMode = 4;
+
+            await paused.capability.home();
+            assert.deepStrictEqual(paused.orders, ["start"]);
+            paused.capability.cancelSafeReturn("test");
+
+            const stopped = build(STATUS.ERROR);
+            stopped.capability.robot.robot.device.motaRawWorkMode = 0;
+
+            await stopped.capability.home();
+            assert.deepStrictEqual(stopped.orders, ["home"]);
+        });
+    });
+
     it("limpiando o parado manda a casa directamente", async () => {
         for (const status of [STATUS.CLEANING, STATUS.IDLE, STATUS.MOVING]) {
             const { capability, orders } = build(status);

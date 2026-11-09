@@ -53,7 +53,9 @@
             "logDelete": "deleting the log",
             "firmwareMapBackups": "the robot map backups",
             "firmwareMapRestore": "restoring the robot map",
-            "storageCleanup": "cleaning up the vendor logs"
+            "storageCleanup": "cleaning up the vendor logs",
+            "fileUpdate": "the update from file",
+            "firmwareOrders": "the robot schedules"
         },
         "errors": {
             "setSegmentMaterial": "Could not set segment material",
@@ -147,7 +149,13 @@
             "unknownType": "Unknown event type: {{type}}",
             "dustBinFull": "The dust bin is full. Please empty it.",
             "mopAttached": "The mop is still attached to the robot.",
-            "motaSafeReturn": "Return to dock from pause: the robot resumed, but Mota did not see it relocalize and did not send it to the dock so as not to risk the map. It has been paused again. Check the map; if it was reset, restore a backup in Map settings → Robot map backups."
+            "motaSafeReturn": "Return to dock from pause: the robot resumed, but Mota did not see it relocalize and did not send it to the dock so as not to risk the map. It has been paused again. Check the map; if it was reset, restore a backup in Map settings → Robot map backups.",
+            "motaEscapeReturn": {
+                "sent": "The robot got stuck and could not free itself. Mota sent it back to the dock once (battery {{battery}} %). If it was paused, resume it first and wait for it to relocalize. Check the map when it arrives.",
+                "alreadyTried": "The robot got stuck again. Mota already sent it back once and will not retry: take it to the dock by hand.",
+                "lowBattery": "The robot got stuck with low battery ({{battery}} %). Mota will not send it back: take it to the dock by hand.",
+                "notSent": "The robot got stuck and could not free itself. Mota did not send it back to the dock: take it to the dock by hand."
+            }
         }
     },
     "robot": {
@@ -1276,6 +1284,25 @@
             "operationMode": "Set Mode to"
         }
     },
+    "firmwareOrders": {
+        "title": "Schedules stored on the robot",
+        "explanation": "These are the robot's own schedules, created with the manufacturer's app. They are unrelated to the Mota schedules above and can start cleanups without Mota knowing. Here you can only view and delete them.",
+        "localTimeHint": "Days and times are shown in this browser's time zone.",
+        "rebootNote": "The robot loads its schedule at startup. It has not been verified that deleting one takes effect before the next restart: to be sure, restart the robot from System information.",
+        "loadError": "The robot schedules could not be read: {{message}}",
+        "empty": "The robot has no schedules of its own.",
+        "orderTitle": "Schedule no. {{id}}",
+        "disabled": "Disabled",
+        "once": "Once only",
+        "twice": "Double pass",
+        "everyDay": "Every day",
+        "schedule": "{{days}} at {{time}}",
+        "noDays": "No days selected (robot time: {{time}})",
+        "delete": "Delete",
+        "deleteConfirmTitle": "Delete this schedule from the robot?",
+        "deleteConfirmText": "Schedule no. {{id}} will be deleted from the robot's memory. This cannot be undone from Mota: to get it back you would have to create it again with the manufacturer's app.",
+        "stillListed": "The robot still lists schedule no. {{id}} after deleting it. Restart the robot and check again."
+    },
     "updater": {
         "title": "Updater",
         "loadError": "Error loading Updater state",
@@ -1295,6 +1322,71 @@
         "apply": "Apply Update",
         "applyConfirmTitle": "Apply Update?",
         "applyConfirmText": "Do you want to apply the downloaded update? The robot may reboot during this procedure."
+    },
+    "fileUpdate": {
+        "title": "Update from file",
+        "explanation": "The robot has no Internet access, so the updater above cannot download new versions. On your computer, download from the Mota release the binary that matches your robot (mota-armv7 or mota-armv7-lowmem) and the SHA256SUMS file, then upload the binary here.\nNothing is installed until you confirm that the SHA256 matches and press “Install”.",
+        "loadError": "The update-from-file status could not be loaded: {{message}}",
+        "megabytes": "{{value}} MB",
+        "unknownVersion": "unknown",
+        "current": "Installed version: {{release}} ({{commit}}), {{size}}.",
+        "running": "An update is in progress. Mota will restart; wait for it to finish.",
+        "choose": "Choose a file and upload it",
+        "chooseAnother": "Upload another file",
+        "uploading": "Uploading {{name}}: {{loaded}} of {{total}}",
+        "cancelUpload": "Cancel upload",
+        "uploadingElsewhere": "A file is being uploaded from another window.",
+        "uploadError": "The file could not be uploaded: {{message}}",
+        "copy": "Copy",
+        "copied": "Copied",
+        "uploaded": {
+            "title": "Uploaded file",
+            "size": "Size: {{size}} ({{bytes}} bytes)",
+            "at": "Uploaded on {{time}}",
+            "sha256": "SHA256",
+            "md5": "MD5",
+            "compare": "Compare the full SHA256 with the file's line in the release's SHA256SUMS. If it does not match, do not install it: discard the file and download it again.",
+            "verified": "I have checked the SHA256"
+        },
+        "space": {
+            "after": "Free space on the robot after installing: {{after}} (minimum required: {{reserve}}).",
+            "unknown": "It is not known how much free space will remain on the robot (minimum required: {{reserve}})."
+        },
+        "blocked": {
+            "busy": "Another operation is in progress. Wait for it to finish.",
+            "notDocked": "The robot has to be on the dock to update or go back to the previous version.",
+            "space": "There would not be enough space left in the robot's memory. Free some space in System information → Robot storage."
+        },
+        "install": "Install",
+        "discard": "Discard the file",
+        "installConfirmTitle": "Install this version?",
+        "installConfirmText": "The new file will be written to the robot's memory. The current version and its configuration are kept as the previous version.\n\nMota will restart with the new version. If the web interface does not answer within {{seconds}} s, it will go back to the previous one on its own.\n\nMeanwhile this page will not respond; it will reload by itself when done.",
+        "previous": {
+            "title": "Previous version",
+            "version": "Saved version: {{release}} ({{commit}}), {{size}}.",
+            "rollback": "Go back to the previous version",
+            "confirmTitle": "Go back to the previous version?",
+            "confirmText": "The binary and configuration are swapped with those of the previous version; the current one is kept as the previous version.\n\nMota will restart. If the web interface does not answer within {{seconds}} s, it will go back to the current version on its own.\n\nMeanwhile this page will not respond; it will reload by itself when done."
+        },
+        "waiting": {
+            "apply": "Installing the new version. Mota is restarting; if it does not answer within {{seconds}} s, it will go back to the previous one on its own. Do not close this page.",
+            "rollback": "Going back to the previous version. Mota is restarting; if it does not answer within {{seconds}} s, it will return to the version from before on its own. Do not close this page.",
+            "elapsed": "Waiting for Mota: {{elapsed}} s (at most {{limit}} s). It is normal for it not to answer while restarting.",
+            "reloading": "Reloading the page…"
+        },
+        "last": {
+            "apply": {
+                "ok": "The last update was installed successfully ({{time}}).",
+                "rolled_back": "The last update did not start properly and Mota went back to the previous version on its own ({{time}}).",
+                "failed": "The last update failed ({{time}})."
+            },
+            "rollback": {
+                "ok": "Went back to the previous version successfully ({{time}}).",
+                "rolled_back": "The previous version did not start properly and Mota went back to the installed one on its own ({{time}}).",
+                "failed": "Going back to the previous version failed ({{time}})."
+            },
+            "message": "Detail: {{message}}"
+        }
     },
     "welcome": {
         "title": "Welcome to Mota",

@@ -180,6 +180,13 @@ import {
     deleteMotaFirmwareMapBackup,
     fetchMotaStorage,
     sendMotaStorageCleanup,
+    fetchMotaFileUpdate,
+    sendMotaFileUpdateUpload,
+    deleteMotaFileUpdateUpload,
+    sendMotaFileUpdateApply,
+    sendMotaFileUpdateRollback,
+    fetchMotaFirmwareOrders,
+    deleteMotaFirmwareOrder,
     deleteValetudoLog,
     sendMotaRoomColor,
     fetchCombinedVirtualRestrictions,
@@ -200,6 +207,7 @@ import {
     CleanRoute,
     CombinedVirtualRestrictionsUpdateRequestParameters,
     MotaFirmwareMapBackupsStatus,
+    MotaFirmwareOrder,
     MotaMapRetouchAction,
     MotaMapRetouchStatus,
     MotaMirrorsSaveRequest,
@@ -327,6 +335,8 @@ enum QueryKey {
     MotaMapRetouch = "mota_map_retouch",
     MotaFirmwareMapBackups = "mota_firmware_map_backups",
     MotaStorage = "mota_storage",
+    MotaFileUpdate = "mota_file_update",
+    MotaFirmwareOrders = "mota_firmware_orders",
 }
 
 // "capability" is either a capability name or an i18n key
@@ -2410,5 +2420,107 @@ export const useValetudoLogDeleteMutation = () => {
     return useMutation({
         mutationFn: deleteValetudoLog,
         onError: useOnCommandError("api.settings.logDelete"),
+    });
+};
+
+// Mota: actualizar desde archivo. Fuera del robot la API responde 404 y la sección no se muestra
+
+export const useMotaFileUpdateQuery = () => {
+    return useQuery({
+        queryKey: [QueryKey.MotaFileUpdate],
+        queryFn: fetchMotaFileUpdate,
+
+        staleTime: 5_000,
+        retry: false,
+        refetchInterval: (query) => {
+            const data = query.state.data;
+
+            return data?.uploading === true || data?.running === true ? 3_000 : false;
+        }
+    });
+};
+
+const useOnMotaFileUpdateChanged = () => {
+    const queryClient = useQueryClient();
+
+    return React.useCallback(async () => {
+        await queryClient.invalidateQueries({queryKey: [QueryKey.MotaFileUpdate]});
+        await queryClient.invalidateQueries({queryKey: [QueryKey.MotaStorage]});
+    }, [queryClient]);
+};
+
+// El error se muestra en la propia sección (el mensaje del robot dice por qué no se acepta el archivo)
+export const useMotaFileUpdateUploadMutation = () => {
+    const onChanged = useOnMotaFileUpdateChanged();
+
+    return useMutation({
+        mutationFn: sendMotaFileUpdateUpload,
+        onSettled: async () => {
+            await onChanged();
+        },
+    });
+};
+
+export const useMotaFileUpdateDiscardMutation = () => {
+    const onChanged = useOnMotaFileUpdateChanged();
+
+    return useMutation({
+        mutationFn: deleteMotaFileUpdateUpload,
+        onError: useOnCommandError("api.settings.fileUpdate"),
+        onSettled: async () => {
+            await onChanged();
+        },
+    });
+};
+
+// Devuelven { waitSeconds }: Mota se reinicia después y la página espera a que vuelva
+export const useMotaFileUpdateApplyMutation = () => {
+    const onChanged = useOnMotaFileUpdateChanged();
+
+    return useMutation({
+        mutationFn: sendMotaFileUpdateApply,
+        onError: useOnCommandError("api.settings.fileUpdate"),
+        onSettled: async () => {
+            await onChanged();
+        },
+    });
+};
+
+export const useMotaFileUpdateRollbackMutation = () => {
+    const onChanged = useOnMotaFileUpdateChanged();
+
+    return useMutation({
+        mutationFn: sendMotaFileUpdateRollback,
+        onError: useOnCommandError("api.settings.fileUpdate"),
+        onSettled: async () => {
+            await onChanged();
+        },
+    });
+};
+
+// Mota: programaciones guardadas en el firmware (las de la app del fabricante)
+
+export const useMotaFirmwareOrdersQuery = () => {
+    return useQuery({
+        queryKey: [QueryKey.MotaFirmwareOrders],
+        queryFn: fetchMotaFirmwareOrders,
+
+        staleTime: 10_000,
+        retry: false,
+    });
+};
+
+export const useMotaFirmwareOrderDeleteMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: deleteMotaFirmwareOrder,
+        onError: useOnCommandError("api.settings.firmwareOrders"),
+        onSuccess: (data) => {
+            queryClient.setQueryData<Array<MotaFirmwareOrder>>([QueryKey.MotaFirmwareOrders], data.orders);
+        },
+        onSettled: async () => {
+            await queryClient.invalidateQueries({queryKey: [QueryKey.MotaFirmwareOrders]});
+        },
     });
 };

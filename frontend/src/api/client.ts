@@ -40,6 +40,11 @@ import {
     MotaDiagnostics,
     MotaFirmwareMapBackupsStatus,
     MotaFirmwareMapRestoreResponse,
+    MotaFileUpdateStartResponse,
+    MotaFileUpdateStatus,
+    MotaFileUpdateUploaded,
+    MotaFirmwareOrder,
+    MotaFirmwareOrderDeleteResponse,
     MotaMapRecoveryStatus,
     MotaMapVersion,
     MotaMapVersionsResponse,
@@ -1679,4 +1684,73 @@ export const sendMotaSystemReboot = async (): Promise<void> => {
 
 export const deleteValetudoLog = async (): Promise<void> => {
     await valetudoAPI.delete("/valetudo/log/content");
+};
+
+// Mota: actualizar desde archivo (solo en el robot: en otro sitio responde 404)
+
+export const fetchMotaFileUpdate = async (): Promise<MotaFileUpdateStatus> => {
+    return valetudoAPI
+        .get<MotaFileUpdateStatus>("/mota/update")
+        .then(({ data }) => {
+            return data;
+        });
+};
+
+export interface MotaFileUpdateUploadParameters {
+    file: File;
+    onProgress?: (loaded: number, total: number) => void;
+    signal?: AbortSignal;
+}
+
+// El archivo va tal cual como cuerpo: el navegador lo lee del disco al enviarlo, sin cargarlo en memoria
+export const sendMotaFileUpdateUpload = async ({file, onProgress, signal}: MotaFileUpdateUploadParameters): Promise<MotaFileUpdateUploaded> => {
+    return valetudoAPI
+        .post<MotaFileUpdateUploaded>("/mota/update/upload", file, {
+            headers: {"Content-Type": "application/octet-stream"},
+            signal: signal,
+            onUploadProgress: (event) => {
+                onProgress?.(event.loaded, event.total ?? file.size);
+            }
+        })
+        .then(({ data }) => {
+            return data;
+        });
+};
+
+export const deleteMotaFileUpdateUpload = async (): Promise<void> => {
+    await valetudoAPI.delete("/mota/update/upload");
+};
+
+export const sendMotaFileUpdateApply = async (sha256: string): Promise<MotaFileUpdateStartResponse> => {
+    return valetudoAPI
+        .post<MotaFileUpdateStartResponse>("/mota/update/apply", {sha256: sha256})
+        .then(({ data }) => {
+            return data;
+        });
+};
+
+export const sendMotaFileUpdateRollback = async (): Promise<MotaFileUpdateStartResponse> => {
+    return valetudoAPI
+        .post<MotaFileUpdateStartResponse>("/mota/update/rollback")
+        .then(({ data }) => {
+            return data;
+        });
+};
+
+// Mota: programaciones guardadas en el firmware (solo ver y borrar)
+
+export const fetchMotaFirmwareOrders = async (): Promise<Array<MotaFirmwareOrder>> => {
+    return valetudoAPI
+        .get<Array<MotaFirmwareOrder>>("/mota/firmware-orders")
+        .then(({ data }) => {
+            return data;
+        });
+};
+
+export const deleteMotaFirmwareOrder = async (id: number): Promise<MotaFirmwareOrderDeleteResponse> => {
+    return valetudoAPI
+        .delete<MotaFirmwareOrderDeleteResponse>(`/mota/firmware-orders/${encodeURIComponent(String(id))}`)
+        .then(({ data }) => {
+            return data;
+        });
 };

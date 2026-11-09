@@ -201,6 +201,12 @@ class CecotecMotaRouter {
 
                 return;
             }
+            // Mota: el reinicio cortaría la instalación del binario
+            if (this.robot.fileUpdater?.isRunning()) {
+                res.status(409).json("Hay una actualización de Mota en curso");
+
+                return;
+            }
 
             try {
                 res.status(202).json(this.robot.firmwareMapBackups.restore(req.params.id));
@@ -237,6 +243,12 @@ class CecotecMotaRouter {
             }
             if (!CecotecFirmwareMapBackups.IS_VALID_ID(req.params.id)) {
                 res.sendStatus(400);
+
+                return;
+            }
+            // Mota: el reinicio cortaría la instalación del binario
+            if (this.robot.fileUpdater?.isRunning()) {
+                res.status(409).json("Hay una actualización de Mota en curso");
 
                 return;
             }
@@ -298,8 +310,119 @@ class CecotecMotaRouter {
             }
         });
 
+        // Mota: actualizar desde archivo (solo en el robot)
+        this.router.get("/update", (req, res) => {
+            if (!this.robot.fileUpdater) {
+                res.sendStatus(404);
+
+                return;
+            }
+
+            res.json(this.robot.fileUpdater.getStatus());
+        });
+
+        // El cuerpo es el binario (application/octet-stream). Se procesa por trozos, sin body parser
+        this.router.post("/update/upload", async (req, res) => {
+            if (!this.robot.fileUpdater) {
+                res.sendStatus(404);
+
+                return;
+            }
+
+            const length = req.headers["content-length"];
+            const declaredSize = length !== undefined ? Number(length) : undefined;
+            if (declaredSize !== undefined && !Number.isSafeInteger(declaredSize)) {
+                res.status(400).json("El tamaño del archivo no es válido");
+
+                return;
+            }
+
+            try {
+                res.json(await this.robot.fileUpdater.receive(req, declaredSize));
+            } catch (e) {
+                this.sendUpdaterError(res, e);
+                // Sin leer el resto del cuerpo, la conexión se cierra
+                req.unpipe();
+                req.resume();
+            }
+        });
+
+        this.router.delete("/update/upload", (req, res) => {
+            if (!this.robot.fileUpdater) {
+                res.sendStatus(404);
+
+                return;
+            }
+
+            try {
+                this.robot.fileUpdater.discard();
+                res.json(this.robot.fileUpdater.getStatus());
+            } catch (e) {
+                this.sendUpdaterError(res, e);
+            }
+        });
+
+        this.router.post("/update/apply", express.json(), (req, res) => {
+            if (!this.robot.fileUpdater) {
+                res.sendStatus(404);
+
+                return;
+            }
+
+            try {
+                res.status(202).json(this.robot.fileUpdater.apply(req.body?.sha256));
+            } catch (e) {
+                this.sendUpdaterError(res, e);
+            }
+        });
+
+        this.router.post("/update/rollback", (req, res) => {
+            if (!this.robot.fileUpdater) {
+                res.sendStatus(404);
+
+                return;
+            }
+
+            try {
+                res.status(202).json(this.robot.fileUpdater.rollback());
+            } catch (e) {
+                this.sendUpdaterError(res, e);
+            }
+        });
+
+        // Mota: programaciones guardadas en el firmware (ver y borrar)
+        this.router.get("/firmware-orders", async (req, res) => {
+            try {
+                res.json(await this.robot.firmwareOrders.list());
+            } catch (e) {
+                res.status(503).json(e.message);
+            }
+        });
+
+        this.router.delete("/firmware-orders/:id", async (req, res) => {
+            const id = Number(req.params.id);
+
+            if (!/^\d{1,10}$/.test(req.params.id) || !Number.isSafeInteger(id)) {
+                res.sendStatus(400);
+
+                return;
+            }
+
+            try {
+                res.json(await this.robot.firmwareOrders.delete(id));
+            } catch (e) {
+                res.status(e.status === 404 ? 404 : 503).json(e.message);
+            }
+        });
+
         // Reinicia el sistema del robot (botón de Información del sistema). Se responde antes de reiniciar.
         this.router.post("/system/reboot", (req, res) => {
+            if (this.robot.fileUpdater?.isRunning()) {
+                res.status(409).json("Hay una actualización de Mota en curso");
+
+                return;
+            }
+
             Logger.info("Rebooting the robot on request");
             res.sendStatus(200);
 
@@ -427,6 +550,24 @@ class CecotecMotaRouter {
         this.router.get("/diagnostics", (req, res) => {
             res.json(CecotecMotaRouter.COLLECT_DIAGNOSTICS(this.robot));
         });
+    }
+
+    /**
+     * @private
+     * @param {any} res
+     * @param {any} e
+     */
+    sendUpdaterError(res, e) {
+        if (res.headersSent) {
+            return;
+        }
+
+        if (e.status === 400 || e.status === 409) {
+            res.status(e.status).json(e.message);
+        } else {
+            Logger.warn("File update: request failed", e);
+            res.status(500).json(e.message);
+        }
     }
 
     getRouter() {
