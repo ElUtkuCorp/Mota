@@ -16,7 +16,6 @@ import {
     Layers as MappingPassIcon,
     LayersClear as MapResetIcon,
     Dashboard as SegmentEditIcon,
-    Crop as CleanupCoverageIcon,
     Download as ValetudoMapDownloadIcon,
     EditNote as MapAnnotationsIcon,
     Videocam as SpectatorIcon,
@@ -335,13 +334,6 @@ const MapManagement = (): React.ReactElement => {
                 primaryLabel={t("options.map.versions.title")}
                 secondaryLabel={t("options.map.versions.description")}
                 icon={<MapVersionsIcon/>}
-            />,
-            <LinkListMenuItem
-                key="robotCoverageMap"
-                url="/options/map_management/robot_coverage"
-                primaryLabel={t("options.map.coverage.title")}
-                secondaryLabel={t("options.map.coverage.description")}
-                icon={<CleanupCoverageIcon/>}
             />
         ];
 

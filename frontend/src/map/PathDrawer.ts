@@ -10,10 +10,16 @@ type PathDrawerOptions = {
     paletteMode: PaletteMode,
     width?: number,
     opacity?: number,
+    // Mota: vista de cobertura. Debajo del recorrido, el mismo recorrido (sin el previsto) con este grosor
+    coverageWidth?: number,
 };
 
 // Grosor por defecto del recorrido, en píxeles del mapa
 export const DEFAULT_PATH_WIDTH = 0.5;
+// Mota: grosor de la vista de cobertura, aproximadamente lo que limpia el robot
+export const COVERAGE_PATH_WIDTH = 5;
+// Translúcida, para que el recorrido se siga viendo encima
+const COVERAGE_PATH_OPACITY = 0.35;
 
 // Mota: pasadas de Chaikin para suavizar las esquinas del recorrido (solo al dibujar; los datos no cambian)
 const PATH_SMOOTHING_ITERATIONS = 2;
@@ -88,13 +94,24 @@ export class PathDrawer {
             pathMapEntities,
             pixelSize,
             width,
-            opacity
+            opacity,
+            coverageWidth
         } = options;
 
         let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${mapWidth}" height="${mapHeight}" viewBox="0 0 ${mapWidth} ${mapHeight}">`;
         const pathColor = PathDrawer.getPathColor(paletteMode);
 
         const paths = pathMapEntities.filter(e => e.type === RawMapEntityType.Path).map(e => e.points);
+        if (paths.length > 0 && coverageWidth !== undefined) {
+            svg += PathDrawer.createSVGPathFromPaths(
+                paths,
+                RawMapEntityType.Path,
+                pixelSize,
+                pathColor,
+                coverageWidth,
+                COVERAGE_PATH_OPACITY
+            );
+        }
         if (paths.length > 0) {
             svg += PathDrawer.createSVGPathFromPaths(
                 paths,

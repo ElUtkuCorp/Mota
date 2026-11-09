@@ -5,7 +5,6 @@ import EditMapPage from "../map/EditMapPage";
 import {useCapabilitiesSupported} from "../CapabilitiesProvider";
 import {Capability, useDuststreamingConfigurationQuery} from "../api";
 import React from "react";
-import RobotCoverageMapPage from "../map/RobotCoverageMapPage";
 import SpectatorMapPage from "../map/SpectatorMapPage";
 import MapVersionsPage from "./MapVersionsPage";
 import FirmwareMapBackupsPage from "./FirmwareMapBackupsPage";
@@ -93,7 +92,8 @@ const OptionsRouter = (): React.ReactElement => {
                 }
             />
 
-            <Route path={"robot_coverage"} element={<RobotCoverageMapPage/>}/>
+            {/* Mota: la cobertura es una vista del mapa de Inicio */}
+            <Route path={"robot_coverage"} element={<Navigate to="/"/>}/>
 
             {/* Mota: versiones del mapa (sin la API propia, la página muestra el error de carga) */}
             <Route path={"versions"} element={<MapVersionsPage/>}/>

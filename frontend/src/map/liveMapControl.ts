@@ -9,7 +9,7 @@ import type {LiveMapMode} from "./LiveMap";
  * - El panel pide un cambio de modo con requestLiveMapMode(); el mapa lo aplica con su lógica de siempre.
  * - Las acciones del mapa (habitaciones, zonas, punto) publican su acción principal para que el botón
  *   grande del panel la pueda lanzar sin reimplementarla.
- * - El botón de la pantalla de inicio oculta o muestra el recorrido.
+ * - El selector de la pantalla de inicio elige cómo se ve el recorrido: normal, cobertura u oculto.
  */
 export interface LiveMapPrimaryAction {
     label: string;
@@ -19,21 +19,34 @@ export interface LiveMapPrimaryAction {
     run: () => void;
 }
 
+/**
+ * La cobertura es el mismo recorrido con un trazo grueso debajo: por eso es un solo selector y no dos casillas
+ */
+export type LiveMapPathView = "path" | "coverage" | "hidden";
+
 interface LiveMapControlState {
     mode: LiveMapMode;
     supportedModes: Array<LiveMapMode>;
     requestedMode: { mode: LiveMapMode, seq: number } | null;
     primaryAction: LiveMapPrimaryAction | null;
-    pathsHidden: boolean;
+    pathView: LiveMapPathView;
 }
 
+const PATH_VIEW_LOCAL_STORAGE_KEY = "live-map-path-view";
+// Antes solo se podía ocultar
 const PATHS_HIDDEN_LOCAL_STORAGE_KEY = "live-map-paths-hidden";
 
-const readPathsHidden = (): boolean => {
+const readPathView = (): LiveMapPathView => {
     try {
-        return window.localStorage.getItem(PATHS_HIDDEN_LOCAL_STORAGE_KEY) === "true";
+        const stored = window.localStorage.getItem(PATH_VIEW_LOCAL_STORAGE_KEY);
+
+        if (stored === "path" || stored === "coverage" || stored === "hidden") {
+            return stored;
+        }
+
+        return window.localStorage.getItem(PATHS_HIDDEN_LOCAL_STORAGE_KEY) === "true" ? "hidden" : "path";
     } catch (e) {
-        return false;
+        return "path";
     }
 };
 
@@ -43,15 +56,16 @@ export const useLiveMapControl = create<LiveMapControlState>()(() => {
         supportedModes: [],
         requestedMode: null,
         primaryAction: null,
-        pathsHidden: readPathsHidden(),
+        pathView: readPathView(),
     };
 });
 
-export const setLiveMapPathsHidden = (pathsHidden: boolean): void => {
-    useLiveMapControl.setState({pathsHidden: pathsHidden});
+export const setLiveMapPathView = (pathView: LiveMapPathView): void => {
+    useLiveMapControl.setState({pathView: pathView});
 
     try {
-        window.localStorage.setItem(PATHS_HIDDEN_LOCAL_STORAGE_KEY, String(pathsHidden));
+        window.localStorage.setItem(PATH_VIEW_LOCAL_STORAGE_KEY, pathView);
+        window.localStorage.removeItem(PATHS_HIDDEN_LOCAL_STORAGE_KEY);
     } catch (e) {
         /* intentional */
     }

@@ -39,7 +39,7 @@ class LiveMap extends BaseMap<LiveMapProps, LiveMapState> {
 
         // Mota: el robot se mueve de forma animada entre las posiciones recibidas (F21)
         this.robotAnimationEnabled = true;
-        this.pathsHidden = useLiveMapControl.getState().pathsHidden;
+        this.pathView = useLiveMapControl.getState().pathView;
 
         this.supportedModes = [];
 
@@ -104,8 +104,8 @@ class LiveMap extends BaseMap<LiveMapProps, LiveMapState> {
                 }
             }
 
-            if (state.pathsHidden !== prevState.pathsHidden) {
-                this.pathsHidden = state.pathsHidden;
+            if (state.pathView !== prevState.pathView) {
+                this.pathView = state.pathView;
                 this.updateEntityDrawables().then(() => {
                     this.draw();
                 }).catch(() => {

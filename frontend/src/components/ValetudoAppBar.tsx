@@ -156,12 +156,6 @@ const menuTree: Array<MenuEntry | MenuSubEntry | MenuSubheader> = [
     },
     {
         kind: "MenuSubEntry",
-        route: "/options/map_management/robot_coverage",
-        title: "nav.robotCoverageMap",
-        parentRoute: "/options/map_management"
-    },
-    {
-        kind: "MenuSubEntry",
         route: "/options/map_management/spectator",
         title: "nav.spectatorMap",
         parentRoute: "/options/map_management"

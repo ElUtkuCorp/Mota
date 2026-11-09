@@ -1,7 +1,8 @@
 import React, {createRef} from "react";
 import {RawMapData, RawMapEntity, RawMapEntityType} from "../api";
 import {MapLayerManager} from "./MapLayerManager";
-import {DEFAULT_PATH_WIDTH, PathDrawer} from "./PathDrawer";
+import {COVERAGE_PATH_WIDTH, DEFAULT_PATH_WIDTH, PathDrawer} from "./PathDrawer";
+import type {LiveMapPathView} from "./liveMapControl";
 import {TouchHandler} from "./utils/touch_handling/TouchHandler";
 import StructureManager from "./StructureManager";
 import {Box, PaletteMode, styled} from "@mui/material";
@@ -85,8 +86,8 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
 
     // Mota: movimiento animado del robot (F21). Solo lo activa el mapa en vivo
     protected robotAnimationEnabled = false;
-    // Mota: el mapa en vivo permite ocultar el recorrido
-    protected pathsHidden = false;
+    // Mota: el mapa en vivo permite ver el recorrido como cobertura u ocultarlo
+    protected pathView: LiveMapPathView = "path";
     private readonly robotAnimator = new RobotMovementAnimator();
     // Inicio (en píxeles del mapa) del último tramo del recorrido, que se dibuja hasta la posición animada
     private pathTailStart: PointCoordinates | undefined;
@@ -268,6 +269,7 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
                     mapHeight: this.props.rawMap.size.y,
                     pixelSize: this.props.rawMap.pixelSize,
                     paletteMode: this.props.paletteMode,
+                    coverageWidth: this.getCoverageWidth(),
                 });
 
                 this.structureManager.updateMapStructuresFromMapData(this.props.rawMap);
@@ -326,6 +328,7 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
             mapHeight: this.props.rawMap.size.y,
             pixelSize: this.props.rawMap.pixelSize,
             paletteMode: this.props.paletteMode,
+            coverageWidth: this.getCoverageWidth(),
         });
 
         this.drawableComponents.push(pathsImage);
@@ -337,8 +340,12 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
         this.drawableComponentsMutex.leave();
     }
 
+    private getCoverageWidth(): number | undefined {
+        return this.pathView === "coverage" ? COVERAGE_PATH_WIDTH : undefined;
+    }
+
     private getPathEntities(): Array<RawMapEntity> {
-        if (this.pathsHidden) {
+        if (this.pathView === "hidden") {
             return [];
         }
 
