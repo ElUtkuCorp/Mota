@@ -97,6 +97,18 @@ describe("Mota: rutas de la API propia", () => {
         assert.strictEqual(await response.json(), "SHA256 x");
     });
 
+    it("rechaza las peticiones que escriben lanzadas desde otra web", async () => {
+        const crossSite = { "Sec-Fetch-Site": "cross-site" };
+
+        assert.strictEqual((await fetch(`${base}/firmware-orders/5`, { method: "DELETE", headers: crossSite })).status, 403);
+        assert.strictEqual((await fetch(`${base}/system/reboot`, { method: "POST", headers: crossSite })).status, 403);
+        assert.strictEqual((await fetch(`${base}/firmware-orders`, { headers: crossSite })).status, 200);
+        assert.strictEqual((await fetch(`${base}/firmware-orders/5`, {
+            method: "DELETE",
+            headers: { "Sec-Fetch-Site": "same-origin" }
+        })).status, 200);
+    });
+
     it("no restaura ni reinicia con una actualización en marcha", async () => {
         robot.updating = true;
         try {

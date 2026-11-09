@@ -92,23 +92,26 @@ class CecotecBasicControlCapability extends BasicControlCapability {
             throw new Error("There is no robot connected to server");
         }
 
+        // Mota: con la vuelta segura en marcha el robot ya está limpiando (relocalizándose). Una segunda pulsación no
+        // debe mandar CHARGE en ese momento; solo empezar, parar o pausar la cancelan
+        if (this.safeReturn) {
+            Logger.info("Return to the dock requested again: the safe return is already in progress");
+
+            return;
+        }
+
         const status = this.robot.state.getFirstMatchingAttributeByConstructor(StatusStateAttribute);
         // Mota: con un fallo (p. ej. 514) el estado es "error", pero el firmware puede seguir en una pausa (AUTO_PAUSE)
         const pausedWithError = status?.value === StatusStateAttribute.VALUE.ERROR &&
             CecotecBasicControlCapability.PAUSED_WORK_MODES.includes(this.robot.robot.device.motaRawWorkMode);
 
         if (status?.value === StatusStateAttribute.VALUE.PAUSED || pausedWithError) {
-            if (this.safeReturn) {
-                return;
-            }
-
             Logger.info(`Return to the dock requested while paused: resuming first, battery ${this.robot.robot.device.battery?.value} %`);
             await this.startSafeReturn();
 
             return;
         }
 
-        this.cancelSafeReturn("home");
         if (status?.value === StatusStateAttribute.VALUE.IDLE) {
             Logger.warn("Return to the dock requested while stopped: the firmware will reload the map and relocalize");
         }

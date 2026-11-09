@@ -162,6 +162,21 @@ describe("Mota: vuelta segura desde pausa", () => {
         });
     });
 
+    it("una segunda pulsación con el robot ya reanudado no manda CHARGE durante la relocalización", async () => {
+        await withTimers(async () => {
+            const { capability, orders, firmware } = build(STATUS.PAUSED);
+
+            await capability.home();
+            firmware(2108, STATUS.CLEANING);
+            await capability.home();
+            wait(5000);
+            assert.deepStrictEqual(orders, ["start"]);
+
+            wait(26000);
+            assert.deepStrictEqual(orders, ["start", "home"]);
+        });
+    });
+
     it("con un error en pausa del firmware (514 en AUTO_PAUSE) también reanuda primero", async () => {
         await withTimers(async () => {
             const paused = build(STATUS.ERROR);

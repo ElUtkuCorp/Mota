@@ -1025,8 +1025,13 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
   handleReportCleantask(message) {
     // Mota: se guarda el resumen de la limpieza hasta que llegue su mapa (0x1196)
     const object = message.packet.payload.object;
+    // Si un mapa no llega, su resumen no debe quedarse para siempre: se conservan los últimos
     this.motaCleanTasks = this.motaCleanTasks || new Map();
+    this.motaCleanTasks.delete(object.cleanId);
     this.motaCleanTasks.set(object.cleanId, object);
+    while (this.motaCleanTasks.size > 5) {
+      this.motaCleanTasks.delete(this.motaCleanTasks.keys().next().value);
+    }
     message.respond('UNK_11A4', {
       unk1: 0
     });

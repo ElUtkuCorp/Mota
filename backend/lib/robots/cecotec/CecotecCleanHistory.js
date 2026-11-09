@@ -1,3 +1,4 @@
+const CecotecFiles = require("./CecotecFiles");
 const fs = require("fs");
 const Logger = require("../../Logger");
 const path = require("path");
@@ -23,7 +24,12 @@ class CecotecCleanHistory {
     constructor(options) {
         this.directory = options.directory;
 
-        this.removeTrivial();
+        // Mota: un fallo de disco al arrancar no debe impedir que arranque Mota
+        try {
+            this.removeTrivial();
+        } catch (e) {
+            Logger.warn("Clean history: unable to remove trivial entries", e);
+        }
     }
 
     /**
@@ -56,7 +62,7 @@ class CecotecCleanHistory {
                 return;
             }
 
-            fs.writeFileSync(path.join(this.directory, `${report.cleanId}.json`), JSON.stringify(entry, null, 2));
+            CecotecFiles.WRITE_ATOMIC(path.join(this.directory, `${report.cleanId}.json`), JSON.stringify(entry, null, 2));
             if (entry.hasMap) {
                 fs.writeFileSync(path.join(this.directory, `${report.cleanId}.png`), report.mapdata);
             }
@@ -93,7 +99,7 @@ class CecotecCleanHistory {
                 rawTask: {}
             };
 
-            fs.writeFileSync(path.join(this.directory, `${cleanId}.json`), JSON.stringify(entry, null, 2));
+            CecotecFiles.WRITE_ATOMIC(path.join(this.directory, `${cleanId}.json`), JSON.stringify(entry, null, 2));
             if (entry.hasMotaMap) {
                 fs.writeFileSync(path.join(this.directory, `${cleanId}.map.json.gz`), zlib.gzipSync(JSON.stringify(motaMap)));
             }
@@ -114,8 +120,14 @@ class CecotecCleanHistory {
                 .filter(f => {
                     return f.endsWith(".json") && f !== "totales.json";
                 })
+                // Mota: una entrada dañada (corte de luz) se aparta y no deja sin historial ni sin poda
                 .map(f => {
-                    return JSON.parse(fs.readFileSync(path.join(this.directory, f)).toString());
+                    return CecotecFiles.READ_JSON(path.join(this.directory, f), e => {
+                        return Number.isFinite(e?.cleanId);
+                    });
+                })
+                .filter(e => {
+                    return e !== undefined;
                 })
                 .sort((a, b) => {
                     return b.cleanId - a.cleanId;
@@ -131,11 +143,11 @@ class CecotecCleanHistory {
      * @returns {{count: number, timeSeconds: number, areaCm2: number}}
      */
     getTotals() {
-        try {
-            return JSON.parse(fs.readFileSync(path.join(this.directory, "totales.json")).toString());
-        } catch (e) {
-            return {count: 0, timeSeconds: 0, areaCm2: 0};
-        }
+        const totals = CecotecFiles.READ_JSON(path.join(this.directory, "totales.json"), t => {
+            return Number.isFinite(t?.count) && Number.isFinite(t?.timeSeconds) && Number.isFinite(t?.areaCm2);
+        });
+
+        return totals ?? {count: 0, timeSeconds: 0, areaCm2: 0};
     }
 
     /**
@@ -173,7 +185,7 @@ class CecotecCleanHistory {
         totals.timeSeconds += entry.durationSeconds ?? 0;
         totals.areaCm2 += entry.area ?? 0;
 
-        fs.writeFileSync(path.join(this.directory, "totales.json"), JSON.stringify(totals));
+        CecotecFiles.WRITE_ATOMIC(path.join(this.directory, "totales.json"), JSON.stringify(totals));
     }
 
     /**
@@ -203,7 +215,7 @@ class CecotecCleanHistory {
             if (entry.result !== "interrupted" && totals.count > 0) {
                 totals.count -= 1;
                 totals.timeSeconds = Math.max(0, totals.timeSeconds - entry.durationSeconds);
-                fs.writeFileSync(path.join(this.directory, "totales.json"), JSON.stringify(totals));
+                CecotecFiles.WRITE_ATOMIC(path.join(this.directory, "totales.json"), JSON.stringify(totals));
             }
             Logger.info(`Removed clean ${entry.cleanId} from the history (${entry.durationSeconds} s, no area)`);
         });

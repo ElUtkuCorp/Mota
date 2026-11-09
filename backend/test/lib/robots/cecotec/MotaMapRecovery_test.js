@@ -623,6 +623,29 @@ describe("Mota: vuelta por batería y carga para reanudar", () => {
         assert.deepStrictEqual(robot.livePathTail, []);
     });
 
+    it("una limpieza nueva no hereda el inicio de una interrumpida sin informe; reanudar tras un error sí", () => {
+        const run = (from) => {
+            const { robot, agnoc } = buildConnected({ status: new StatusStateAttribute({ value: from }) });
+
+            robot.virtualRooms = { stale: false };
+            robot.mapRecovery = { onDeviceUpdate: () => {} };
+            robot.emitStateAttributesUpdated = () => {};
+            // Atasco de hace días: quedó guardada como interrumpida y nunca llegó el informe
+            robot.cleanStartedAt = 111;
+            robot.lastCleanStatistics = { time: 60, area: 100 };
+            Object.assign(agnoc.device, { state: { value: DeviceState.VALUE.CLEANING }, motaRawWorkMode: 1, motaRawFaultCode: 0 });
+            robot.onUpdateDevice(agnoc);
+
+            return robot;
+        };
+
+        const fromDock = run(STATUS.DOCKED);
+        assert.notStrictEqual(fromDock.cleanStartedAt, 111);
+        assert.strictEqual(fromDock.lastCleanStatistics, undefined);
+
+        assert.strictEqual(run(STATUS.ERROR).cleanStartedAt, 111);
+    });
+
     it("no recupera el mapa mientras carga para reanudar", async () => {
         const { robot, recovery, orders } = buildRobot();
 

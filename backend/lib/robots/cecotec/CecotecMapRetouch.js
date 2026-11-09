@@ -1,4 +1,4 @@
-const fs = require("fs");
+const CecotecFiles = require("./CecotecFiles");
 const Logger = require("../../Logger");
 
 const EMPTY = 0;
@@ -348,10 +348,12 @@ class CecotecMapRetouch {
             return;
         }
 
-        try {
-            this.data = JSON.parse(fs.readFileSync(this.path).toString());
-        } catch (e) {
-            // sin retoques todavía
+        // Mota: si el archivo está dañado se aparta como .corrupt; una forma inesperada rompería cada mapa
+        const data = CecotecFiles.READ_JSON(this.path, d => {
+            return Number.isFinite(d?.rotation) && Number.isInteger(d?.width) && Array.isArray(d?.edits);
+        });
+        if (data !== undefined) {
+            this.data = data;
         }
     }
 
@@ -364,7 +366,7 @@ class CecotecMapRetouch {
         }
 
         try {
-            fs.writeFileSync(this.path, JSON.stringify(this.data));
+            CecotecFiles.WRITE_ATOMIC(this.path, JSON.stringify(this.data));
         } catch (e) {
             Logger.warn("Map retouch: unable to save", e);
         }

@@ -1,4 +1,4 @@
-const fs = require("fs");
+const CecotecFiles = require("./CecotecFiles");
 const Logger = require("../../Logger");
 
 /**
@@ -173,6 +173,10 @@ class CecotecVirtualRooms {
         const a = this.getRoom(idA);
         const b = this.getRoom(idB);
 
+        if (a === b) {
+            throw new Error("No se puede unir una habitación consigo misma.");
+        }
+
         this.fitted = undefined;
         a.pixels = a.pixels.concat(b.pixels);
         this.data.rooms = this.data.rooms.filter(r => {
@@ -191,13 +195,12 @@ class CecotecVirtualRooms {
     split(id, pA, pB) {
         const room = this.getRoom(id);
         // Se divide la versión ajustada al suelo actual, que es la que ve el usuario
-        room.pixels = this.fitted?.get(room.id) ?? room.pixels;
-        this.fitted = undefined;
+        const pixels = this.fitted?.get(room.id) ?? room.pixels;
         const width = this.data.width;
         const sideA = [];
         const sideB = [];
 
-        room.pixels.forEach(i => {
+        pixels.forEach(i => {
             const x = i % width;
             const y = Math.floor(i / width);
             const cross = (pB.x - pA.x) * (y - pA.y) - (pB.y - pA.y) * (x - pA.x);
@@ -209,6 +212,7 @@ class CecotecVirtualRooms {
             throw new Error("La línea no divide la habitación: debe cruzarla de borde a borde.");
         }
 
+        this.fitted = undefined;
         room.pixels = sideA;
         const newId = Math.max(...this.data.rooms.map(r => {
             return r.id;
@@ -372,10 +376,14 @@ class CecotecVirtualRooms {
             return;
         }
 
-        try {
-            this.data = JSON.parse(fs.readFileSync(this.path).toString());
-        } catch (e) {
-            // sin habitaciones todavía
+        // Mota: si el archivo está dañado se aparta como .corrupt en vez de perderlo al segmentar de nuevo
+        const data = CecotecFiles.READ_JSON(this.path, d => {
+            return Number.isInteger(d?.width) && Array.isArray(d?.rooms) && d.rooms.every(r => {
+                return Number.isInteger(r?.id) && Array.isArray(r?.pixels);
+            });
+        });
+        if (data !== undefined) {
+            this.data = data;
         }
     }
 
@@ -388,7 +396,7 @@ class CecotecVirtualRooms {
         }
 
         try {
-            fs.writeFileSync(this.path, JSON.stringify(this.data));
+            CecotecFiles.WRITE_ATOMIC(this.path, JSON.stringify(this.data));
         } catch (e) {
             Logger.warn("Virtual rooms: unable to save", e);
         }

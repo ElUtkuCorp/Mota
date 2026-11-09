@@ -1,3 +1,4 @@
+const CecotecFiles = require("./CecotecFiles");
 const crypto = require("crypto");
 const fs = require("fs");
 const Logger = require("../../Logger");
@@ -125,8 +126,14 @@ class CecotecMapVersions {
                 .filter(f => {
                     return f.endsWith(".meta.json");
                 })
+                // Mota: una versión dañada (corte de luz) se aparta y no deja sin versiones ni sin poda
                 .map(f => {
-                    return JSON.parse(fs.readFileSync(path.join(this.directory, f)).toString());
+                    return CecotecFiles.READ_JSON(path.join(this.directory, f), v => {
+                        return Number.isFinite(v?.id);
+                    });
+                })
+                .filter(v => {
+                    return v !== undefined;
                 })
                 .sort((a, b) => {
                     return b.id - a.id;
@@ -248,11 +255,12 @@ class CecotecMapVersions {
             roomsHash: CecotecMapVersions.ROOMS_HASH(snapshot.rooms),
         };
 
-        fs.writeFileSync(
+        // Primero los datos y después la ficha: una versión solo existe cuando su ficha está completa
+        CecotecFiles.WRITE_ATOMIC(
             path.join(this.directory, `${id}.json.gz`),
             zlib.gzipSync(JSON.stringify({map: snapshot.map, rooms: snapshot.rooms, retouch: snapshot.retouch}))
         );
-        fs.writeFileSync(path.join(this.directory, `${id}.meta.json`), JSON.stringify(info));
+        CecotecFiles.WRITE_ATOMIC(path.join(this.directory, `${id}.meta.json`), JSON.stringify(info));
         Logger.info(`Map versions: stored version ${id} (${reason}, ${snapshot.floor.length} floor cells)`);
 
         this.prune();

@@ -53,6 +53,8 @@ const LOW_BATTERY_RETURN_MODE = 11;
 // Mota: una limpieza nueva empieza al pasar de uno de estos estados a limpiando (desde pausa es reanudar)
 const CLEANING_START_FROM_STATES = [StatusStateAttribute.VALUE.DOCKED, StatusStateAttribute.VALUE.IDLE, StatusStateAttribute.VALUE.ERROR];
 const CLEANING_STATES = [StatusStateAttribute.VALUE.CLEANING, StatusStateAttribute.VALUE.MOVING];
+// Mota: desde error puede ser reanudar la misma limpieza; desde la base o parado es una nueva
+const NEW_CLEAN_FROM_STATES = [StatusStateAttribute.VALUE.DOCKED, StatusStateAttribute.VALUE.IDLE];
 // Mota: dos posiciones seguidas del recorrido más separadas que esto son un salto (no se dibuja la recta)
 const PATH_MAX_GAP_METERS = 0.5;
 // Mota: un tramo del recorrido se dibuja solo si la mayor parte cae sobre el suelo del mapa actual. Si no, es de otro
@@ -530,30 +532,40 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
     onAddRobot(robot) {
         Logger.info(`Added new robot with id '${robot.device.id}'`);
 
-        robot.on("updateDevice", () => {
+        // Mota: agnoc emite desde el socket; una excepción aquí llegaría a uncaughtException y apagaría Mota
+        robot.on("updateDevice", CecotecCongaRobot.GUARD("updateDevice", () => {
             return this.onUpdateDevice(robot);
-        });
-        robot.on("updateMap", () => {
+        }));
+        robot.on("updateMap", CecotecCongaRobot.GUARD("updateMap", () => {
             return this.onUpdateMap(robot);
-        });
-        robot.on("updateRobotPosition", () => {
+        }));
+        robot.on("updateRobotPosition", CecotecCongaRobot.GUARD("updateRobotPosition", () => {
             return this.onUpdateRobotPosition(robot);
-        });
-        robot.on("updateChargerPosition", () => {
+        }));
+        robot.on("updateChargerPosition", CecotecCongaRobot.GUARD("updateChargerPosition", () => {
             return this.onUpdateChargerPosition(robot);
-        });
+        }));
         robot.on("cleanReport", (report) => {
-            this.cleanHistory?.store(report, this.lastCleanStatistics, this.state.map);
+            const { map } = robot.device;
+            const temporaryMap = this.isTemporaryMapMode(robot);
+
+            // Mota: cada paso por separado, para que un fallo (p. ej. disco lleno) no impida la copia del mapa
+            CecotecCongaRobot.GUARD("cleanReport (history)", () => {
+                this.cleanHistory?.store(report, this.lastCleanStatistics, this.state.map);
+            })();
             this.lastCleanStatistics = undefined;
             this.cleanStartedAt = undefined;
 
             // Mota: bordes y espiral trabajan con un mapa temporal; no cuentan para las versiones
-            const { map } = robot.device;
-            if (this.mapVersions && map && !this.isTemporaryMapMode(robot)) {
-                this.mapVersions.onCleaningFinished(this.getFloorSnapshot(map));
-            }
+            CecotecCongaRobot.GUARD("cleanReport (map versions)", () => {
+                if (this.mapVersions && map && !temporaryMap) {
+                    this.mapVersions.onCleaningFinished(this.getFloorSnapshot(map));
+                }
+            })();
             // Mota: el firmware escribe el par del mapa al terminar; la copia se hace después
-            this.firmwareMapBackups?.onCleanReport(this.isTemporaryMapMode(robot));
+            CecotecCongaRobot.GUARD("cleanReport (map backup)", () => {
+                this.firmwareMapBackups?.onCleanReport(temporaryMap);
+            })();
         });
     }
 
@@ -617,6 +629,15 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         const currentClean = robot.device.currentClean;
         if (currentClean && currentClean.time > 0) {
             this.lastCleanStatistics = { time: currentClean.time * 60, area: currentClean.size * 100 };
+        }
+        if (
+            oldStatus &&
+            NEW_CLEAN_FROM_STATES.includes(oldStatus.value) &&
+            oldStatus.flag !== StatusStateAttribute.FLAG.RESUMABLE &&
+            CLEANING_STATES.includes(newStatus.value)
+        ) {
+            this.cleanStartedAt = undefined;
+            this.lastCleanStatistics = undefined;
         }
         this.trackInterruptedClean(oldStatus, newStatus);
         this.state.upsertFirstMatchingAttribute(newStatus);
@@ -1769,6 +1790,29 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
                 fanSpeed.value :
                 PresetSelectionStateAttribute.INTENSITY.OFF,
         });
+    }
+
+    /**
+     * Mota: manejador de eventos de agnoc que registra los errores (también de promesas) en vez de propagarlos
+     *
+     * @param {string} name
+     * @param {(...args: Array<any>) => any} fn
+     * @returns {(...args: Array<any>) => void}
+     */
+    static GUARD(name, fn) {
+        return (...args) => {
+            try {
+                const result = fn(...args);
+
+                if (result && typeof result.catch === "function") {
+                    result.catch(e => {
+                        Logger.error(`Robot event ${name} failed`, e);
+                    });
+                }
+            } catch (e) {
+                Logger.error(`Robot event ${name} failed`, e);
+            }
+        };
     }
 
     static IMPLEMENTATION_AUTO_DETECTION_HANDLER() {

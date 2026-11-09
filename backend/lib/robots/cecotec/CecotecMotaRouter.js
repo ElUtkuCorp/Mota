@@ -26,6 +26,19 @@ class CecotecMotaRouter {
      * @private
      */
     initRoutes() {
+        // Mota: muchas rutas que escriben o reinician no llevan cuerpo JSON, así que otra web podría lanzarlas desde el
+        // navegador del usuario con un formulario. Los navegadores marcan esas peticiones con Sec-Fetch-Site
+        this.router.use((req, res, next) => {
+            if (!["GET", "HEAD", "OPTIONS"].includes(req.method) && req.headers["sec-fetch-site"] === "cross-site") {
+                Logger.warn(`Rejected a cross-site ${req.method} to /api/v2/mota${req.path}`);
+                res.sendStatus(403);
+
+                return;
+            }
+
+            next();
+        });
+
         this.router.get("/history", (req, res) => {
             res.json(this.robot.cleanHistory?.list() ?? []);
         });
