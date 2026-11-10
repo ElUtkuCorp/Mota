@@ -1689,8 +1689,13 @@ export const deleteValetudoLog = async (): Promise<void> => {
 // Mota: actualizar desde archivo (solo en el robot: en otro sitio responde 404)
 
 export const fetchMotaFileUpdate = async (): Promise<MotaFileUpdateStatus> => {
+    return pollMotaFileUpdate(0);
+};
+
+// Mota: con tiempo límite, para el sondeo mientras Mota se reinicia (0 = sin límite)
+export const pollMotaFileUpdate = async (timeoutMs: number): Promise<MotaFileUpdateStatus> => {
     return valetudoAPI
-        .get<MotaFileUpdateStatus>("/mota/update")
+        .get<MotaFileUpdateStatus>("/mota/update", {timeout: timeoutMs})
         .then(({ data }) => {
             return data;
         });

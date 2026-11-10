@@ -20,6 +20,14 @@ const ConfirmationDialog: FunctionComponent<YesNoDialogProps> = ({
     onAccept,
 }): React.ReactElement => {
     const {t} = useTranslation();
+    // Mota: un doble clic durante la animación de cierre no acepta dos veces
+    const accepted = React.useRef(false);
+
+    React.useEffect(() => {
+        if (open) {
+            accepted.current = false;
+        }
+    }, [open]);
 
     return (
         <Dialog
@@ -43,6 +51,10 @@ const ConfirmationDialog: FunctionComponent<YesNoDialogProps> = ({
             </DialogContent>
             <DialogActions>
                 <Button onClick={() => {
+                    if (accepted.current) {
+                        return;
+                    }
+                    accepted.current = true;
                     onAccept();
                     onClose();
                 }} autoFocus>

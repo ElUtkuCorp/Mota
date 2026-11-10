@@ -19,7 +19,7 @@ export const DEFAULT_PATH_WIDTH = 0.5;
 // Mota: grosor de la vista de cobertura, aproximadamente lo que limpia el robot
 export const COVERAGE_PATH_WIDTH = 5;
 // Translúcida, para que el recorrido se siga viendo encima
-const COVERAGE_PATH_OPACITY = 0.35;
+export const COVERAGE_PATH_OPACITY = 0.35;
 
 // Mota: pasadas de Chaikin para suavizar las esquinas del recorrido (solo al dibujar; los datos no cambian)
 const PATH_SMOOTHING_ITERATIONS = 2;

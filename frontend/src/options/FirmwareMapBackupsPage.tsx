@@ -108,8 +108,21 @@ const FirmwareMapBackupsPage = (): React.ReactElement => {
     const {
         mutate: restoreBackup,
         isPending: restorePending,
-        isSuccess: restoreRequested
+        isSuccess: restoreRequested,
+        reset: resetRestore
     } = useMotaFirmwareMapBackupRestoreMutation();
+    // Mota: cuando el robot vuelve del reinicio sin restauración en curso, la página deja de esperar
+    const sawRestoring = React.useRef(false);
+    React.useEffect(() => {
+        if (!restoreRequested) {
+            sawRestoring.current = false;
+        } else if (data?.restoring === true) {
+            sawRestoring.current = true;
+        } else if (data?.restoring === false && sawRestoring.current) {
+            sawRestoring.current = false;
+            resetRestore();
+        }
+    }, [restoreRequested, data?.restoring, resetRestore]);
 
     const [autoConfirmOpen, setAutoConfirmOpen] = React.useState(false);
     const [saveConfirmOpen, setSaveConfirmOpen] = React.useState(false);

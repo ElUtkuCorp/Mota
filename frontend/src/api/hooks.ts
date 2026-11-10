@@ -2480,8 +2480,9 @@ export const useMotaFileUpdateApplyMutation = () => {
     return useMutation({
         mutationFn: sendMotaFileUpdateApply,
         onError: useOnCommandError("api.settings.fileUpdate"),
-        onSettled: async () => {
-            await onChanged();
+        onSettled: () => {
+            // Mota: sin esperar a los GET, que fallan o se cuelgan mientras Mota se para
+            void onChanged();
         },
     });
 };
@@ -2492,8 +2493,9 @@ export const useMotaFileUpdateRollbackMutation = () => {
     return useMutation({
         mutationFn: sendMotaFileUpdateRollback,
         onError: useOnCommandError("api.settings.fileUpdate"),
-        onSettled: async () => {
-            await onChanged();
+        onSettled: () => {
+            // Mota: sin esperar a los GET, que fallan o se cuelgan mientras Mota se para
+            void onChanged();
         },
     });
 };

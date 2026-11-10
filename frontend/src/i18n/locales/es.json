@@ -1369,7 +1369,9 @@
             "apply": "Instalando la versión nueva. Mota se está reiniciando; si no responde en {{seconds}} s, volverá sola a la anterior. No cierres esta página.",
             "rollback": "Volviendo a la versión anterior. Mota se está reiniciando; si no responde en {{seconds}} s, volverá sola a la de antes. No cierres esta página.",
             "elapsed": "Esperando a Mota: {{elapsed}} s (como mucho {{limit}} s). Es normal que no responda durante el reinicio.",
-            "reloading": "Recargando la página…"
+            "reloading": "Recargando la página…",
+            "late": "Mota todavía no responde. Se sigue esperando y la página se recargará en cuanto conteste.",
+            "reload": "Recargar"
         },
         "last": {
             "apply": {

@@ -1369,7 +1369,9 @@
             "apply": "Installing the new version. Mota is restarting; if it does not answer within {{seconds}} s, it will go back to the previous one on its own. Do not close this page.",
             "rollback": "Going back to the previous version. Mota is restarting; if it does not answer within {{seconds}} s, it will return to the version from before on its own. Do not close this page.",
             "elapsed": "Waiting for Mota: {{elapsed}} s (at most {{limit}} s). It is normal for it not to answer while restarting.",
-            "reloading": "Reloading the page…"
+            "reloading": "Reloading the page…",
+            "late": "Mota is not answering yet. Still waiting; the page will reload as soon as it does.",
+            "reload": "Reload"
         },
         "last": {
             "apply": {

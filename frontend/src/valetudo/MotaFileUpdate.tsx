@@ -16,7 +16,7 @@ import {
 import {ContentCopy as CopyIcon} from "@mui/icons-material";
 import {useTranslation} from "react-i18next";
 import {
-    fetchMotaFileUpdate,
+    pollMotaFileUpdate,
     MotaFileUpdateAction,
     MotaFileUpdateLast,
     MotaFileUpdateStatus,
@@ -37,6 +37,8 @@ import {DISPLAY_LOCALE, formatNumber} from "../i18n";
  */
 
 const POLL_INTERVAL_MS = 3_000;
+// Una petición colgada durante el reinicio no debe parar el sondeo
+const POLL_TIMEOUT_MS = 5_000;
 const MONO_FONT = "\"JetBrains Mono\",monospace";
 
 const useFormatMegabytes = (): ((bytes: number) => string) => {
@@ -158,6 +160,7 @@ const UpdateWaiting: React.FunctionComponent<{
     const limitSeconds = waitSeconds * 2 + 30;
     const [elapsed, setElapsed] = React.useState(0);
     const [reloading, setReloading] = React.useState(false);
+    const [late, setLate] = React.useState(false);
 
     React.useEffect(() => {
         const startedAt = Date.now();
@@ -177,8 +180,10 @@ const UpdateWaiting: React.FunctionComponent<{
             const seconds = Math.floor((Date.now() - startedAt) / 1000);
             setElapsed(seconds);
 
+            // Pasado el límite no se recarga a ciegas: si Mota aún no escucha, el navegador mostraría su página de
+            // error. Se sigue sondeando y se recarga en cuanto responda
             if (seconds >= limitSeconds) {
-                finish();
+                setLate(true);
             }
         }, 1_000);
 
@@ -188,10 +193,11 @@ const UpdateWaiting: React.FunctionComponent<{
             }
             polling = true;
 
-            fetchMotaFileUpdate().then(status => {
+            pollMotaFileUpdate(POLL_TIMEOUT_MS).then(status => {
                 const last = status.last;
+                const done = last && last.startedAt !== previousStartedAt && last.result !== "running";
 
-                if (last && last.startedAt !== previousStartedAt && last.result !== "running") {
+                if (done || (Date.now() - startedAt) / 1000 >= limitSeconds) {
                     finish();
                 }
             }).catch(() => {
@@ -217,6 +223,24 @@ const UpdateWaiting: React.FunctionComponent<{
                 variant="determinate"
                 value={Math.min(100, elapsed / limitSeconds * 100)}
             />
+            {late && !reloading && (
+                <Alert
+                    severity="warning"
+                    action={
+                        <Button
+                            color="inherit"
+                            size="small"
+                            onClick={() => {
+                                window.location.reload();
+                            }}
+                        >
+                            {t("fileUpdate.waiting.reload")}
+                        </Button>
+                    }
+                >
+                    {t("fileUpdate.waiting.late")}
+                </Alert>
+            )}
             <Typography variant="body2" color="text.secondary">
                 {reloading ?
                     t("fileUpdate.waiting.reloading") :
@@ -229,8 +253,9 @@ const UpdateWaiting: React.FunctionComponent<{
 
 const UploadedFile: React.FunctionComponent<{
     status: MotaFileUpdateStatus,
+    busy: boolean,
     onInstall: (sha256: string) => void
-}> = ({status, onInstall}): React.ReactElement | null => {
+}> = ({status, busy, onInstall}): React.ReactElement | null => {
     const {t} = useTranslation();
     const formatMegabytes = useFormatMegabytes();
     const [verified, setVerified] = React.useState(false);
@@ -302,7 +327,7 @@ const UploadedFile: React.FunctionComponent<{
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                     <Button
                         variant="contained"
-                        disabled={!verified || blockedReason !== null || discardPending}
+                        disabled={!verified || blockedReason !== null || discardPending || busy}
                         onClick={() => {
                             setConfirmOpen(true);
                         }}
@@ -342,6 +367,7 @@ const FileUpload: React.FunctionComponent<{ status: MotaFileUpdateStatus }> = ({
     const formatMegabytes = useFormatMegabytes();
     const {mutate: upload, isPending, error, reset} = useMotaFileUpdateUploadMutation();
     const [progress, setProgress] = React.useState<{ loaded: number, total: number } | null>(null);
+    const inputRef = React.useRef<HTMLInputElement>(null);
     const [fileName, setFileName] = React.useState<string | null>(null);
     const abortRef = React.useRef<AbortController | null>(null);
 
@@ -383,24 +409,27 @@ const FileUpload: React.FunctionComponent<{ status: MotaFileUpdateStatus }> = ({
             <Box>
                 <Button
                     variant="outlined"
-                    component="label"
                     disabled={isPending || status.uploading || status.running}
+                    onClick={() => {
+                        inputRef.current?.click();
+                    }}
                 >
                     {status.uploaded ? t("fileUpdate.chooseAnother") : t("fileUpdate.choose")}
-                    <input
-                        type="file"
-                        hidden
-                        onChange={(e) => {
-                            const file = e.target.files?.[0];
-
-                            // Para poder elegir otra vez el mismo archivo
-                            e.target.value = "";
-                            if (file) {
-                                startUpload(file);
-                            }
-                        }}
-                    />
                 </Button>
+                <input
+                    ref={inputRef}
+                    type="file"
+                    hidden
+                    onChange={(e) => {
+                        const file = e.target.files?.[0];
+
+                        // Para poder elegir otra vez el mismo archivo
+                        e.target.value = "";
+                        if (file) {
+                            startUpload(file);
+                        }
+                    }}
+                />
             </Box>
             {isPending && progress && (
                 <Stack spacing={0.75}>
@@ -446,8 +475,9 @@ const FileUpload: React.FunctionComponent<{ status: MotaFileUpdateStatus }> = ({
 
 const PreviousVersion: React.FunctionComponent<{
     status: MotaFileUpdateStatus,
+    busy: boolean,
     onRollback: () => void
-}> = ({status, onRollback}): React.ReactElement | null => {
+}> = ({status, busy, onRollback}): React.ReactElement | null => {
     const {t} = useTranslation();
     const formatMegabytes = useFormatMegabytes();
     const [confirmOpen, setConfirmOpen] = React.useState(false);
@@ -481,7 +511,7 @@ const PreviousVersion: React.FunctionComponent<{
                 <Button
                     variant="outlined"
                     color="warning"
-                    disabled={blockedReason !== null}
+                    disabled={blockedReason !== null || busy}
                     onClick={() => {
                         setConfirmOpen(true);
                     }}
@@ -531,7 +561,7 @@ const MotaFileUpdate = (): React.ReactElement | null => {
         );
     } else if (isPending) {
         body = <Skeleton height={"8rem"}/>;
-    } else if (isError || !status) {
+    } else if (!status || (isError && !applyPending && !rollbackPending)) {
         body = <Alert severity="error">{t("fileUpdate.loadError", {message: getApiErrorMessage(error)})}</Alert>;
     } else {
         const previousStartedAt = status.last?.startedAt ?? null;
@@ -559,6 +589,7 @@ const MotaFileUpdate = (): React.ReactElement | null => {
                 <FileUpload status={status}/>
                 <UploadedFile
                     status={status}
+                    busy={applyPending || rollbackPending}
                     onInstall={(sha256) => {
                         apply(sha256, {
                             onSuccess: (result) => {
@@ -573,6 +604,7 @@ const MotaFileUpdate = (): React.ReactElement | null => {
                 />
                 <PreviousVersion
                     status={status}
+                    busy={applyPending || rollbackPending}
                     onRollback={() => {
                         rollback(undefined, {
                             onSuccess: (result) => {

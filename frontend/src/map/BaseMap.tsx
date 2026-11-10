@@ -1,7 +1,7 @@
 import React, {createRef} from "react";
 import {RawMapData, RawMapEntity, RawMapEntityType} from "../api";
 import {MapLayerManager} from "./MapLayerManager";
-import {COVERAGE_PATH_WIDTH, DEFAULT_PATH_WIDTH, PathDrawer} from "./PathDrawer";
+import {COVERAGE_PATH_OPACITY, COVERAGE_PATH_WIDTH, DEFAULT_PATH_WIDTH, PathDrawer} from "./PathDrawer";
 import type {LiveMapPathView} from "./liveMapControl";
 import {TouchHandler} from "./utils/touch_handling/TouchHandler";
 import StructureManager from "./StructureManager";
@@ -447,8 +447,18 @@ abstract class BaseMap<P, S> extends React.Component<P & MapProps, S & MapState 
         ctx.save();
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
-        ctx.lineWidth = DEFAULT_PATH_WIDTH;
         ctx.strokeStyle = PathDrawer.getPathColor(this.props.paletteMode);
+        // Mota: en la vista de cobertura, la banda ancha también llega hasta el robot animado
+        if (this.pathView === "coverage") {
+            ctx.globalAlpha = COVERAGE_PATH_OPACITY;
+            ctx.lineWidth = COVERAGE_PATH_WIDTH;
+            ctx.beginPath();
+            ctx.moveTo(this.pathTailStart.x, this.pathTailStart.y);
+            ctx.lineTo(robotPose.x, robotPose.y);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+        }
+        ctx.lineWidth = DEFAULT_PATH_WIDTH;
         ctx.beginPath();
         ctx.moveTo(this.pathTailStart.x, this.pathTailStart.y);
         ctx.lineTo(robotPose.x, robotPose.y);
