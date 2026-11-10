@@ -4,7 +4,6 @@ import {
     Box,
     Button,
     Checkbox,
-    Divider,
     FormControlLabel,
     IconButton,
     LinearProgress,
@@ -142,7 +141,9 @@ const LastResult: React.FunctionComponent<{ last: MotaFileUpdateLast }> = ({last
             {last.message && (
                 <>
                     <br/>
-                    {t("fileUpdate.last.message", {message: last.message})}
+                    {t("fileUpdate.last.message", {
+                        message: t(`fileUpdate.last.step.${last.message}`, {defaultValue: last.message})
+                    })}
                 </>
             )}
         </Alert>
@@ -321,8 +322,9 @@ const UploadedFile: React.FunctionComponent<{
                         })
                     }
                 </Typography>
-                {blockedReason && (
-                    <Alert severity={status.docked ? "error" : "info"}>{blockedReason}</Alert>
+                {/* Fuera de la base el aviso ya sale arriba */}
+                {blockedReason && status.docked && (
+                    <Alert severity="error">{blockedReason}</Alert>
                 )}
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                     <Button
@@ -498,13 +500,19 @@ const PreviousVersion: React.FunctionComponent<{
         <Stack spacing={1.25}>
             <Typography variant="subtitle1" sx={{fontWeight: 600}}>{t("fileUpdate.previous.title")}</Typography>
             <Typography variant="body2">
-                {t("fileUpdate.previous.version", {
-                    release: previous.release ?? t("fileUpdate.unknownVersion"),
-                    commit: previous.commit ?? t("fileUpdate.unknownVersion"),
-                    size: formatMegabytes(previous.size)
-                })}
+                {previous.release !== null ?
+                    t("fileUpdate.previous.version", {
+                        release: previous.release,
+                        commit: previous.commit ?? t("fileUpdate.unknownVersion"),
+                        size: formatMegabytes(previous.size)
+                    }) :
+                    t("fileUpdate.previous.versionUnknown", {
+                        time: formatIsoTime(previous.modifiedAt),
+                        size: formatMegabytes(previous.size)
+                    })
+                }
             </Typography>
-            {blockedReason && (
+            {blockedReason && status.docked && (
                 <Typography variant="body2" color="text.secondary">{blockedReason}</Typography>
             )}
             <Box>
@@ -623,7 +631,6 @@ const MotaFileUpdate = (): React.ReactElement | null => {
 
     return (
         <Box sx={{mt: 2}}>
-            <Divider sx={{mb: 2}}/>
             <Stack spacing={2}>
                 <Typography variant="h6">{t("fileUpdate.title")}</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{whiteSpace: "pre-wrap"}}>

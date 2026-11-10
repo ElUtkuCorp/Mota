@@ -1,8 +1,10 @@
 import {
     UpdaterState,
+    useMotaFileUpdateQuery,
     useUpdaterCommandMutation,
     useUpdaterStateQuery
 } from "../api";
+import {getApiErrorStatus} from "../api/utils";
 import {
     SystemUpdateAlt as UpdaterIcon,
     Warning as ErrorIcon,
@@ -48,6 +50,15 @@ const Updater = (): React.ReactElement => {
         isError: updaterStateError,
         refetch: refetchUpdaterState,
     } = useUpdaterStateQuery();
+    // Mota: en el robot no hay Internet ni sitio para el actualizador en línea (pide 20 MB libres en la memoria del
+    // robot): la página es solo "Actualizar desde archivo". El actualizador en línea queda donde no existe la API
+    const {
+        isError: fileUpdateError,
+        error: fileUpdateErrorValue,
+        isFetching: fileUpdateFetching,
+        refetch: refetchFileUpdate
+    } = useMotaFileUpdateQuery();
+    const onlineUpdater = fileUpdateError && getApiErrorStatus(fileUpdateErrorValue) === 404;
 
     return (
         <PaperContainer>
@@ -56,20 +67,22 @@ const Updater = (): React.ReactElement => {
                     <DetailPageHeaderRow
                         title={t("updater.title")}
                         icon={<UpdaterIcon/>}
-                        helpText={t("help.updater")}
+                        helpText={onlineUpdater ? t("help.updater") : t("help.fileUpdate")}
                         onRefreshClick={() => {
-                            refetchUpdaterState().catch(() => {
+                            (onlineUpdater ? refetchUpdaterState() : refetchFileUpdate()).catch(() => {
                                 /* intentional */
                             });
                         }}
-                        isRefreshing={updaterStateFetching}
+                        isRefreshing={onlineUpdater ? updaterStateFetching : fileUpdateFetching}
                     />
 
-                    <UpdaterStateComponent
-                        state={updaterState}
-                        stateLoading={updaterStatePending}
-                        stateError={updaterStateError}
-                    />
+                    {onlineUpdater && (
+                        <UpdaterStateComponent
+                            state={updaterState}
+                            stateLoading={updaterStatePending}
+                            stateError={updaterStateError}
+                        />
+                    )}
 
                     {/* Mota: el robot no tiene Internet; se actualiza subiendo el binario desde el navegador */}
                     <MotaFileUpdate/>

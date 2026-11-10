@@ -198,6 +198,11 @@ describe("Mota: actualizar desde archivo", () => {
         }, /anterior/);
 
         fs.writeFileSync(path.join(dir, "valetudo.prev"), "anterior");
+        // Sin la ficha de versión (instalada con el script de despliegue) se da al menos la fecha del archivo
+        const previous = updater.getStatus().previous;
+        assert.strictEqual(previous.release, null);
+        assert.strictEqual(previous.size, 8);
+        assert.ok(!Number.isNaN(Date.parse(previous.modifiedAt)));
         updater.rollback();
         assert.strictEqual(launches[0][1], "rollback");
     });

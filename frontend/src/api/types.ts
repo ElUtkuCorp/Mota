@@ -958,6 +958,7 @@ export interface MotaFileUpdateStatus {
     };
     previous: {
         size: number;
+        modifiedAt: string;
         release: string | null;
         commit: string | null;
     } | null;

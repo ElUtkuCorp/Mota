@@ -112,7 +112,10 @@ class CecotecFileUpdater {
                 commit: Tools.GET_COMMIT_ID(),
                 size: current?.size ?? null
             },
-            previous: previous ? Object.assign({size: previous.size}, this.readPrevInfo()) : null,
+            previous: previous ? Object.assign({
+                size: previous.size,
+                modifiedAt: previous.mtime.toISOString()
+            }, this.readPrevInfo()) : null,
             uploaded: this.uploaded ?? null,
             uploading: this.uploading,
             running: this.isRunning(),
