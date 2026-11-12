@@ -804,19 +804,27 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
      * @returns {Array<number>}
      */
     getPathPoints(map) {
-        const offset = map.size.y;
-        const robotPath =
-      map.robotPath &&
-      map.robotPath
-          .map((coordinate) => {
-              const { x, y } = map.toPixel(coordinate);
+        const source = map.robotPath;
 
-              return [x, offset - y];
-          })
-          .flat();
+        // Mota: el historial solo cambia cuando llega un mapa (cada 10 s), pero esto se llama con cada posición. Se
+        // convierte una vez por historial y sin un array [x, y] por punto: con miles de puntos agotaba el heap
+        if (source && source.length > 0) {
+            const cache = this.pathPointsCache;
 
-        if (robotPath && robotPath.length > 0) {
-            this.lastPathPoints = robotPath;
+            if (!cache || cache.map !== map || cache.source !== source || cache.points !== this.lastPathPoints) {
+                const offset = map.size.y;
+                const points = new Array(source.length * 2);
+
+                for (let i = 0; i < source.length; i++) {
+                    const { x, y } = map.toPixel(source[i]);
+
+                    points[2 * i] = x;
+                    points[2 * i + 1] = offset - y;
+                }
+
+                this.lastPathPoints = points;
+                this.pathPointsCache = {map: map, source: source, points: points};
+            }
         }
 
         // Mota: al acabar la limpieza el historial llega vacío. El recorrido se mantiene hasta que empiece otro
@@ -839,9 +847,28 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         }
 
         const maxGap = PATH_MAX_GAP_METERS / this.getMapResolution(map);
-        const segments = CecotecCongaRobot.SPLIT_PATH(this.getPathPoints(map), maxGap).filter(segment => {
-            return CecotecCongaRobot.IS_PATH_ON_FLOOR(segment, this.floorCells);
-        });
+        const points = this.getPathPoints(map);
+        // Mota: los tramos del historial no cambian entre posiciones; solo la cola en vivo. Se reutilizan mientras
+        // no cambien el historial, su longitud (pathPoints crece) ni el suelo
+        let cache = this.pathSegmentsCache;
+
+        if (
+            !cache || cache.points !== points || cache.length !== points.length ||
+            cache.floorCells !== this.floorCells || cache.maxGap !== maxGap
+        ) {
+            cache = {
+                points: points,
+                length: points.length,
+                floorCells: this.floorCells,
+                maxGap: maxGap,
+                segments: CecotecCongaRobot.SPLIT_PATH(points, maxGap).filter(segment => {
+                    return CecotecCongaRobot.IS_PATH_ON_FLOOR(segment, this.floorCells);
+                })
+            };
+            this.pathSegmentsCache = cache;
+        }
+
+        const segments = cache.segments.slice();
 
         // Mota: lo recorrido desde el último mapa (llega cada 10 s) se añade al final para que la línea siga al robot
         if (this.livePathTail.length >= 2) {
@@ -1254,6 +1281,17 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             return null;
         }
 
+        // Mota: ordenar claves numéricas en un array tipado en vez de un array [x, y] por píxel. Con el suelo y las
+        // paredes son decenas de miles de arrays pequeños en cada mapa, y el heap (42 MB) no da para tanto
+        const sorted = CecotecCongaRobot.SORT_PIXELS(pixels);
+        if (sorted) {
+            return new MapLayer({
+                type: type,
+                pixels: sorted,
+                metaData: metaData
+            });
+        }
+
         const tuples = [];
 
         for (let i = 0; i < pixels.length; i = i + 2) {
@@ -1269,6 +1307,41 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             pixels: tuples.flat(),
             metaData: metaData
         });
+    }
+
+    /**
+     * Mota: píxeles ordenados por y y luego por x, con una clave numérica por píxel en un array tipado (fuera del heap)
+     *
+     * @param {Array<number>} pixels pares x, y planos
+     * @returns {Array<number>|null} null si algún valor no cabe en la clave (entonces se ordena como antes)
+     */
+    static SORT_PIXELS(pixels) {
+        const count = pixels.length >> 1;
+        const keys = new Float64Array(count);
+
+        for (let i = 0; i < count; i++) {
+            const x = pixels[2 * i];
+            const y = pixels[2 * i + 1];
+
+            if (!Number.isInteger(x) || !Number.isInteger(y) || x < 0 || y < 0 || x > 0xffff || y > 0xffff) {
+                return null;
+            }
+            keys[i] = y * 65536 + x;
+        }
+
+        keys.sort();
+
+        const sorted = new Array(count * 2);
+
+        for (let i = 0; i < count; i++) {
+            const key = keys[i];
+            const y = Math.floor(key / 65536);
+
+            sorted[2 * i] = key - y * 65536;
+            sorted[2 * i + 1] = y;
+        }
+
+        return sorted;
     }
 
     // Convert walls and floor array to matrix style
@@ -1387,7 +1460,8 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
      * over the floor pixels starting from the median of the reported pixels
      *
      * @param {import("@agnoc/core").DeviceMap} map
-     * @param {Array<Array<number|string>>} fullMap
+     * @param {Array<Array<number|string>> | (() => Array<Array<number|string>>)} fullMap Mota: o una función que la
+     *        construye, para no crearla (una matriz del tamaño del mapa) cuando hay habitaciones virtuales
      * @param {Map<number, Array<number>>} [retouchedRooms] Mota: celdas que se muestran de cada habitación
      * @returns {Array<import("../../entities/map/MapLayer")>}
      */
@@ -1432,7 +1506,11 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             return segment.pixels.length > 0;
         });
 
-        if (fullMap.length !== 0) {
+        if (segments.length > 0 && typeof fullMap === "function") {
+            fullMap = fullMap();
+        }
+
+        if (segments.length > 0 && fullMap.length !== 0) {
             // first, dump the segment layers to the map
             segments.forEach(s => {
                 this.dumpSegmentLayer(fullMap, s);
@@ -1575,7 +1653,9 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             layers: [
                 this.buildMapLayer(MapLayer.TYPE.FLOOR, retouched.floor),
                 this.buildMapLayer(MapLayer.TYPE.WALL, retouched.walls),
-                ...this.getSegmentEntities(map, this.mapArrayToMatrix(walls, floor), retouched.rooms),
+                ...this.getSegmentEntities(map, () => {
+                    return this.mapArrayToMatrix(walls, floor);
+                }, retouched.rooms),
             ].filter(Boolean),
             metaData: {motaRotation: this.mapRetouch.getRotation()},
             size: {

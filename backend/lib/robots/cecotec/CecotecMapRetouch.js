@@ -476,6 +476,36 @@ class CecotecMapRetouch {
     }
 
     /**
+     * Mota: como FOR_EACH_NEIGHBOR, en el mismo orden, pero escribe los vecinos en un búfer reutilizable. En los
+     * recorridos de FIND_ISLANDS un callback por celda creaba un cierre nuevo cada vez: varios MB de basura en el heap
+     * con cada mapa
+     *
+     * @param {number} cell
+     * @param {number} width
+     * @param {number} height
+     * @param {number} radius
+     * @param {Int32Array} out
+     * @returns {number} cuántos vecinos hay en out
+     */
+    static NEIGHBORS(cell, width, height, radius, out) {
+        const x = cell % width;
+        const y = (cell - x) / width;
+        const y1 = Math.min(height - 1, y + radius);
+        const x1 = Math.min(width - 1, x + radius);
+        let count = 0;
+
+        for (let ny = Math.max(0, y - radius); ny <= y1; ny++) {
+            for (let nx = Math.max(0, x - radius); nx <= x1; nx++) {
+                if (nx !== x || ny !== y) {
+                    out[count++] = ny * width + nx;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    /**
      * Los trozos del mapa real que no están unidos a nada que importe. Se conserva el trozo de suelo más grande y los
      * que tengan una habitación o estén junto a la base o el robot, con las paredes que los rodean. El resto del suelo
      * y las paredes sueltas, unidos entre sí, son las islas.
@@ -490,6 +520,9 @@ class CecotecMapRetouch {
         const roomLabels = CecotecMapRetouch.BUILD_ROOM_LABELS(context);
         const labels = new Int32Array(size);
         const stack = new Int32Array(size);
+        const near = new Int32Array(8);
+        const attachRadius = CecotecMapRetouch.WALL_ATTACH_RADIUS;
+        const around = new Int32Array((2 * attachRadius + 1) * (2 * attachRadius + 1));
         const kept = [false];
         const sizes = [0];
 
@@ -510,12 +543,16 @@ class CecotecMapRetouch {
 
                 count++;
                 hasRoom = hasRoom || roomLabels[cell] > 0;
-                CecotecMapRetouch.FOR_EACH_NEIGHBOR(cell, width, size, 1, n => {
+                const found = CecotecMapRetouch.NEIGHBORS(cell, width, height, 1, near);
+
+                for (let k = 0; k < found; k++) {
+                    const n = near[k];
+
                     if (grid[n] === FLOOR && labels[n] === 0) {
                         labels[n] = label;
                         stack[top++] = n;
                     }
-                });
+                }
             }
 
             sizes.push(count);
@@ -550,13 +587,15 @@ class CecotecMapRetouch {
         }
 
         const wallSeen = new Uint8Array(size);
+        // Celdas del trozo de pared actual (sin un array por trozo)
+        const visited = new Int32Array(size);
 
         for (let start = 0; start < size; start++) {
             if (grid[start] !== WALL || wallSeen[start] === 1) {
                 continue;
             }
 
-            const cells = [];
+            let visitedCount = 0;
             let top = 0;
             let attached = false;
 
@@ -565,24 +604,32 @@ class CecotecMapRetouch {
             while (top > 0) {
                 const cell = stack[--top];
 
-                cells.push(cell);
-                CecotecMapRetouch.FOR_EACH_NEIGHBOR(cell, width, size, 1, n => {
+                visited[visitedCount++] = cell;
+                const found = CecotecMapRetouch.NEIGHBORS(cell, width, height, 1, near);
+
+                for (let k = 0; k < found; k++) {
+                    const n = near[k];
+
                     if (grid[n] === WALL && wallSeen[n] === 0) {
                         wallSeen[n] = 1;
                         stack[top++] = n;
                     }
-                });
+                }
                 if (!attached) {
-                    CecotecMapRetouch.FOR_EACH_NEIGHBOR(cell, width, size, CecotecMapRetouch.WALL_ATTACH_RADIUS, n => {
-                        attached = attached || (labels[n] > 0 && kept[labels[n]]);
-                    });
+                    const count = CecotecMapRetouch.NEIGHBORS(cell, width, height, attachRadius, around);
+
+                    for (let k = 0; k < count && !attached; k++) {
+                        const n = around[k];
+
+                        attached = labels[n] > 0 && kept[labels[n]];
+                    }
                 }
             }
 
             if (!attached) {
-                cells.forEach(cell => {
-                    loose[cell] = 1;
-                });
+                for (let k = 0; k < visitedCount; k++) {
+                    loose[visited[k]] = 1;
+                }
             }
         }
 
@@ -605,12 +652,16 @@ class CecotecMapRetouch {
 
                 cells.push(cell);
                 floorCells += grid[cell] === FLOOR ? 1 : 0;
-                CecotecMapRetouch.FOR_EACH_NEIGHBOR(cell, width, size, 1, n => {
+                const found = CecotecMapRetouch.NEIGHBORS(cell, width, height, 1, near);
+
+                for (let k = 0; k < found; k++) {
+                    const n = near[k];
+
                     if (loose[n] === 1) {
                         loose[n] = 2;
                         stack[top++] = n;
                     }
-                });
+                }
             }
 
             islands.push({id: start, cells: cells, floorCells: floorCells});

@@ -103,27 +103,33 @@ class CecotecVirtualRooms {
             });
         });
 
+        // Mota: sin un cierre por celda (con cada mapa eran decenas de miles de funciones nuevas en el heap)
+        const around = new Int32Array(4);
+
         while (head < tail) {
             const cell = queue[head++];
             const x = cell % width;
-            const visit = (n) => {
+            let count = 0;
+
+            if (x > 0) {
+                around[count++] = cell - 1;
+            }
+            if (x < width - 1) {
+                around[count++] = cell + 1;
+            }
+            if (cell >= width) {
+                around[count++] = cell - width;
+            }
+            if (cell < size - width) {
+                around[count++] = cell + width;
+            }
+            for (let k = 0; k < count; k++) {
+                const n = around[k];
+
                 if (label[n] === 0) {
                     label[n] = label[cell];
                     queue[tail++] = n;
                 }
-            };
-
-            if (x > 0) {
-                visit(cell - 1);
-            }
-            if (x < width - 1) {
-                visit(cell + 1);
-            }
-            if (cell >= width) {
-                visit(cell - width);
-            }
-            if (cell < size - width) {
-                visit(cell + width);
             }
         }
 
@@ -291,9 +297,15 @@ class CecotecVirtualRooms {
             return true;
         }
 
-        const floorCells = new Set();
+        // Mota: un mapa de bits en vez de un Set con decenas de miles de celdas en cada mapa
+        let maxCell = 0;
         for (let i = 0; i < floor.length; i += 2) {
-            floorCells.add(floor[i + 1] * width + floor[i]);
+            maxCell = Math.max(maxCell, floor[i + 1] * width + floor[i]);
+        }
+
+        const isFloor = new Uint8Array(maxCell + 1);
+        for (let i = 0; i < floor.length; i += 2) {
+            isFloor[floor[i + 1] * width + floor[i]] = 1;
         }
 
         let roomCells = 0;
@@ -301,7 +313,7 @@ class CecotecVirtualRooms {
         data.rooms.forEach(room => {
             room.pixels.forEach(cell => {
                 roomCells++;
-                if (floorCells.has(cell)) {
+                if (cell >= 0 && cell <= maxCell && isFloor[cell] === 1) {
                     overlap++;
                 }
             });
