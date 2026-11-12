@@ -52,6 +52,8 @@ exports.MANUAL_MODE = MANUAL_MODE;
 })(MANUAL_MODE || (exports.MANUAL_MODE = MANUAL_MODE = {}));
 const MODE_CHANGE_TIMEOUT = 5000;
 const RECV_TIMEOUT = 5000;
+// Mota: modo del firmware en reposo (sin tarea abierta)
+const MOTA_IDLE_WORK_MODE = 0;
 const CONSUMABLE_TYPE_RESET = {
   [_deviceConsumable.CONSUMABLE_TYPE.MAIN_BRUSH]: 1,
   [_deviceConsumable.CONSUMABLE_TYPE.SIDE_BRUSH]: 2,
@@ -368,15 +370,34 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
       itemId
     });
   }
-  async updateMap() {
-    let mask = 0x78ff;
-    if (!this.device.system.supports(_deviceSystem.DEVICE_CAPABILITY.MAP_PLANS)) {
-      // Mota: sin 0x400 la 3090 devuelve las zonas prohibidas del guardado anterior
-      mask = 0xff | 0x400;
-    }
+  async updateMap(options) {
+    const mask = this.getMotaMapMask(options);
     await this.sendRecv('DEVICE_MAPID_GET_GLOBAL_INFO_REQ', 'DEVICE_MAPID_GET_GLOBAL_INFO_RSP', {
       mask
     });
+  }
+  // Mota: sin 0x400 la 3090 devuelve las zonas prohibidas del guardado anterior. Pero con 0x400 el firmware guarda el
+  // mapa y cierra la tarea en curso: al reconectar Mota con el robot limpiando (modo 1), en una limpieza por zonas
+  // (35) o esperando a terminar de cargar para seguir (11), el robot pitaba y pasaba a reposo (modo 0, 4 de 4 casos en
+  // el log del fabricante). Con la tarea viva se pide sin 0x400 y la petición completa se repite al pasar a reposo.
+  getMotaMapMask(options) {
+    if (this.device.system.supports(_deviceSystem.DEVICE_CAPABILITY.MAP_PLANS)) {
+      return 0x78ff;
+    }
+    if (!(options !== null && options !== void 0 && options.connecting) && this.device.motaRawWorkMode === MOTA_IDLE_WORK_MODE) {
+      this.motaFreshMapPending = false;
+      return 0xff | 0x400;
+    }
+    this.motaFreshMapPending = true;
+    return 0xff;
+  }
+  motaRefreshMapWhenIdle() {
+    if (this.motaFreshMapPending && this.device.motaRawWorkMode === MOTA_IDLE_WORK_MODE) {
+      this.motaFreshMapPending = false;
+      this.updateMap().catch(() => {
+        this.motaFreshMapPending = true;
+      });
+    }
   }
   async getWlan() {
     const packet = await this.sendRecv('DEVICE_WLAN_INFO_GETTING_REQ', 'DEVICE_WLAN_INFO_GETTING_RSP', {});
@@ -486,6 +507,8 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
       areas.push([]);
     }
     if (!this.device.system.supports(_deviceSystem.DEVICE_CAPABILITY.MAP_PLANS)) {
+      // Mota: aquí se mantiene 0x400 aunque haya una tarea abierta. Sin él llegan las zonas del guardado anterior y
+      // las últimas no se borrarían. Es una orden del usuario, no un refresco automático (ver getMotaMapMask).
       await this.sendRecv('DEVICE_MAPID_GET_GLOBAL_INFO_REQ', 'DEVICE_MAPID_GET_GLOBAL_INFO_RSP', {
         mask: 0xff | 0x400
       });
@@ -743,7 +766,10 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
       unk2: ''
     });
     void this.getTime();
-    void this.updateMap();
+    // Mota: aún no se sabe en qué modo está el robot: sin 0x400 (ver getMotaMapMask)
+    void this.updateMap({
+      connecting: true
+    });
     void this.getWlan();
   }
   handleDeviceVersionInfoUpdate(message) {
@@ -823,6 +849,7 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
       this.device.updateWaterLevel(_deviceWaterLevel.DeviceWaterLevelMapper.toDomain(waterLevel));
     }
     this.emit('updateDevice');
+    this.motaRefreshMapWhenIdle();
   }
   handleMapUpdate(message) {
     const object = message.packet.payload.object;
@@ -866,6 +893,7 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
       this.device.updateError(_deviceError.DeviceErrorMapper.toDomain(faultCode));
       this.device.updateFanSpeed(_deviceFanSpeed.DeviceFanSpeedMapper.toDomain(cleanPreference));
       this.emit('updateDevice');
+      this.motaRefreshMapWhenIdle();
     }
     let map = this.device.map;
     if (mapHeadInfo && mapGrid) {
