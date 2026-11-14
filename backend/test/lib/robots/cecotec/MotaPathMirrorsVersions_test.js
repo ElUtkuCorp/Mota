@@ -270,8 +270,9 @@ describe("Mota: borrar el mapa", () => {
 
     it("mantiene el recorrido cuando el firmware deja de enviarlo y lo cambia por el de la limpieza nueva", () => {
         const robot = Object.create(CecotecCongaRobot.prototype);
-        const buildMap = (robotPath) => {
+        const buildMap = (robotPath, id = 1) => {
             return {
+                id: { value: id },
                 size: { x: 100, y: 100 },
                 robotPath: robotPath,
                 robot: { toCoordinates: () => {
@@ -293,7 +294,8 @@ describe("Mota: borrar el mapa", () => {
         assert.deepStrictEqual(robot.getPathPoints(emptyMap), [1, 10, 2, 10]);
         assert.deepStrictEqual(robot.pathPoints, []);
 
-        assert.deepStrictEqual(robot.getPathPoints(buildMap([{ x: 5, y: 95 }])), [5, 5]);
+        // La limpieza nueva trae otro mapa del firmware
+        assert.deepStrictEqual(robot.getPathPoints(buildMap([{ x: 5, y: 95 }], 2)), [5, 5]);
     });
 
     it("guarda la limpieza al fallar, solo una vez y solo si estaba limpiando", () => {

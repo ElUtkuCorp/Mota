@@ -182,16 +182,28 @@ function readRoomConnectionList(stream, roomList) {
   }
   return list;
 }
-function readPointList(stream, pointNumber) {
-  const list = [];
-  for (let i = 0; i < pointNumber; i++) {
-    list.push({
-      flag: (0, _stream.readByte)(stream),
-      x: (0, _stream.readFloat)(stream),
-      y: (0, _stream.readFloat)(stream)
-    });
+// Mota: el recorrido se lee de una vez a arrays tipados. Leerlo punto a punto creaba tres Buffer y un objeto por
+// punto en cada mapa (cada 10 s): en una limpieza larga son decenas de miles de objetos por mapa
+const POINT_SIZE = 9;
+function readPathPoints(stream, pointNumber) {
+  const points = new Float32Array(pointNumber * 2);
+  const flags = new Uint8Array(pointNumber);
+  if (pointNumber > 0) {
+    const buffer = stream.read(pointNumber * POINT_SIZE);
+    if (!buffer || buffer.length !== pointNumber * POINT_SIZE) {
+      throw new Error(`readPathPoints(${pointNumber}): short read`);
+    }
+    for (let i = 0; i < pointNumber; i++) {
+      const offset = i * POINT_SIZE;
+      flags[i] = buffer[offset];
+      points[2 * i] = buffer.readFloatLE(offset + 1);
+      points[2 * i + 1] = buffer.readFloatLE(offset + 5);
+    }
   }
-  return list;
+  return {
+    points,
+    flags
+  };
 }
 const MASK = {
   STATUS: 0x1,
@@ -240,10 +252,23 @@ function readMap(stream, mask) {
     data.historyHeadInfo = {
       mapHeadId: (0, _stream.readWord)(stream),
       poseId: (0, _stream.readWord)(stream),
-      pointNumber: (0, _stream.readWord)(stream),
-      pointList: []
+      pointNumber: (0, _stream.readWord)(stream)
     };
-    data.historyHeadInfo.pointList = readPointList(stream, data.historyHeadInfo.pointNumber);
+    // Mota: x, y planos en un Float32Array (ver readPathPoints). pointList se construye solo si alguien lo pide
+    const {
+      points,
+      flags
+    } = readPathPoints(stream, data.historyHeadInfo.pointNumber);
+    data.historyHeadInfo.points = points;
+    data.historyHeadInfo.flags = flags;
+    Object.defineProperty(data.historyHeadInfo, 'pointList', {
+      enumerable: false,
+      get: () => Array.from(flags, (flag, i) => ({
+        flag,
+        x: points[2 * i],
+        y: points[2 * i + 1]
+      }))
+    });
   }
   if (data.mask & 0x8) {
     data.robotChargeInfo = {

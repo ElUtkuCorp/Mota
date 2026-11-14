@@ -924,13 +924,9 @@ let Robot = (_class = class Robot extends _tinyTypedEmitter.TypedEmitter {
       if (historyHeadInfo) {
         // Mota: el firmware envía el recorrido entero. Se sustituye en vez de añadir por índice: tras reiniciar
         // su mapa, la lista nueva es más corta y se mezclaba con la anterior
-        map.updateRobotPath(historyHeadInfo.pointList.map(({
-          x,
-          y
-        }) => new _coordinate.Coordinate({
-          x,
-          y
-        })));
+        // Mota: como Float32Array plano [x, y, x, y, ...] en vez de un Coordinate por punto (unos 60-110 bytes cada
+        // uno). Lo lee CecotecTaskPath en el backend
+        map.updateRobotPath(historyHeadInfo.points);
       }
       if (robotPoseInfo) {
         map.updateRobot(new _position.Position({

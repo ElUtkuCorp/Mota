@@ -10,9 +10,11 @@ const CecotecMapVersions = require("./CecotecMapVersions");
 const CecotecMotaRouter = require("./CecotecMotaRouter");
 const CecotecQuirkFactory = require("./CecotecQuirkFactory");
 const CecotecStorage = require("./CecotecStorage");
+const CecotecTaskPath = require("./CecotecTaskPath");
 const CecotecVirtualRooms = require("./CecotecVirtualRooms");
 const fs = require("fs");
 const Logger = require("../../Logger");
+const os = require("os");
 const path = require("path");
 const PendingMapChangeValetudoEvent = require("../../valetudo_events/events/PendingMapChangeValetudoEvent");
 const QuirksCapability = require("../../core/capabilities/QuirksCapability");
@@ -168,6 +170,13 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         this.mapRetouch = new CecotecMapRetouch({
             path: this.config.get("embedded") === true ? path.join(path.dirname(this.config.location), "retoques.json") : undefined
         });
+        // Mota: recorrido de la limpieza en curso, que se recupera si Mota se reinicia a mitad (en /tmp: memoria, no
+        // la flash)
+        this.taskPath = new CecotecTaskPath({
+            directory: this.config.get("embedded") === true ? os.tmpdir() : undefined
+        });
+        this.taskPath.load();
+        this.taskPath.startSaving();
         this.server = new CloudServer();
         this.emitStateUpdated = throttle(this.emitStateUpdated.bind(this));
         this.emitStateAttributesUpdated = throttle(
@@ -413,6 +422,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         this.pathPoints = [];
         this.livePathTail = [];
         this.lastPathPoints = [];
+        this.getTaskPath().reset();
         Logger.info("Map reset by the user: rooms, retouches and mirror zones cleared");
     }
 
@@ -510,6 +520,8 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         this.mapRecovery.shutdown();
         this.firmwareMapBackups?.shutdown();
         this.escapeReturn?.shutdown();
+        this.taskPath?.stopSaving();
+        await this.taskPath?.save();
         await this.server.close();
     }
 
@@ -555,6 +567,8 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             })();
             this.lastCleanStatistics = undefined;
             this.cleanStartedAt = undefined;
+            // Mota: el informe ya lleva el recorrido; no hace falta recuperarlo si Mota se reinicia
+            this.getTaskPath().finish();
 
             // Mota: bordes y espiral trabajan con un mapa temporal; no cuentan para las versiones
             CecotecCongaRobot.GUARD("cleanReport (map versions)", () => {
@@ -616,6 +630,7 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         ) {
             this.pathPoints = [];
             this.livePathTail = [];
+            this.getTaskPath().reset();
         }
 
         // Mota: la limpieza nueva ya trabaja sobre el mapa nuevo
@@ -638,8 +653,10 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
         ) {
             this.cleanStartedAt = undefined;
             this.lastCleanStatistics = undefined;
+            this.getTaskPath().reset();
         }
         this.trackInterruptedClean(oldStatus, newStatus);
+        this.getTaskPath().setStartedAt(this.cleanStartedAt);
         this.state.upsertFirstMatchingAttribute(newStatus);
         this.mapRecovery.onDeviceUpdate();
         this.escapeReturn?.onDeviceUpdate(newStatus);
@@ -804,31 +821,99 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
      * @returns {Array<number>}
      */
     getPathPoints(map) {
-        const source = map.robotPath;
+        const taskPath = this.getTaskPath();
 
-        // Mota: el historial solo cambia cuando llega un mapa (cada 10 s), pero esto se llama con cada posición. Se
-        // convierte una vez por historial y sin un array [x, y] por punto: con miles de puntos agotaba el heap
-        if (source && source.length > 0) {
+        // Mota: el historial del firmware pasa por el recorrido de la tarea, que conserva lo anterior si el firmware lo
+        // reinicia y lo recupera si Mota se ha reiniciado a mitad de la limpieza
+        taskPath.update(map.id?.value, map.robotPath, () => {
+            return this.isTaskInProgress();
+        });
+        if (taskPath.startedAt !== undefined && (this.cleanStartedAt === undefined || taskPath.startedAt < this.cleanStartedAt)) {
+            this.cleanStartedAt = taskPath.startedAt;
+        }
+
+        if (taskPath.length > 0) {
+            // Mota: el recorrido solo cambia cuando llega un mapa (cada 10 s), pero esto se llama con cada posición. Se
+            // convierte una vez por mapa y sin un array [x, y] por punto
             const cache = this.pathPointsCache;
 
-            if (!cache || cache.map !== map || cache.source !== source || cache.points !== this.lastPathPoints) {
-                const offset = map.size.y;
-                const points = new Array(source.length * 2);
-
-                for (let i = 0; i < source.length; i++) {
-                    const { x, y } = map.toPixel(source[i]);
-
-                    points[2 * i] = x;
-                    points[2 * i + 1] = offset - y;
-                }
+            if (!cache || cache.map !== map || cache.version !== taskPath.version) {
+                const points = CecotecCongaRobot.PATH_TO_PIXELS(map, taskPath.getPoints());
 
                 this.lastPathPoints = points;
-                this.pathPointsCache = {map: map, source: source, points: points};
+                this.pathPointsCache = {map: map, version: taskPath.version, points: points};
             }
+
+            return this.pathPointsCache.points;
         }
 
         // Mota: al acabar la limpieza el historial llega vacío. El recorrido se mantiene hasta que empiece otro
         return this.lastPathPoints.length > 0 ? this.lastPathPoints : this.pathPoints;
+    }
+
+    /**
+     * @returns {CecotecTaskPath}
+     */
+    getTaskPath() {
+        // Mota: los tests crean el robot sin constructor
+        if (!this.taskPath) {
+            this.taskPath = new CecotecTaskPath();
+        }
+
+        return this.taskPath;
+    }
+
+    /**
+     * Mota: si el robot sigue con una limpieza (limpiando, volviendo, en pausa o cargando para reanudar). Sin estado
+     * aún, se da por buena: el mapa ya es el mismo
+     *
+     * @returns {boolean}
+     */
+    isTaskInProgress() {
+        const status = this.state?.getFirstMatchingAttributeByConstructor(StatusStateAttribute);
+
+        if (!status) {
+            return true;
+        }
+
+        return !(
+            status.value === StatusStateAttribute.VALUE.IDLE ||
+            (status.value === StatusStateAttribute.VALUE.DOCKED && status.flag !== StatusStateAttribute.FLAG.RESUMABLE)
+        );
+    }
+
+    /**
+     * Mota: [x, y, ...] en metros del firmware a píxeles del mapa (y invertida), con la misma cuenta que
+     * DeviceMap.toPixel pero sin crear un objeto por punto
+     *
+     * @param {import("@agnoc/core").DeviceMap} map
+     * @param {Float32Array} xy
+     * @returns {Array<number>}
+     */
+    static PATH_TO_PIXELS(map, xy) {
+        const points = new Array(xy.length);
+        const offset = map.size.y;
+
+        if (map.min && map.max) {
+            const minX = map.min.x;
+            const minY = map.min.y;
+            const rangeX = map.max.x - minX;
+            const rangeY = map.max.y - minY;
+
+            for (let i = 0; i < xy.length; i += 2) {
+                points[i] = Math.floor((xy[i] - minX) * map.size.x / rangeX);
+                points[i + 1] = offset - Math.floor((xy[i + 1] - minY) * map.size.y / rangeY);
+            }
+        } else {
+            for (let i = 0; i < xy.length; i += 2) {
+                const { x, y } = map.toPixel(/** @type {any} */ ({ x: xy[i], y: xy[i + 1] }));
+
+                points[i] = x;
+                points[i + 1] = offset - y;
+            }
+        }
+
+        return points;
     }
 
     /**
@@ -1506,14 +1591,12 @@ module.exports = class CecotecCongaRobot extends ValetudoRobot {
             return segment.pixels.length > 0;
         });
 
-        if (segments.length > 0 && typeof fullMap === "function") {
-            fullMap = fullMap();
-        }
+        const matrix = segments.length > 0 ? (typeof fullMap === "function" ? fullMap() : fullMap) : [];
 
-        if (segments.length > 0 && fullMap.length !== 0) {
+        if (segments.length > 0 && matrix.length !== 0) {
             // first, dump the segment layers to the map
             segments.forEach(s => {
-                this.dumpSegmentLayer(fullMap, s);
+                this.dumpSegmentLayer(matrix, s);
             });
             segments.forEach(s => {
                 const x = [];
