@@ -252,15 +252,34 @@ class CecotecVirtualRooms {
     }
 
     /**
-     * Rectángulos (en celdas) que cubren una habitación, para limpiarla como zonas
+     * Rectángulos (en celdas) que cubren una habitación, para limpiarla como zonas. Si la habitación es
+     * pequeña y su rectángulo envolvente apenas toca otras habitaciones ni zonas prohibidas, se manda
+     * entera como una sola zona (SINGLE_ZONE); si no, se cubre con COVER.
      *
      * @param {number} id
      * @param {number} maxRects
      * @param {number} resolution metros por celda
+     * @param {Array<{x0: number, y0: number, x1: number, y1: number}>} [forbidden] zonas prohibidas en celdas
      * @returns {Array<{x0: number, y0: number, x1: number, y1: number}>}
      */
-    getCleaningRects(id, maxRects, resolution) {
-        return CecotecVirtualRooms.COVER(this.fitted?.get(Number(id)) ?? this.getRoom(id).pixels, this.data.width, maxRects, resolution);
+    getCleaningRects(id, maxRects, resolution, forbidden = []) {
+        const room = this.getRoom(id);
+        const pixels = this.fitted?.get(room.id) ?? room.pixels;
+        const others = new Set();
+
+        this.data.rooms.forEach(r => {
+            if (r.id !== room.id) {
+                (this.fitted?.get(r.id) ?? r.pixels).forEach(cell => {
+                    others.add(cell);
+                });
+            }
+        });
+
+        const single = CecotecVirtualRooms.SINGLE_ZONE(pixels, this.data.width, resolution, cell => {
+            return others.has(cell);
+        }, forbidden);
+
+        return single ?? CecotecVirtualRooms.COVER(pixels, this.data.width, maxRects, resolution);
     }
 
     /**
@@ -600,9 +619,90 @@ class CecotecVirtualRooms {
     }
 
     /**
+     * @param {Array<number>} pixels índices de celda
+     * @param {number} width
+     * @returns {{x0: number, y0: number, x1: number, y1: number}} rectángulo envolvente, extremos incluidos
+     */
+    static BOUNDS(pixels, width) {
+        let x0 = Infinity;
+        let y0 = Infinity;
+        let x1 = -Infinity;
+        let y1 = -Infinity;
+
+        pixels.forEach(i => {
+            const x = i % width;
+            const y = Math.floor(i / width);
+
+            x0 = Math.min(x0, x);
+            y0 = Math.min(y0, y);
+            x1 = Math.max(x1, x);
+            y1 = Math.max(y1, y);
+        });
+
+        return {x0: x0, y0: y0, x1: x1, y1: y1};
+    }
+
+    /**
+     * Mota: una habitación pequeña se limpia mejor como una sola zona: el firmware hace su zigzag en
+     * todo el espacio y no hay franjas sueltas junto a las paredes. Se usa el rectángulo envolvente si
+     * mide como mucho SINGLE_ZONE_MAX_AREA, invade menos de SINGLE_ZONE_MAX_FOREIGN de celdas de otras
+     * habitaciones (respecto a las de la habitación) y no toca ninguna zona prohibida.
+     *
+     * @param {Array<number>} pixels índices de celda
+     * @param {number} width
+     * @param {number} resolution metros por celda
+     * @param {function(number): boolean} isOtherRoom si la celda es de otra habitación
+     * @param {Array<{x0: number, y0: number, x1: number, y1: number}>} forbidden zonas prohibidas en celdas
+     * @returns {Array<{x0: number, y0: number, x1: number, y1: number}> | undefined}
+     */
+    static SINGLE_ZONE(pixels, width, resolution, isOtherRoom, forbidden) {
+        if (pixels.length === 0) {
+            return undefined;
+        }
+
+        const box = CecotecVirtualRooms.BOUNDS(pixels, width);
+        const cellsX = box.x1 - box.x0 + 1;
+        const cellsY = box.y1 - box.y0 + 1;
+        const minCells = Math.ceil(CecotecVirtualRooms.MIN_ZONE_SIDE / resolution - 1e-9);
+
+        if (
+            cellsX * cellsY * resolution * resolution > CecotecVirtualRooms.SINGLE_ZONE_MAX_AREA ||
+            cellsX < minCells || cellsY < minCells
+        ) {
+            return undefined;
+        }
+
+        const touchesForbidden = forbidden.some(z => {
+            return z.x0 <= box.x1 && z.x1 >= box.x0 && z.y0 <= box.y1 && z.y1 >= box.y0;
+        });
+
+        if (touchesForbidden) {
+            return undefined;
+        }
+
+        const maxForeign = pixels.length * CecotecVirtualRooms.SINGLE_ZONE_MAX_FOREIGN;
+        let foreign = 0;
+
+        for (let y = box.y0; y <= box.y1; y++) {
+            for (let x = box.x0; x <= box.x1; x++) {
+                if (isOtherRoom(y * width + x) && ++foreign >= maxForeign) {
+                    return undefined;
+                }
+            }
+        }
+
+        return [box];
+    }
+
+    /**
      * Cubre una habitación con pocos rectángulos: se trabaja en bloques de ~25 cm y se toma
      * repetidamente el mayor rectángulo de bloques sin cubrir, hasta cubrir el 95 % o llegar a
      * maxRects.
+     *
+     * Mota: ningún rectángulo mide menos de MIN_ZONE_SIDE de lado. En una franja más estrecha que el
+     * robot (unos 33 cm) el firmware no puede hacer zigzag, gira sin parar y acaba subiéndose a la
+     * pared (cocina, 2026-11-16). Un rectángulo estrecho se amplía hacia bloques de suelo de la misma
+     * habitación, aunque se solape con otra zona; si no se puede, se descarta.
      *
      * @param {Array<number>} pixels índices de celda
      * @param {number} width
@@ -616,20 +716,9 @@ class CecotecVirtualRooms {
         }
 
         const block = Math.max(1, Math.round(0.25 / resolution));
-        let minX = Infinity;
-        let minY = Infinity;
-        let maxX = -Infinity;
-        let maxY = -Infinity;
-
-        pixels.forEach(i => {
-            const x = i % width;
-            const y = Math.floor(i / width);
-
-            minX = Math.min(minX, x);
-            minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x);
-            maxY = Math.max(maxY, y);
-        });
+        // Lado mínimo en celdas (9 con 5 cm por celda); con bloques de 25 cm, dos bloques
+        const minCells = Math.ceil(CecotecVirtualRooms.MIN_ZONE_SIDE / resolution - 1e-9);
+        const {x0: minX, y0: minY, x1: maxX, y1: maxY} = CecotecVirtualRooms.BOUNDS(pixels, width);
 
         const cols = Math.floor((maxX - minX) / block) + 1;
         const rows = Math.floor((maxY - minY) / block) + 1;
@@ -643,15 +732,42 @@ class CecotecVirtualRooms {
         });
 
         const threshold = Math.max(1, Math.floor(block * block / 2));
-        const todo = new Uint8Array(cols * rows);
+        const isFloor = new Uint8Array(cols * rows); // bloques de suelo de la habitación
+        const todo = new Uint8Array(cols * rows); // los que aún no cubre ninguna zona
         let remaining = 0;
 
         for (let i = 0; i < counts.length; i++) {
             if (counts[i] >= threshold) {
+                isFloor[i] = 1;
                 todo[i] = 1;
                 remaining++;
             }
         }
+
+        const columnIsFloor = (c, r0, r1) => {
+            if (c < 0 || c >= cols) {
+                return false;
+            }
+            for (let r = r0; r <= r1; r++) {
+                if (!isFloor[r * cols + c]) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
+        const rowIsFloor = (r, c0, c1) => {
+            if (r < 0 || r >= rows) {
+                return false;
+            }
+            for (let c = c0; c <= c1; c++) {
+                if (!isFloor[r * cols + c]) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
 
         const total = remaining;
         const rects = [];
@@ -663,6 +779,7 @@ class CecotecVirtualRooms {
                 break;
             }
 
+            // Lo que no se puede cubrir con una zona en la que quepa el robot se da por perdido
             for (let r = best.r0; r <= best.r1; r++) {
                 for (let c = best.c0; c <= best.c1; c++) {
                     if (todo[r * cols + c]) {
@@ -672,11 +789,43 @@ class CecotecVirtualRooms {
                 }
             }
 
+            let {r0, r1, c0, c1} = best;
+            // El último bloque de cada eje puede quedar recortado por el borde de la habitación
+            const narrowX = () => {
+                return Math.min(maxX, minX + (c1 + 1) * block - 1) - (minX + c0 * block) + 1 < minCells;
+            };
+            const narrowY = () => {
+                return Math.min(maxY, minY + (r1 + 1) * block - 1) - (minY + r0 * block) + 1 < minCells;
+            };
+
+            while (narrowX()) {
+                if (columnIsFloor(c1 + 1, r0, r1)) {
+                    c1++;
+                } else if (columnIsFloor(c0 - 1, r0, r1)) {
+                    c0--;
+                } else {
+                    break;
+                }
+            }
+            while (narrowY()) {
+                if (rowIsFloor(r1 + 1, c0, c1)) {
+                    r1++;
+                } else if (rowIsFloor(r0 - 1, c0, c1)) {
+                    r0--;
+                } else {
+                    break;
+                }
+            }
+
+            if (narrowX() || narrowY()) {
+                continue;
+            }
+
             rects.push({
-                x0: minX + best.c0 * block,
-                y0: minY + best.r0 * block,
-                x1: Math.min(maxX, minX + (best.c1 + 1) * block - 1),
-                y1: Math.min(maxY, minY + (best.r1 + 1) * block - 1),
+                x0: minX + c0 * block,
+                y0: minY + r0 * block,
+                x1: Math.min(maxX, minX + (c1 + 1) * block - 1),
+                y1: Math.min(maxY, minY + (r1 + 1) * block - 1),
             });
         }
 
@@ -725,5 +874,11 @@ class CecotecVirtualRooms {
 }
 
 CecotecVirtualRooms.MIN_MAP_OVERLAP = 0.6;
+// Lado mínimo de una zona en metros: el robot mide unos 33 cm y necesita algo de margen para girar
+CecotecVirtualRooms.MIN_ZONE_SIDE = 0.45;
+// Zona única: hasta 10 m² de rectángulo envolvente (un dormitorio, una cocina, un baño). Con el 5 % de
+// invasión permitido, como mucho medio metro cuadrado de otra habitación se limpia de más.
+CecotecVirtualRooms.SINGLE_ZONE_MAX_AREA = 10;
+CecotecVirtualRooms.SINGLE_ZONE_MAX_FOREIGN = 0.05;
 
 module.exports = CecotecVirtualRooms;

@@ -1,5 +1,7 @@
+const Logger = require("../../../Logger");
 const MapSegmentationCapability = require("../../../core/capabilities/MapSegmentationCapability");
 const {Pixel} = require("@agnoc/core");
+const {PolygonMapEntity} = require("../../../entities/map");
 
 /**
  * Mota: limpieza por habitaciones virtuales. Cada habitación se cubre con rectángulos y se envía
@@ -27,27 +29,69 @@ class CecotecMapSegmentationCapability extends MapSegmentationCapability {
         const resolution = this.robot.getMapResolution(map);
         const maxRectsPerRoom = Math.max(1, Math.floor(CecotecMapSegmentationCapability.MAX_ZONES / segments.length));
         const offset = map.size.y;
-        const toCoordinate = (x, y) => {
-            return map.toCoordinate(new Pixel({x: x, y: offset - y}));
+        // Mota: la celda (x, y) de Mota es el píxel del firmware (x, offset - y), que abarca de x a x + 1 y
+        // de offset - y a offset - y + 1 (toCoordinate da la esquina inferior del píxel). Para que la zona
+        // incluya las celdas enteras, el borde derecho va en x1 + 1 y el superior en offset - y0 + 1; antes
+        // se perdía una celda por cada eje y una franja de 25 cm se enviaba de 20.
+        const toCoordinate = (x, firmwareY) => {
+            return map.toCoordinate(new Pixel({x: x, y: firmwareY}));
         };
+        const forbidden = CecotecMapSegmentationCapability.NO_GO_RECTS(this.robot.getRestrictedZoneEntities(map));
         const areas = [];
+        const sizes = [];
 
         segments.forEach(segment => {
-            this.robot.virtualRooms.getCleaningRects(Number(segment.id), maxRectsPerRoom, resolution).forEach(r => {
+            this.robot.virtualRooms.getCleaningRects(Number(segment.id), maxRectsPerRoom, resolution, forbidden).forEach(r => {
+                const left = r.x0;
+                const right = r.x1 + 1;
+                const bottom = offset - r.y1;
+                const top = offset - r.y0 + 1;
+
                 areas.push([
-                    toCoordinate(r.x0, r.y0),
-                    toCoordinate(r.x0, r.y1),
-                    toCoordinate(r.x1, r.y1),
-                    toCoordinate(r.x1, r.y0),
+                    toCoordinate(left, top),
+                    toCoordinate(left, bottom),
+                    toCoordinate(right, bottom),
+                    toCoordinate(right, top),
                 ]);
+                sizes.push(`${Math.round((r.x1 - r.x0 + 1) * resolution * 100)}x${Math.round((r.y1 - r.y0 + 1) * resolution * 100)}`);
             });
         });
 
-        if (areas.length === 0) {
+        const sent = areas.slice(0, CecotecMapSegmentationCapability.MAX_ZONES);
+        const names = segments.map(segment => {
+            const room = this.robot.virtualRooms.getRooms().find(r => {
+                return r.id === Number(segment.id);
+            });
+
+            return room ? `${room.id} "${room.name}"` : String(segment.id);
+        });
+
+        Logger.info(`Room cleaning: rooms ${names.join(", ")}; ${sent.length} zones (cm): ${sizes.slice(0, sent.length).join(", ")}`);
+
+        if (sent.length === 0) {
             throw new Error("The selected rooms are empty");
         }
 
-        await this.robot.robot.cleanAreas(areas.slice(0, CecotecMapSegmentationCapability.MAX_ZONES));
+        await this.robot.robot.cleanAreas(sent);
+    }
+
+    /**
+     * @param {Array<any>} entities entidades de restricciones del mapa de Mota
+     * @returns {Array<{x0: number, y0: number, x1: number, y1: number}>} zonas prohibidas en celdas
+     */
+    static NO_GO_RECTS(entities) {
+        return entities.filter(e => {
+            return e instanceof PolygonMapEntity && e.type === PolygonMapEntity.TYPE.NO_GO_AREA;
+        }).map(e => {
+            const xs = e.points.filter((_, i) => {
+                return i % 2 === 0;
+            });
+            const ys = e.points.filter((_, i) => {
+                return i % 2 === 1;
+            });
+
+            return {x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys)};
+        });
     }
 
     /**
